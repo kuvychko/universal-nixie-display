@@ -41,7 +41,7 @@ pinout and sectional test provisions defined.
 | D11 | Sectional test provisions: removable links, test points, dummy-load landing | **Proposed** | Links L1-L14, HV inhibit jumper, dummy-load footprints, test-point list; see [Test provisions](#test-provisions-d11) |
 | D12 | Discharge path and target discharge time | **Proposed** | Always-connected 4.8 MΩ bleeder; target < 50 V within 10 s without firmware; C_eff ≤ 0.87 µF; see [Discharge](#discharge-d12) |
 | D13 | Clearance/creepage rules for ~450 V, component voltage ratings | **Proposed** | Four net classes, `HV` ≥ 3.0 mm; 1206 strings ≤ 150 V per part; see [Clearance and ratings](#clearance-and-ratings-d13) |
-| D14 | Connectors: 12 V in, 5 V out, I2C, programming access | **Proposed** | JST VH/XH low-voltage set with unique pin counts; Mini-Fit Jr (600 V) tube harness; see [Connectors](#connectors-d14) |
+| D14 | Connectors: 12 V in, 5 V out, I2C, programming access | **Decided** 2026-10-06 (approach) | Harness wires solder directly to board pads; connectors only at the far end where a module needs one. Dekatron harness soldered at both ends. See [Harness landings](#harness-landings-d14) |
 
 ### A101 operating point (D1)
 
@@ -338,33 +338,43 @@ the IPC-2221B **B2** column (external conductors, uncoated, sea level to 3050 m)
   ≤ 150 V per part ([Component conventions](#component-conventions)).
 * **Wire:** harness conductors that carry HV are 600 V-insulated (e.g. UL1015).
 
-### Connectors (D14)
+### Harness landings (D14)
 
-Every connector is keyed and its pinout is by signal name. **No two connectors on the board share
-both family and pin count**, so no cable fits a wrong socket.
+**Decision (user, 2026-10-06):** wires solder directly to the board, with connectors only at the far
+end where a module needs one. The dekatron harness is soldered at both ends, to the board and to
+the socket. This saves space and avoids connector voltage ratings; it follows nanovolt-divider's
+display harness. The tube itself still plugs into its socket, so a tube can be swapped.
 
-| Ref | Connects | Type | Pins (signal names) |
-|---|---|---|---|
-| J1 | 12 V in from the chassis jack, via the panel switch | JST VH, 2-pin (3.96 mm, power) | `+12V_IN`, `GND` |
-| J2 | 12 V out to the purchased Nixie HV module, via its resettable fuse | JST XH, 2-pin | `+12V_NIX`, `GND` |
-| J3 | ESP32 display harness, splitting into the module's three 1.25 mm plugs | JST XH, 9-pin | `5V_DISP`, `GND`, `3V3_CYD`, `IO35`, `GND`, `IO23`, `IO19`, `SCL`, `SDA` |
-| J4 | Nixie controller board: logic power and I2C | JST XH, 6-pin | `5V_NIX`, `GND`, `SDA`, `SCL`, `GND`, spare (e.g. global blank) |
-| J5 | Tube harness to the A101 socket | Molex Mini-Fit Jr, 2 × 9 (600 V, 4.2 mm) | Anode at a corner with its three nearest positions empty; G1, G2, K1 (index), K0, K2-K9 |
-| JP_HVINH | HV inhibit (D11) | 2.54 mm 1 × 2 header + shunt | EN/UVLO, `GND` |
-| — | RP2040-Zero programming | The Zero's own USB-C, BOOT and RESET | Board edge keeps all three reachable; no separate SWD (the Zero does not expose it on its edge pads) |
+| Landing | Wires | Far end |
+|---|---|---|
+| `PWR_IN` | `+12V_IN`, `GND` | Panel switch, then the chassis barrel jack |
+| `NIX_12V` | `+12V_NIX`, `GND` (after its resettable fuse) | Purchased Nixie HV module input |
+| `DISP` | `5V_DISP`, `GND`, `3V3_CYD`, `IO35`, `GND`, `IO23`, `IO19`, `SCL`, `SDA` | The display module's three 1.25 mm plugs ([Display harness](#display-harness)) |
+| `NIX_LV` | `5V_NIX`, `GND`, `SDA`, `SCL`, `GND`, spare (e.g. global blank) | Nixie controller board (Phase 2) |
+| `TUBE` | Anode, G1, G2, K1 (index), K0, K2-K9: 13 wires | A101 socket, soldered |
+| `JP_HVINH` | 2.54 mm header + shunt (a bench jumper, not a harness) | — |
+| — | RP2040-Zero programming: its own USB-C, BOOT and RESET at the board edge; no SWD on its edge pads | — |
 
-Notes:
+Rules for every landing:
 
-* **J3** routes `IO19`/`IO23`/`IO35` through this board so the encoder (still open, see
-  [Encoder pins](#encoder-pins-proposal)) can land here. `3V3_CYD` is the module's own 3.3 V, used
-  only for encoder pull-ups and never joined to this board's 3V3. The I2C pull-ups go to this
-  board's 3V3 ([Display harness](#display-harness)).
-* **J4's `5V_NIX`** leaves through the same ideal-diode block as the other 5 V feeds: the Nixie
-  board also carries an RP2040-Zero with its own USB (D6).
-* **J5**: the anode resistor string stays on this board, so the harness only carries
-  current-limited HV (≤ 0.7 mA into a short). The empty positions around the anode put ≥ 8.4 mm
-  (two 4.2 mm pitches) between the anode pad and the nearest used pad, above the 3.0 mm `HV` rule.
-  Bringing all nine RTN cathodes out separately keeps the cathode links (L6-L14) on this board.
+* **Silkscreen signal names at every pad, never only numbers.** nanovolt-divider's numbered silk
+  did not match its module and invited a reversed 5 V.
+* **Strain relief at the board:** each harness passes through a relief hole (wire through a
+  larger hole, then back to its pad) or a cable-tie slot before it reaches its pads, so pulling the
+  harness never loads a solder joint. Same at the socket end of `TUBE`.
+* **Pads sized for the wire:** plated through-holes sized for the chosen gauge; power pads
+  (`PWR_IN`, `NIX_12V`) larger than signal pads.
+* **Grouping:** each landing is one contiguous group, in harness order, matching the module's pin
+  order where the far end is a module plug.
+* **`TUBE` spacing:** the anode pad sits apart from the other twelve by at least the 3.0 mm `HV`
+  rule, with its own silkscreen HV mark. Anode wire is 600 V-insulated (e.g. UL1015); the other
+  tube wires carry ≤ 100 V but use the same wire for simplicity. The anode resistor string stays
+  on the board, so the harness only carries current-limited HV (≤ 0.7 mA into a short).
+* **Cathode links:** all nine RTN cathodes are wired separately, so links L6-L14 stay on the board
+  (plan §5).
+* **Verification:** a wrong pad replaces a wrong socket as the risk, so every harness gets an
+  unpowered continuity check against this table before first power ([bringup.md](bringup.md),
+  step 0).
 * With this board unpowered, the I2C bus idles low through the pull-ups to an unpowered rail.
   Firmware on both sides treats a missing peer as absent without hanging (plan Phase 3 exit
   criterion).
