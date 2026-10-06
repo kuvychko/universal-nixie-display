@@ -54,7 +54,7 @@ soft-start; generic MOSFET and diode models):
 | PGOOD | High |
 | Start-up | 95 % of setpoint at 4.84 ms; current-limited (0.677 A peak) until 5.63 ms, about 500 consecutive cycles |
 | Steady state | DCM, 0.37 A inductor peak, 100 kHz |
-| Run time | About 15 min for 9 ms at a 5 ns step |
+| Run time | Under 10 min for 9 ms at a 5 ns step (not timed precisely) |
 
 Not meaningful here: efficiency (input and output power agree within ~2 %; idealised device
 models) and the tripler, which is not in this bench.
