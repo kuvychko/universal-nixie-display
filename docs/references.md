@@ -22,3 +22,13 @@ before copying circuit artwork or code, and record the outcome in the table.
 
 Stored locally in `docs/datasheets/` (git-ignored). List each one here with its source URL and
 revision as it is used.
+
+| File | Part | Source | Revision |
+|---|---|---|---|
+| `lm3478.pdf` | LM3478 boost controller | https://www.ti.com/lit/gpn/lm3478 | SNVS085Y, Jan 2026 |
+| `uc3843.pdf` | UCx84x PWM controllers | https://www.ti.com/lit/ds/symlink/uc3843.pdf | SLUS223H, Oct 2024 |
+| `ad01/*.gif` | AD01 dekatron shield schematic, BOM, hook-up | threeneurons (see above) | April 2017 |
+
+Simulation models to fetch for Phase 1B (TI product pages; may need a TI login): **LM3478
+Unencrypted PSpice Transient Model (rev. B)**; for the alternate, the UCCx8C43 Unencrypted PSpice
+Transient Model.

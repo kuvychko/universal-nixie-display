@@ -29,12 +29,12 @@ pinout and sectional test provisions defined.
 | ID | Decision | Status | Notes / inputs needed |
 |---|---|---|---|
 | D1 | A101 operating point: anode supply, anode resistor, tube current, guide bias and pulse amplitude | **Decided** 2026-10-05 | HV rated for 500 V, set to 450 V at first bring-up; see [A101 operating point](#a101-operating-point-d1) |
-| D2 | HV converter topology (direct boost / boost + multiplier / flyback / 12→5 V + AD01A-style) | **Proposed** | Boost to HV/3 plus Cockcroft-Walton tripler; see [HV converter](#hv-converter-d2) |
+| D2 | HV converter topology (direct boost / boost + multiplier / flyback / 12→5 V + AD01A-style) | **Proposed** | Boost to HV/3 plus Cockcroft-Walton tripler, LM3478 controller; see [HV converter](#hv-converter-d2) |
 | D3 | HV output current budget (tube + bias + bleeder) and margin | **Proposed** | 1 mA at HV, about 4.4 mA at the boost node; see [HV load budget](#hv-load-budget-d3) |
 | D4 | 12 V input protection: reverse polarity, fuse/PTC, TVS, inrush | Open | Barrel adapters of either polarity exist, so reverse-polarity protection is mandatory. Input arrives by wire from the chassis jack, not a board-mounted jack |
 | D5 | 5 V buck capacity | Open | Sum ESP32/TFT, 2× RP2040, 6× K155ID1, converter control; measure CYD draw |
 | D6 | USB power paths: VBUS isolation/selection for ESP32 USB and standalone RP2040 debug | Open | Inspect actual CYD and RP2040-Zero schematics. **Reversed vs. the divider:** there the CYD's 5V pin powered the board from USB; here the board's buck feeds that pin while CH340 USB may also be plugged in. Determine whether the CYD has any diode between VBUS and its 5V header before connecting both |
-| D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | Open | Hardware pull-downs so reset = HV off / guides idle |
+| D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | **Proposed** (HV part) | LM3478 FA/SD pulled high from 12 V unless `HV_EN` asserts; see [Controller IC](#controller-ic). Guide drivers: base pull-downs so reset = guides at rest. Confirm RP2040 GPIO reset state in its datasheet |
 | D8 | Guide driver circuit and its input current at 3.3 V | Open | Reference drive is ~5 V logic |
 | D9 | Index sense: threshold, level translation to 3.3 V, protection | Open | One sensed reference cathode in Rev A |
 | D10 | A101 socket pinout, verified against the tube drawing | Partly resolved | Two independent sources agree (see [Pinout](#a101-pinout)); the reference page's "pin 12" text is the outlier. Still check continuity on the physical socket and a tube |
@@ -125,12 +125,54 @@ Proposed structure, to be refined and simulated in Phase 1B:
   a high-value divider for diagnostics only.
 * Switch: an external MOSFET rated ≥ 250 V, driven from 12 V (the 5 V-input reason the reference
   used bipolar switches does not apply here).
-* Controller IC: chosen in 1B. Requirements: 12 V supply, external MOSFET drive, an
-  enable/shutdown input that defaults **off** when the RP2040 is in reset (D7), and
-  current-mode or cycle-by-cycle current limit. Candidates to compare: UC3843 family, MAX1771,
-  LT3757, MC34063 + gate driver.
+* Controller IC: **TI LM3478** proposed; see [Controller IC](#controller-ic).
 * Multiplier diodes and capacitors rated for the 500 V case with margin (e.g. ≥ 600 V diodes,
   since the 250 V BAV21 used in the reference has too little margin at V_b = 167 V).
+
+### Controller IC
+
+Requirements: runs from the protected 12 V input; drives an external low-side MOSFET; has a
+shutdown input that can be made to default **off** whenever the RP2040 is in reset, unpowered or
+being flashed (D7); cycle-by-cycle current limit; actively produced; a hand-solderable package;
+and a simulation model that runs in ngspice (Phase 1B).
+
+| Candidate | Status | Supply | Shutdown | Model | Verdict |
+|---|---|---|---|---|---|
+| MAX1771 | Not recommended for new designs (ADI) | 2-16.5 V | SHDN pin | None found | Rejected: lifecycle |
+| LT3757 | Active | 2.9-40 V | SHDN/UVLO pin | Encrypted LTspice only; ngspice cannot run encrypted models | Rejected: no usable model; exposed-pad package |
+| MC34063 + gate driver | Active | 3-40 V | None | Generic | Rejected: no shutdown, two parts, voltage-mode |
+| UC3843 / UCC28C43 | Active | UVLO 8.4 V on / 7.6 V off; UC3843 recommended **12-28 V** | None: gate its VCC or pull COMP to ground | Unencrypted PSpice transient model (UCCx8C43) | Alternate |
+| **LM3478** | Active (datasheet rev. Jan 2026) | **2.97-40 V** | **FA/SD pin: high (> 1.4 V) for > 30 µs = off, < 10 µA** | Unencrypted PSpice transient model (rev. B) | **Proposed** |
+
+Why the LM3478 over the UC3843 family: our 12 V input minus a reverse-polarity drop sits below the
+UC3843's 12 V recommended minimum, while the LM3478 is specified from 2.97 V. It has a real
+shutdown pin, internal soft-start (4 ms), internal slope compensation and current-mode control
+with a low 156 mV sense threshold. It is available in SOIC-8, which is easy to hand-solder.
+
+Datasheet values that constrain the design (LM3478, SNVS085Y):
+
+| Parameter | Value | Design consequence |
+|---|---|---|
+| FB reference | 1.26 V ±2.5 % over temperature | Sets V_b via the feedback divider |
+| Switching frequency | 100 kHz-1 MHz, set by R_FA on the FA/SD pin | Choose in 1B; low end favours DCM at our light load |
+| Gate drive swing | V_IN below 7.2 V, clamped at 7.2 V above | MOSFET must be specified at V_GS ≤ 6 V, rated ≥ 250 V |
+| Current-sense threshold | 156 mV typ (125-190 mV over temperature) | Sense resistor sets the cycle-by-cycle limit |
+| Minimum on-time | 325 ns typ, 600 ns max | At no load (HV on, tube dark) it must skip pulses: simulate this case |
+| FA/SD | Shutdown above 1.4 V; abs max **7 V** | Never tie to 12 V directly |
+| Output OVP | FB + 50 mV | Tracks FB, so it does **not** protect against an open feedback divider |
+
+**Shutdown (D7), proposed scheme:** pull FA/SD high from a clamped divider on the 12 V input (kept
+below the 7 V abs max), through a diode so that R_FA still sets the frequency when the pull-up is
+released. The RP2040's `HV_EN` (external pull-down) drives a small N-MOSFET that sinks the
+pull-up. So whenever 12 V is present but the RP2040 is unpowered, in reset or in BOOTSEL, the
+pull-up wins and the converter is off. The pull-up must not come from 3V3 or 5 V: those rails may
+come up after the controller.
+
+**Independent overvoltage shutdown, proposed:** if the top resistor of the feedback divider fails
+open, FB falls to 0 and the converter runs to its current limit with no voltage limit. A second,
+independent divider from V_b should force FA/SD high above roughly 110 % of the 500 V-rating
+setpoint. The RP2040 also measures HV and can drop `HV_EN`, but that does not replace a hardware
+limit.
 
 ### HV load budget (D3)
 
