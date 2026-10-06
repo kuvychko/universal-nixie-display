@@ -1,0 +1,2 @@
+* ngspice reads this from the working directory: PSpice compatibility for vendor models.
+set ngbehavior=psa

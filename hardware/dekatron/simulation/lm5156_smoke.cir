@@ -1,0 +1,59 @@
+* LM5156 smoke test: 12 V -> 150 V boost (V_b stage only, tripler not modelled)
+*
+* Purpose: prove the TI LM5156-Q1 unencrypted transient model runs in ngspice and
+* regulates a 150 V boost in DCM. Component values are illustrative placeholders,
+* not the Phase 1B design.
+* Model: models/vendor/ti (git-ignored; see README.md). Model covers LM5156-Q1; the
+* LM5156H shares the controller core. Temperature and dithering are not modelled.
+* MOSFET and diode are generic ngspice models written for this bench.
+* Run from this directory:  ngspice_con -b lm5156_smoke.cir
+
+.include models/vendor/ti/LM5156-Q1_PSPICE_TRANS/LM5156-Q1_TRANS.ngspice.lib
+
+VIN   vin  0  12
+* HV_EN from the RP2040: 3.3 V at 100 us through 10k, 100k pull-down on EN/UVLO
+VEN   en_drv 0 PULSE(0 3.3 100u 1u 1u 1 2)
+REN   en_drv uvlo 10k
+RPD   uvlo 0 100k
+
+XU1   vin comp cs vcc fb gate 0 pgood rt ss uvlo vcc LM5156-Q1_TRANS
+CVCC  vcc 0 1u
+CBIAS vin 0 1u
+RRT   rt 0 220k
+CSS   ss 0 10n
+RC    comp c1 10k
+CC    c1 0 10n
+CHF   comp 0 100p
+RPG   pgood v3 100k
+V3    v3 0 3.3
+
+* Power stage
+CIN   vin 0 22u
+L1    vin sw 100u
+M1    sw gate cs M250
+RS    cs 0 0.15
+D1    sw vb DHV
+COUT  vb 0 1u
+RLOAD vb 0 34k
+* Feedback: V_b = 1.00 V * (1 + 1.49M/10k) = 150 V
+RFT   vb fb 1.49Meg
+RFB   fb 0 10k
+
+.model M250 VDMOS(nchan Vto=3 Kp=4 Rd=0.4 Rs=0.05 Cgdmax=150p Cgdmin=10p Cgs=500p Cjo=80p Is=1e-12 Rb=0.1 BV=250)
+.model DHV D(Is=1e-9 Rs=0.3 N=1.8 Cjo=8p Tt=35n BV=600)
+
+.tran 5n 9m 0 5n uic
+.control
+run
+rusage totaltime
+meas tran vb_end   AVG v(vb)    from=8.5m to=9m
+meas tran vb_ripple PP v(vb)    from=8.5m to=9m
+meas tran ipk_l1   MAX i(L1)   from=8.5m to=9m
+meas tran pg_end   AVG v(pgood) from=8.5m to=9m
+meas tran t150     WHEN v(vb)=142.5 RISE=1
+meas tran ipk_reg  MAX i(L1) from=8.5m to=9m
+meas tran tcl_end  WHEN i(L1)=0.66 FALL=LAST
+let iin = -i(VIN)
+meas tran iin_avg  AVG iin      from=8.5m to=9m
+.endc
+.end

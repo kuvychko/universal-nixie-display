@@ -60,3 +60,10 @@ firmware/*/build/
 __pycache__/
 *.pyc
 .venv/
+
+# --- Vendor simulation models (copyrighted, no redistribution grant; see simulation/README.md) ---
+hardware/*/simulation/models/vendor/
+
+# Simulation run logs and data
+hardware/*/simulation/*.log
+hardware/*/simulation/*.txt
