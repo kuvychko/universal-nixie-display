@@ -1,0 +1,124 @@
+* Tube section: G+ / RTN regulator, guide drivers, index sense, anode string (tube.kicad_sch)
+*
+* Purpose (Phase 1B): check D8 / D9 / tube-sheet claims with the scheduled glow moving
+* K0 -> G1 -> G2 -> K1 (index) -> G1 -> G2 -> K2 over two steps at 200 steps/s timing:
+*   - RTN stays regulated whether the tube current returns through RTN, K1 (index) or a guide
+*     (zero RTN current), and G+ holds while the guide pull-ups load it;
+*   - guides swing from G+ to ~0 V, and rise back when released;
+*   - NDX reads ~2.7-3.0 V only while the glow sits on K1, and settles within the 60 us budget;
+*   - 3.3 V GPIO base current, zener currents, tube current.
+* Not modelled: the tube's glow physics. The schedule *assumes* transfer within 20 us of each
+* guide edge; it cannot show that the A101 transfers at -50 V guide pulses (plan section 9).
+* Sources: V_B_BIAS and HV are ideal (the power-sheet benches cover them). Device models are
+* generic, from datasheet values: MMBTA42 / MMBTA92 (h_FE >= 25 at 1 mA; 60 used),
+* MMSZ5259B (39 V at 3.2 mA, Zzt 80 ohm), MMSZ5262B (51 V at 2.5 mA, Zzt 125 ohm), BAT54S.
+* .param VB = V_b (157 V nominal; 150 / 175 for the 450 V / 500 V corners), FAULT=1 opens D202.
+* Run from this directory:  ngspice_con -b tube_section.cir > tube_section.log
+
+.param VB=157 HVV=450 VM=150 FAULT=0
+
+VVB   v_b_bias 0 {VB}
+VHV   hv 0 {HVV}
+V33   p3v3 0 3.3
+
+* ---- G+ / RTN zener regulator --------------------------------------------------------------
+R201  v_b_bias gplus 56k
+D201  rtn gplus DZ39
+D202  0 rtn_z DZ51
+RFLT  rtn_z rtn {FAULT ? 1e9 : 1m}
+C201  gplus rtn 0.1u
+C202  rtn 0 1u
+R202  rtn str_rs1 100k
+R203  str_rs1 rtn_sense 100k
+R204  rtn_sense 0 10k
+C305  rtn_sense 0 100n
+D303A 0 rtn_sense DBAT54
+D303K rtn_sense p3v3 DBAT54
+
+* ---- Guide drivers (GPIO pulses: G1 on 1-3 ms and 6-8 ms, G2 on 2-4 ms and 7-9 ms) --------
+VG1   guide1 0 PWL(0 0 1m 0 1.00001m 3.3 3m 3.3 3.00001m 0 6m 0 6.00001m 3.3 8m 3.3 8.00001m 0)
+VG2   guide2 0 PWL(0 0 2m 0 2.00001m 3.3 4m 3.3 4.00001m 0 7m 0 7.00001m 3.3 9m 3.3 9.00001m 0)
+R205  gplus tube_g1 470k
+R206  guide1 g1_b 10k
+R207  g1_b 0 47k
+Q201  tube_g1 g1_b 0 QA42
+R208  gplus tube_g2 470k
+R209  guide2 g2_b 10k
+R210  g2_b 0 47k
+Q202  tube_g2 g2_b 0 QA42
+* electrode and wiring capacitance (assumed 10 pF each)
+CG1   tube_g1 0 10p
+CG2   tube_g2 0 10p
+
+* ---- Index sense ----------------------------------------------------------------------------
+Q203  ndx_c rtn tube_k1 QA92
+R211  tube_k1 rtn 220k
+R212  ndx_c str_nx1 110k
+R213  str_nx1 ndx 110k
+R214  ndx 0 13k
+C204  ndx 0 1n
+D304A 0 ndx DBAT54
+D304K ndx p3v3 DBAT54
+
+* ---- Anode string and scheduled glow ---------------------------------------------------------
+R215  hv str_a1 220k
+R216  str_a1 str_a2 220k
+R217  str_a2 anode 220k
+* Glow: 150 V maintaining drop from the anode to node tc, then into the scheduled electrode
+VMNT  anode tcp {VM}
+DGL   tcp tc DGLOW
+RTCL  tc 0 1G
+* Schedule (each transfer 20 us): K0 (lumped in RTN) -> G1 at 1 ms -> G2 at 2 ms -> K1 at 4 ms
+* -> G1 at 6 ms -> G2 at 7 ms -> K2 (RTN) at 9 ms
+VSR   s_rtn 0 PWL(0 1 1m 1 1.02m 0 9m 0 9.02m 1)
+VSG1  s_g1  0 PWL(0 0 1m 0 1.02m 1 2m 1 2.02m 0 6m 0 6.02m 1 7m 1 7.02m 0)
+VSG2  s_g2  0 PWL(0 0 2m 0 2.02m 1 4m 1 4.02m 0 7m 0 7.02m 1 9m 1 9.02m 0)
+VSK1  s_k1  0 PWL(0 0 4m 0 4.02m 1 6m 1 6.02m 0)
+BGR   tc rtn     I = V(s_rtn) * 1m * max(V(tc,rtn), 0)
+BGG1  tc tube_g1 I = V(s_g1)  * 1m * max(V(tc,tube_g1), 0)
+BGG2  tc tube_g2 I = V(s_g2)  * 1m * max(V(tc,tube_g2), 0)
+BGK1  tc tube_k1 I = V(s_k1)  * 1m * max(V(tc,tube_k1), 0)
+
+.model QA42 NPN(Is=2e-14 Bf=60 Br=3 Vaf=120 Rb=20 Rc=2 Re=0.5 Cje=25p Cjc=3p Tf=2n Tr=80n)
+.model QA92 PNP(Is=2e-14 Bf=60 Br=3 Vaf=120 Rb=20 Rc=2 Re=0.5 Cje=30p Cjc=6p Tf=2n Tr=80n)
+.model DZ39 D(Is=1e-12 N=1 Rs=80 BV=39 Ibv=3.2m)
+.model DZ51 D(Is=1e-12 N=1 Rs=125 BV=51 Ibv=2.5m)
+.model DBAT54 D(Is=2e-7 N=1.05 Rs=1 Cjo=10p BV=30)
+.model DGLOW D(Is=1e-12 N=1)
+
+.tran 1u 11m 0 1u
+.control
+save all @d201[id] @d202[id]
+run
+let vbias = v(gplus) - v(rtn)
+meas tran rtn_rest   AVG v(rtn)        from=0.5m to=0.95m
+meas tran rtn_ong    AVG v(rtn)        from=2.5m to=2.95m
+meas tran rtn_onk1   AVG v(rtn)        from=4.5m to=5.95m
+meas tran rtn_min    MIN v(rtn)        from=0.2m to=11m
+meas tran rtn_max    MAX v(rtn)        from=0.2m to=11m
+meas tran gp_rest    AVG v(gplus)      from=0.5m to=0.95m
+meas tran gp_min     MIN v(gplus)      from=0.2m to=11m
+meas tran bias_rest  AVG vbias         from=0.5m to=0.95m
+meas tran bias_min   MIN vbias         from=0.2m to=11m
+meas tran g1_low     AVG v(tube_g1)    from=1.5m to=1.95m
+meas tran g1_rest    AVG v(tube_g1)    from=0.5m to=0.95m
+meas tran g1_t90     WHEN v(tube_g1)=78 RISE=1 from=3m
+meas tran g2_t90     WHEN v(tube_g2)=78 RISE=1 from=4m
+let ib1 = (v(guide1)-v(g1_b))/10k
+meas tran ib_on      AVG ib1           from=1.5m to=1.95m
+meas tran ndx_onk1   AVG v(ndx)        from=4.5m to=5.95m
+meas tran ndx_off    MAX v(ndx)        from=6.5m to=11m
+meas tran ndx_off0   MAX v(ndx)        from=0.2m to=3.9m
+meas tran ndx_t90    WHEN v(ndx)=2.0 RISE=1 from=4m
+meas tran ndx_tfall  WHEN v(ndx)=0.8 FALL=1 from=6m
+let itube = -i(VMNT)
+meas tran itube_rest AVG itube         from=0.5m to=0.95m
+meas tran itube_k1   AVG itube         from=4.5m to=5.95m
+let iz51 = -@d202[id]
+let iz39 = -@d201[id]
+meas tran iz51_min   MIN iz51          from=0.2m to=11m
+meas tran iz51_max   MAX iz51          from=0.2m to=11m
+meas tran iz39_min   MIN iz39          from=0.2m to=11m
+meas tran rtnsense   AVG v(rtn_sense)  from=0.5m to=0.95m
+.endc
+.end

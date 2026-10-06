@@ -776,6 +776,29 @@ zener → **RTN** → 51 V zener → GND.
 | Bypass | 0.1 µF 100 V across G+-RTN; 1 µF 100 V RTN-GND | Absorbs guide and tube current steps |
 | RTN_SENSE | 2 × 100k / 10k → 2.43 V at 51 V | ADC (GP29); clamp at the RP2040 (mcu sheet) |
 
+**Simulation** (`tube_section.cir`: ideal V_b and HV sources, scheduled glow K0 → G1 → G2 → K1 → G1 →
+G2 → K2 at 200 steps/s, generic MMBTA42/92, zener and BAT54S models from datasheet values):
+
+| Case | RTN | G+ − RTN (min) | NDX, glow on K1 | 51 V zener current | 39 V zener (min) |
+|---|---|---|---|---|---|
+| V_b 157 V (450 V setting) | 51.03-51.15 V | 39.03 V | 2.886 V | 0.57-1.32 mA | 0.81 mA |
+| V_b 150 V | 51.01-51.13 V | 39.02 V | 2.885 V | 0.45-1.20 mA | 0.69 mA |
+| V_b 175 V (500 V setting) | 51.08-51.21 V | 39.06 V | 2.890 V | 0.89-1.72 mA | 1.13 mA |
+| 51 V zener open (fault) | 102-106 V | 34.95 V | 3.43 V, clamped | — | — |
+
+* RTN moves ≤ 0.12 V whether the tube current returns through the cathodes, K1 or a guide (zero
+  RTN current): D8's requirement holds.
+* Guides: 23 mV when pulled low, 90.2 V at rest, back above 78 V 7-11 µs after release. GPIO base
+  current 0.265 mA. Tube current 375 µA.
+* NDX: 2.886 V on K1, ≤ 2.4 mV otherwise; crosses 2.0 V 3 µs after the glow arrives and 0.8 V
+  18 µs after it leaves, inside the 60 µs read budget (D9). RTN_SENSE 2.436 V.
+* **Correction:** the 51 V zener's minimum current is 0.45 mA (V_b 150 V, glow on a guide), not the
+  ≥ 0.82 mA estimated above: the RTN_SENSE divider also draws 0.24 mA from RTN. That is above the
+  1N52xx-family knee current (0.25 mA) and RTN holds within 0.12 V, so the 56k feed stays.
+* **Fault, 51 V zener open:** RTN rises to ~104 V; the BAT54S clamps hold NDX at 3.43 V and
+  RTN_SENSE at 3.48 V. Firmware reads RTN_SENSE over range and drops `HV_EN`.
+* Not modelled: whether the A101 transfers its glow at −50 V guide pulses (bring-up, plan §9).
+
 With the 51 V zener's tolerance (48.5-53.6 V) the index output spans **2.73-3.01 V** (D9 table used
 47.5-52.5 V): still ≥ 0.73 V above the RP2040's 2.0 V V_IH.
 
