@@ -325,7 +325,7 @@ the IPC-2221B **B2** column (external conductors, uncoated, sea level to 3050 m)
 | Net class | Members | Design maximum | IPC-2221B B2 | Rule (to any other class) |
 |---|---|---|---|---|
 | `HV` | Tripler stage nodes, HV output, bleeder and monitor string tops, anode string, tube anode | 550 V (OVP trip, 110 % of the 500 V rating) | 2.75 mm | **3.0 mm** |
-| `VB` | V_b, switch node, feedback divider top | 185 V (167 V + OVP) | 1.25 mm (151-300 V row, *verify*) | **1.5 mm** |
+| `VB` | V_b, switch node | 200 V (≈ 195 V at the 550 V OVP trip with HV feedback) | 1.25 mm (151-300 V row, *verify*) | **1.5 mm** |
 | `BIAS` | G+, RTN, guides, cathodes, index high side | 100 V | 0.6 mm (51-100 V row, *verify*) | **0.8 mm** |
 | `LV` | 12 V and below | 25 V (TVS clamp) | 0.1 mm | Fab minimum |
 
@@ -626,29 +626,35 @@ and RTN regulators belong to the `tube` sheet. Simulation benches live in
 | Sense resistor | 0.13 Ω → cycle limit 0.71-0.82 A (100 mV ±7 %) | Peak power ½·L·I²·f ≈ 2.2 W in DCM vs. ≈ 0.92 W needed (0.73 W at 167 V, 80 % assumed) |
 | DCM margin | t_on + t_off = L·I_pk·(1/V_IN + 1/(V_b − V_IN)) ≈ 6.6 µs < 10 µs at 0.77 A, 10.8 V in | Stays DCM even at the current limit and −10 % input |
 | CS filter | 100 Ω + 470 pF (47 ns) | **Required:** see pump surge below |
-| MOSFET | onsemi FDD7N25LZ: 250 V, logic level (V_th 2 V, R_DS(on) specified at 5 V drive), 0.55 Ω at 10 V, DPAK | LM5156 gate drive is 6.85 V |
+| MOSFET | **AOS AOD5N40: 400 V**, 1.6 Ω max at V_GS = 10 V, V_th 3.4-4.5 V, Q_g 6.9 nC, DPAK | 2.05× margin at the worst case (below). Chosen over logic-level parts (user, 2026-10-06) |
+| Gate drive | **10 V**: LM5156 in BIAS = VCC mode (datasheet: 2.97-16 V), fed by an **LP2951** (30 V max input, 100 mA, 380 mV dropout, adjustable, SOIC-8) from the protected 12 V | Internal VCC (6.85 V) is too low for a 4.5 V-threshold MOSFET. Load ≈ 1 mA (Q_g × f + bias). The LP2951 input rating covers the ≈ 24 V TVS clamp |
 | Boost diode | ES1J: 600 V, 1 A, t_rr 35 ns, SMA | |
 | Soft-start | C_SS = 47 nF (10 µA → 4.7 ms ramp) | LM5156H (no hiccup); start-up is energy-limited anyway |
 | Compensation | 10 kΩ + 10 nF, 100 pF to ground | Smoke-test values; load-step check pending |
 | Feedback | **From HV:** 4 × 1.1M / 9.8k → HV = 450 V (1.00 V ref); 500 V option: bottom ≈ 8.82k | Moved from V_b in simulation (see results). ≤ 150 V per part: 137 V each at 550 V |
 | V_b bleeder | 2 × 1.2M (2.4 MΩ, 63 µA) | V_b's own discharge path when link L3 separates the boost from the tripler (D11) |
 
-**MOSFET margin: open.** With HV feedback the stack's per-stage shortfall pushes V_b up: the
-simulated switch-node peak is **161 V at the 450 V setting** (1.55× margin on 250 V). Scaling to
-the 500 V setting during an OVP trip (550 V) gives about 195 V: **1.28×**, below the 1.5× rule
-(D13). The node is clamped by the boost diode to V_b + V_F, but the margin is thin. **Action: find
-a ≥ 300 V MOSFET specified for ≤ 6 V gate drive**, or restrict the board to the 450 V setting.
+**MOSFET margin: resolved with a 400 V part.** With HV feedback the stack's per-stage shortfall
+pushes V_b up: the simulated switch-node peak is 161-163 V at the 450 V setting, and scaling to the
+500 V setting during an OVP trip (550 V) gives about 195 V. A 250 V logic-level part would have
+had 1.28×, below the 1.5× rule (D13). Logic-level options at ≥ 300 V are small-signal parts: the
+Nexperia BSP130 (300 V) is rated 350 mA continuous, 10 Ω max at V_GS 2.4 V, and 83 K/W, which
+cannot carry the 0.82 A current limit through a long current-limited start or a shorted output.
+Instead the gate drive rises to 10 V, and the **AOD5N40 (400 V) gives 400/195 = 2.05×**.
+Simulated (`hv_warm.cir`, 4.0 V threshold model, 10 V drive): HV 449.1 V, tube 378 µA, switch
+node 161 V, CS ≤ 0.10 V, the same as the logic-level design.
 
 ### Tripler
 
 Series-stack Cockcroft-Walton driven from the switch node: pump capacitors CP1-CP2 in series from
 the switch node, DC capacitors C1-C3 stacked from ground, diodes D1-D5 (ES1J). **Every capacitor
-and diode sees at most V_b** (185 V at OVP), so HV = 3 × V_b with no part across the full HV.
+and diode sees at most V_b** (≈ 195 V at the 550 V OVP trip with HV feedback), so HV ≈ 3 × V_b
+with no part across the full HV.
 
 | Item | Value | Basis |
 |---|---|---|
-| Capacitors | 0.47 µF, 400 V, PET film, THT (WIMA MKS4 class) | 400 V ≥ 1.5 × 185 V. Film instead of MLCC: no DC-bias capacitance loss, no piezo noise from a pulse-skipping supply. Deviation from the 1206 default, recorded here |
-| Diodes | ES1J (600 V) | 3.2× V_b at OVP |
+| Capacitors | 0.47 µF, 400 V, PET film, THT (WIMA MKS4 class) | 400 V = 2.05 × 195 V. Film instead of MLCC: no DC-bias capacitance loss, no piezo noise from a pulse-skipping supply. Deviation from the 1206 default, recorded here |
+| Diodes | ES1J (600 V) | 3.1× V_b at OVP |
 | Pump surge resistor | **47 Ω** between the switch node and CP1 | **Required:** see below |
 | Ripple | < 1 V at 0.58 mA (I/(f·C) ≈ 12 mV per stage) | Checked in simulation |
 
@@ -668,9 +674,9 @@ pump current is ~1.2 mA. 100 Ω also works but charges the stack about half as f
 | `hv_warm.cir`, tube held dark | Steady state with no tube current | **HV 453.3 V, 1.7 V p-p**, V_b 157.9 V, PGOOD high. Load regulation dark → lit 0.9 % |
 | `hv_warm.cir`, V_b feedback (superseded) | Same, regulating V_b = 150 V | HV only 442 V with the tube dark: the reason feedback moved to HV |
 | `hv_warm.cir` stresses | Peaks over the run | Switch node 161 V; capacitors ≤ 159 V (400 V parts); diode reverse ≤ 149 V (600 V); CS pin ≤ 0.10 V (0.3 V abs max); switch current spike 1.86 A with the 47 Ω pump resistor |
-| `hv_startup.cir` | Cold start from 0 V | Reaches V_b ≈ 151 V and HV ≈ 427 V at 10 ms (V_b feedback); stalled in the solver at a light-load mode change. Rerunning with HV feedback and relaxed tolerances |
+| `hv_startup.cir` | Cold start from 0 V, 40 ms, HV feedback | **Completes** (250 V logic-level MOSFET, 6.85 V drive): tube strikes at 9.7 ms; at 38-40 ms HV 449.9 V, 0.11 V p-p ripple, tube 379 µA, PGOOD high; switch node 163 V, CS ≤ 0.10 V, switch spike 1.87 A. Rerun with the 400 V MOSFET and 10 V drive in progress |
 
-Model limitations: generic MOSFET and diode models (FDD7N25LZ- and ES1J-like), film capacitors as
+Model limitations: generic MOSFET and diode models (AOD5N40- and ES1J-like), film capacitors as
 C + 0.1 Ω ESR (ESL omitted: nH parasitics ring faster than the 5 ns step resolves), and a
 behavioural tube whose 380 V strike voltage is an assumption, not tube data. Efficiency is not
 measured yet: the 1 ms averaging window falls inside the converter's burst pauses.
@@ -679,6 +685,7 @@ measured yet: the 1 ms averaging window falls inside the converter's burst pause
 
 | Item | Part | Basis |
 |---|---|---|
+| Gate-drive LDO | TI LP2951, adjustable, set to 10 V | See HV boost stage |
 | 5 V buck | TI TPS54202: 4.5-28 V in, 2 A, 500 kHz, SOT-23-6, Eco-mode; unencrypted PSpice model available | D5; 28 V > TVS clamp |
 | Ideal diodes (D6) | TI LM66100: 1.5-5.5 V, 1.5 A, 79 mΩ at 5 V, reverse blocking, SC-70-6 | One block per external 5 V feed |
 | OVP comparator | TI TLV3011 (open-drain; 1.242 V reference ±1 %, 1.8-5.5 V supply) from 5 V, sensing HV through its own 4-part string; output pulls EN/UVLO low and drives `OVP_TRIP` | TLV3012 is push-pull and cannot share the EN node |

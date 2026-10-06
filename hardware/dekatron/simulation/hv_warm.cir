@@ -9,7 +9,7 @@
 *
 * Values: Phase 1B draft (docs/hardware.md, "Power sheet"). The LM5156 model is TI's (see
 * README.md); MOSFET, diodes and the tube are approximate generic models written for this bench:
-*   M1  ~ FDD7N25LZ  (250 V, Vth ~2 V, Rds(on) ~0.55 ohm)
+*   M1  ~ AOD5N40    (400 V, Vth 4.0 V worst-ish case of 3.4-4.5 V, Rds(on) ~1.2-1.6 ohm at 10 V)
 *   D*  ~ ES1J       (600 V, trr 35 ns)
 *   Tube: dark until anode-cathode > V_STRIKE, then a 150 V maintaining drop until the current
 *         falls below hold. V_STRIKE = 380 V is an assumption, not tube data; the A101 data gives
@@ -26,9 +26,9 @@ VEN   en_drv 0 PULSE(0 3.3 100u 1u 1u 1 2)
 REN   en_drv uvlo 10k
 RPD   uvlo 0 100k
 
-XU1   vin comp cs vcc fb gate 0 pgood rt ss uvlo vcc LM5156-Q1_TRANS
-CVCC  vcc 0 1u
-CBIAS vin 0 1u
+* BIAS = VCC from the 10 V gate-drive regulator (LP2951; LM5156 BIAS=VCC mode, 2.97-16 V)
+VDRV  vdrv 0 10
+XU1   vdrv comp cs vdrv fb gate 0 pgood rt ss uvlo vdrv LM5156-Q1_TRANS
 RRT   rt 0 220k
 CSS   ss 0 2.2n
 RC    comp c1 10k
@@ -98,7 +98,7 @@ BTUBE  anode rtn I = 0.5*(1+tanh(200*(V(latf)-0.5))) * (0.5/1k) * ((V(anode,rtn)
 RTLEAK anode rtn 10G
 VRTNS  rtn 0 {VRTN}
 
-.model M250 VDMOS(nchan Vto=2.0 Kp=6 Rd=0.35 Rs=0.05 Cgdmax=120p Cgdmin=8p Cgs=450p Cjo=90p Is=1e-12 Rb=0.1 BV=250)
+.model M250 VDMOS(nchan Vto=4.0 Kp=2 Rd=1.0 Rs=0.1 Cgdmax=60p Cgdmin=5p Cgs=350p Cjo=40p Is=1e-12 Rb=0.2 BV=400)
 .model DES1J D(Is=5e-9 Rs=0.15 N=1.9 Cjo=12p Tt=25n BV=600 Ibv=1u)
 
 .ic v(vb)=145 v(sw)=12 v(swp)=12 v(p1)=157 v(n2)=290 v(p2)=302 v(hv)=435 v(latf)=0 v(lat)=0
