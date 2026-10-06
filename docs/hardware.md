@@ -93,8 +93,8 @@ Consequences, computed from those values:
 | G+ (guide rest) | RTN + 40 V = +90 V | Centre of datasheet bias range |
 | Guide pulse | Guide switched to ~0 V: −50 V vs. cathodes | Reference practice; datasheet says −150 Vp |
 | Anode supply HV | **Option A:** 450 V to ground (400 V above RTN); **Option B:** 500 V to ground (450 V above RTN) | See below |
-| Anode resistor | A: 680 kΩ; B: 820 kΩ (built as E24 strings, see decision below) | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
-| Tube current | A: 305-430 µA (368 typ); B: 311-421 µA (366 typ) | Within datasheet 300-450 µA |
+| Anode resistor | A: 660 kΩ (3 × 220k); B: 810 kΩ (3 × 270k) | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
+| Tube current | A: 314-443 µA (379 typ); B: 315-426 µA (≈ 370 typ) | Within datasheet 300-450 µA |
 | Step rate | ≤ 200 steps/s for homing (plan §5) | Datasheet limit 1 kHz |
 
 The datasheet supply figure (425 min / 450 typ) is referred to the cathodes. With cathodes at
