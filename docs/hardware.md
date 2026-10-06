@@ -10,10 +10,10 @@ Record the exact revision of every purchased module before footprints or pin map
 | Item | Assumed | Confirmed revision / evidence |
 |---|---|---|
 | ESP32 display board | ESP32-2432S028R family (as in nanovolt-divider) | **Confirmed** (user, 2026-10-05): same module as nanovolt-divider — ESP32, CH340 USB serial, 320×240 ILI9341, XPT2046-type resistive touch, microSD. See [Display harness](#display-harness) |
-| Controller MCU | RP2040-Zero (Waveshare) | _open_ — confirm modules on hand and footprint |
+| Controller MCU | RP2040-Zero (Waveshare) | **Confirmed** (user, 2026-10-05): RP2040-Zero, headerless. Mount by its castellated edge pads soldered directly to the carrier (no header stack height); footprint must also leave the USB-C connector and BOOT/RESET buttons reachable |
 | A101 socket | Existing socket on hand | _open_ — dimensions, pin numbering |
 | Nixie HV module | Amazon B09D94N3MX | _open_ — qualify delivered version |
-| 12 V adapter | Isolated 12 VDC | _open_ — current rating, connector |
+| 12 V adapter | Isolated 12 VDC | Connector **confirmed** (user, 2026-10-05): 2.1 mm barrel plug into a chassis-mounted jack the user already has; jack wired to the board. Adapter not yet bought: rating to be specified generously from the power budget (D5). Assume centre-positive, but D4 must survive reversed polarity |
 
 ## Dekatron controller/PSU
 
@@ -31,7 +31,7 @@ pinout and sectional test provisions defined.
 | D1 | A101 operating point: anode supply, anode resistor, tube current, guide bias and pulse amplitude | Open | From A101 data and the reference AD01A circuit; 420 V reference ≠ 450 V without review |
 | D2 | HV converter topology (direct boost / boost + multiplier / flyback / 12→5 V + AD01A-style) | Open | Compare against D1 load incl. bias network and bleeder; controller IC availability |
 | D3 | HV output current budget (tube + bias + bleeder) and margin | Open | Depends on D1 |
-| D4 | 12 V input protection: reverse polarity, fuse/PTC, TVS, inrush | Open | |
+| D4 | 12 V input protection: reverse polarity, fuse/PTC, TVS, inrush | Open | Barrel adapters of either polarity exist, so reverse-polarity protection is mandatory. Input arrives by wire from the chassis jack, not a board-mounted jack |
 | D5 | 5 V buck capacity | Open | Sum ESP32/TFT, 2× RP2040, 6× K155ID1, converter control; measure CYD draw |
 | D6 | USB power paths: VBUS isolation/selection for ESP32 USB and standalone RP2040 debug | Open | Inspect actual CYD and RP2040-Zero schematics. **Reversed vs. the divider:** there the CYD's 5V pin powered the board from USB; here the board's buck feeds that pin while CH340 USB may also be plugged in. Determine whether the CYD has any diode between VBUS and its 5V header before connecting both |
 | D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | Open | Hardware pull-downs so reset = HV off / guides idle |
@@ -41,7 +41,7 @@ pinout and sectional test provisions defined.
 | D11 | Sectional test provisions: removable links, test points, dummy-load landing | Open | HV converter must be isolatable from the tube section |
 | D12 | Discharge path and target discharge time | Open | Measure in 1D |
 | D13 | Clearance/creepage rules for ~450 V, component voltage ratings | Open | Becomes the board's DRC rules |
-| D14 | Connectors: 12 V in, 5 V out, I2C, programming access | Open | Keyed, pinout by signal name |
+| D14 | Connectors: 12 V in, 5 V out, I2C, programming access | Open | Keyed, pinout by signal name. 12 V in is a wire-to-board connector from the chassis jack; 12 V also onward to the Nixie HV module |
 
 ### Power budget
 
