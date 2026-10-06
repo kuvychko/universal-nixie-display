@@ -277,6 +277,7 @@ RTN (50 V) ──┬───────────────[R_E 220k]─�
 ### Test provisions (D11)
 
 Plan §9 brings the board up section by section on the final PCB, so each section can be cut off.
+Schematic references: L1-L5 below are `LK1`-`LK5` (`LK` avoids clashing with inductor references).
 Links are **0 Ω 1206** on low-voltage nets and **wire-link footprints at ≥ 7.62 mm pitch** on HV
 nets (desolder to open; the open gap then meets the HV clearance rule).
 
@@ -621,10 +622,18 @@ and RTN regulators belong to the `tube` sheet. Simulation benches live in
 | Item | Value | Basis |
 |---|---|---|
 | Controller | LM5156H (D2) | |
-| Switching frequency | 100 kHz, R_T = 220 kΩ | Low end: DCM at light load, low switching loss at 150 V |
-| Inductor | 100 µH, Bourns SRR1260-101M (I_sat 1.7 A, DCR 180 mΩ max, shielded) | DCM check below |
-| Sense resistor | 0.13 Ω → cycle limit 0.71-0.82 A (100 mV ±7 %) | Peak power ½·L·I²·f ≈ 2.2 W in DCM vs. ≈ 0.92 W needed (0.73 W at 167 V, 80 % assumed) |
-| DCM margin | t_on + t_off = L·I_pk·(1/V_IN + 1/(V_b − V_IN)) ≈ 6.6 µs < 10 µs at 0.77 A, 10.8 V in | Stays DCM even at the current limit and −10 % input |
+| Switching frequency | **~150 kHz, R_T = 147 kΩ** (was 100 kHz / 220 kΩ) | Raised with the kit inductor's lower current limit (below) |
+| Inductor | **100 µH ±10 % from the user's 6 × 8 mm radial kit: rated 0.71 A, DCR 0.35 Ω** (was SRR1260-101M) | User's kit (2026-10-06); see Kit inductor below |
+| Sense resistor | **0.22 Ω → cycle limit 0.42-0.49 A** (100 mV ±7 %) | Inside the kit inductor's 0.71 A rating |
+| DCM margin | t_on + t_off = L·I_pk·(1/V_IN + 1/(V_b − V_IN)) ≈ 5.3 µs < 6.7 µs at 0.49 A, 110 µH, 10.8 V in | Stays DCM at the current limit, +10 % inductance and −10 % input |
+
+**Kit inductor (2026-10-06).** The user's kit 100 µH part is rated 0.71 A (DCR 0.35 Ω), below the
+original 0.71-0.82 A current limit. The limit drops to 0.42-0.49 A (0.22 Ω) and the frequency
+rises to ~150 kHz: at the low end of the limit and −10 % inductance, DCM delivers
+½ × 90 µH × 0.423² × 150 kHz ≈ 1.2 W against ≈ 0.92 W needed. Simulated (`hv_warm.cir`, 90 µH,
+0.35 Ω): HV 450.9 V, 4.1 V p-p ripple, tube 381 µA, inductor peak 0.464 A, switch node 158 V,
+CS ≤ 0.10 V, PGOOD high. Alternative offered by the user: two kit 47 µH parts in series (94 µH,
+rated 0.80 A); kept as a fallback since one part meets the requirement.
 | CS filter | 100 Ω + 470 pF (47 ns) | **Required:** see pump surge below |
 | MOSFET | **AOS AOD5N40: 400 V**, 1.6 Ω max at V_GS = 10 V, V_th 3.4-4.5 V, Q_g 6.9 nC, DPAK | 2.05× margin at the worst case (below). Chosen over logic-level parts (user, 2026-10-06) |
 | Gate drive | **10 V**: LM5156 in BIAS = VCC mode (datasheet: 2.97-16 V), fed by an **LP2951** (30 V max input, 100 mA, 380 mV dropout, adjustable, SOIC-8) from the protected 12 V | Internal VCC (6.85 V) is too low for a 4.5 V-threshold MOSFET. Load ≈ 1 mA (Q_g × f + bias). The LP2951 input rating covers the ≈ 24 V TVS clamp |
@@ -720,19 +729,19 @@ constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W be
 
 ### Power sheet parts
 
-All selected parts, with manufacturer part numbers for ordering:
-[`hardware/dekatron/bom_power_draft.csv`](../hardware/dekatron/bom_power_draft.csv). Passives marked
-"(choose)" are specified by value, rating, dielectric and size. Resistors come from the 1206 kit.
-The final BOM, with reference designators, comes from the KiCad schematic.
+The schematic generator writes the power-sheet BOM with references, functions, MPNs and ratings:
+[`hardware/dekatron/bom_power.csv`](../hardware/dekatron/bom_power.csv) (114 lines, incl. 10 DNP dummy-load
+resistors). Passives without an MPN are specified by value, rating, dielectric and size; resistors
+come from the 1206 kit and inductors from the user's radial kit where noted.
 
 | Function | Part |
 |---|---|
 | HV controller | TI **LM5156HPWPR** |
 | HV MOSFET / gate-drive LDO | AOS **AOD5N40** / onsemi **LP2951ACDR2G** (143k / 20.0k → 10.07 V) |
-| HV inductor / diodes | Bourns **SRR1260-101M** / onsemi **ES1J** × 5 |
+| HV inductor / diodes | **Kit 100 µH radial** (0.71 A, 0.35 Ω) / onsemi **ES1J** × 5 |
 | HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4 class) |
 | OVP comparator | TI **TLV3011AIDBVR** (open-drain) |
-| 5 V buck / inductor | TI **TPS54202DDCR** / Bourns **SRR1260-150M** |
+| 5 V buck / inductor | TI **TPS54202DDCR** / Bourns **SRR1260-150M** (kit 15 µH if its rating allows) |
 | Ideal diodes | TI **LM66100DCKR** × 3 |
 | Fuse / PTC | Littelfuse **0468002.NRHF** / **1812L075/33DR** |
 | Reverse polarity / TVS | AOS **AOD4185** + BZT52C10 / Littelfuse **SMBJ15A** |
