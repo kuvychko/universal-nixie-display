@@ -28,9 +28,9 @@ pinout and sectional test provisions defined.
 
 | ID | Decision | Status | Notes / inputs needed |
 |---|---|---|---|
-| D1 | A101 operating point: anode supply, anode resistor, tube current, guide bias and pulse amplitude | **Proposed** | See [A101 operating point](#a101-operating-point-d1); one choice (HV reference point) awaits the user |
-| D2 | HV converter topology (direct boost / boost + multiplier / flyback / 12→5 V + AD01A-style) | Open | Compare against D1 load incl. bias network and bleeder; controller IC availability |
-| D3 | HV output current budget (tube + bias + bleeder) and margin | Open | Depends on D1 |
+| D1 | A101 operating point: anode supply, anode resistor, tube current, guide bias and pulse amplitude | **Decided** 2026-10-05 | HV rated for 500 V, set to 450 V at first bring-up; see [A101 operating point](#a101-operating-point-d1) |
+| D2 | HV converter topology (direct boost / boost + multiplier / flyback / 12→5 V + AD01A-style) | **Proposed** | Boost to HV/3 plus Cockcroft-Walton tripler; see [HV converter](#hv-converter-d2) |
+| D3 | HV output current budget (tube + bias + bleeder) and margin | **Proposed** | 1 mA at HV, about 4.4 mA at the boost node; see [HV load budget](#hv-load-budget-d3) |
 | D4 | 12 V input protection: reverse polarity, fuse/PTC, TVS, inrush | Open | Barrel adapters of either polarity exist, so reverse-polarity protection is mandatory. Input arrives by wire from the chassis jack, not a board-mounted jack |
 | D5 | 5 V buck capacity | Open | Sum ESP32/TFT, 2× RP2040, 6× K155ID1, converter control; measure CYD draw |
 | D6 | USB power paths: VBUS isolation/selection for ESP32 USB and standalone RP2040 debug | Open | Inspect actual CYD and RP2040-Zero schematics. **Reversed vs. the divider:** there the CYD's 5V pin powered the board from USB; here the board's buck feeds that pin while CH340 USB may also be plugged in. Determine whether the CYD has any diode between VBUS and its 5V header before connecting both |
@@ -97,11 +97,58 @@ Consequences, computed from those values:
 | Tube current | A: 305-430 µA (368 typ); B: 311-421 µA (366 typ) | Within datasheet 300-450 µA |
 | Step rate | ≤ 200 steps/s for homing (plan §5) | Datasheet limit 1 kHz |
 
-The **choice between A and B is the open part of D1.** The datasheet supply figure (425 min / 450
-typ) is referred to the cathodes. With cathodes at +50 V, Option A gives the tube 400 V, below
-the datasheet minimum but more than the reference's ≤ 368 V, which works. Option B meets the
-datasheet typical but raises every HV rating and clearance by about 50 V. Anode resistor
-dissipation is ~0.1 W in either case.
+The datasheet supply figure (425 min / 450 typ) is referred to the cathodes. With cathodes at
++50 V, Option A gives the tube 400 V, below the datasheet minimum but more than the reference's
+≤ 368 V, which works. Option B meets the datasheet typical. Anode resistor dissipation is ~0.1 W
+in either case.
+
+**Decision (user, 2026-10-05):** rate every HV component, clearance and the converter for
+Option B (500 V), and set the regulator for Option A (450 V) at first bring-up. Raise the setpoint
+only if striking or glow transfer is marginal. The setpoint is fixed by the feedback resistor, and
+the anode resistor is paired with it (680 kΩ at 450 V, 820 kΩ at 500 V). Lay the anode resistor
+out as two series footprints so either value can be fitted.
+
+### HV converter (D2)
+
+| Candidate | Assessment |
+|---|---|
+| Direct boost 12 → 450 V | Conversion ratio 37.5: duty ≈ 97 % in continuous mode, switch rated > 500 V plus ringing. Rejected |
+| **Boost 12 → HV/3, CW tripler** | Duty ≈ 92 %, workable (the same class as common 12 → 170 V Nixie supplies). Switch sees only ~150-167 V. The boost node also supplies G+ and RTN directly, as in the reference. **Proposed** |
+| Flyback 12 → 450 V | One magnetic, but a custom or scarce transformer, and G+/RTN would be derived from 450 V dissipatively. Not worth it at < 1 W |
+| 12 → 5 V buck + reference AD01 circuit | Proven, but its 160 V 2N5551 switches cap the tripler at ~420 V, below the decided 450-500 V. Fallback only |
+
+Proposed structure, to be refined and simulated in Phase 1B:
+
+* Boost stage regulated at the **boost node, V_b = HV/3** (150 V for 450 V, 167 V for 500 V),
+  as in the reference. Multiplier droop at ~1 mA is small, so regulating V_b sets HV closely
+  enough for a tube whose current is set by its anode resistor. The RP2040 measures HV through
+  a high-value divider for diagnostics only.
+* Switch: an external MOSFET rated ≥ 250 V, driven from 12 V (the 5 V-input reason the reference
+  used bipolar switches does not apply here).
+* Controller IC: chosen in 1B. Requirements: 12 V supply, external MOSFET drive, an
+  enable/shutdown input that defaults **off** when the RP2040 is in reset (D7), and
+  current-mode or cycle-by-cycle current limit. Candidates to compare: UC3843 family, MAX1771,
+  LT3757, MC34063 + gate driver.
+* Multiplier diodes and capacitors rated for the 500 V case with margin (e.g. ≥ 600 V diodes,
+  since the 250 V BAV21 used in the reference has too little margin at V_b = 167 V).
+
+### HV load budget (D3)
+
+| Load | At HV (450 V) | Basis |
+|---|---|---|
+| Tube via anode resistor | ≤ 0.43 mA | D1 worst case |
+| Bleeder 4.7 MΩ | 96 µA (106 µA at 500 V) | Discharge 450 → 50 V in 5-10 s for 0.5-1 µF effective output capacitance; measure in 1D (D12) |
+| **Total / design value** | 0.53 mA / **1 mA** | ~2× margin |
+
+| Load at boost node V_b | Current | Basis |
+|---|---|---|
+| Tripler, reflected | 3 mA | 3 × 1 mA design value |
+| Guide pull-ups, both conducting | 0.38 mA | 2 × 90 V / 470 kΩ |
+| G+ / RTN regulator feeds | 1 mA | Allowance, refine in 1B |
+| **Total** | **≈ 4.4 mA, 0.66 W at 150 V (0.73 W at 167 V)** | |
+
+At an assumed 75 % efficiency that is ~75-80 mA from 12 V. The HV section is a small part of the
+12 V budget; the 5 V rail and the Nixie module dominate (D5).
 
 ### A101 pinout
 
