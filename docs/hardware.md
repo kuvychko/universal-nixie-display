@@ -40,7 +40,7 @@ pinout and sectional test provisions defined.
 | D10 | A101 socket pinout, verified against the tube drawing | Partly resolved | Two independent sources agree (see [Pinout](#a101-pinout)); the reference page's "pin 12" text is the outlier. Still check continuity on the physical socket and a tube |
 | D11 | Sectional test provisions: removable links, test points, dummy-load landing | Open | HV converter must be isolatable from the tube section |
 | D12 | Discharge path and target discharge time | Open | Measure in 1D |
-| D13 | Clearance/creepage rules for ~450 V, component voltage ratings | Open | Becomes the board's DRC rules. Passives are 1206 by default ([Component conventions](#component-conventions)); per-resistor working voltage checked against its series datasheet |
+| D13 | Clearance/creepage rules for ~450 V, component voltage ratings | Open | Becomes the board's DRC rules. Passives are 1206; HV resistors are series strings, ≤ 150 V per part ([Component conventions](#component-conventions)) |
 | D14 | Connectors: 12 V in, 5 V out, I2C, programming access | Open | Keyed, pinout by signal name. 12 V in is a wire-to-board connector from the chassis jack; 12 V also onward to the Nixie HV module |
 
 ### A101 operating point (D1)
@@ -93,7 +93,7 @@ Consequences, computed from those values:
 | G+ (guide rest) | RTN + 40 V = +90 V | Centre of datasheet bias range |
 | Guide pulse | Guide switched to ~0 V: −50 V vs. cathodes | Reference practice; datasheet says −150 Vp |
 | Anode supply HV | **Option A:** 450 V to ground (400 V above RTN); **Option B:** 500 V to ground (450 V above RTN) | See below |
-| Anode resistor | A: 680 kΩ; B: 820 kΩ, split into two series parts for voltage rating | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
+| Anode resistor | A: 680 kΩ; B: 820 kΩ (built as E24 strings, see decision below) | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
 | Tube current | A: 305-430 µA (368 typ); B: 311-421 µA (366 typ) | Within datasheet 300-450 µA |
 | Step rate | ≤ 200 steps/s for homing (plan §5) | Datasheet limit 1 kHz |
 
@@ -105,8 +105,10 @@ in either case.
 **Decision (user, 2026-10-05):** rate every HV component, clearance and the converter for
 Option B (500 V), and set the regulator for Option A (450 V) at first bring-up. Raise the setpoint
 only if striking or glow transfer is marginal. The setpoint is fixed by the feedback resistor, and
-the anode resistor is paired with it (680 kΩ at 450 V, 820 kΩ at 500 V). Lay the anode resistor
-out as two series footprints so either value can be fitted.
+the anode resistor is paired with it. It is a string of three 1206 parts (see
+[Component conventions](#component-conventions)): **3 × 220k = 660 kΩ at 450 V** (314-443 µA,
+≤ 83 V per part) and **3 × 270k = 810 kΩ at 500 V** (315-426 µA, ≤ 100 V per part), both within
+300-450 µA over V_m 130-170 V and HV ±5 %.
 
 ### HV converter (D2)
 
@@ -260,7 +262,7 @@ RTN (50 V) ──┬───────────────[R_E 220k]─�
 | Output high | (RTN + 0.4) × 13k / 233k = **2.67 / 2.81 / 2.95 V** at RTN = 47.5 / 50 / 52.5 V (±5 % zener) | RP2040 V_IH ≈ 2.0 V at 3.3 V IOVDD: confirm in its datasheet |
 | Output low | 0 V: R_E holds K1 at RTN, Q off, R16 pulls down | |
 | Current split, glow on K1 | 0.22 mA through the divider, the rest of the ~0.4 mA via the base into RTN | RTN regulator sinks it (D8 note) |
-| Fault: RTN regulator fails to V_b (167 V) | Unclamped output 9.3 V; the clamp conducts 0.74 mA through R15 into 3V3 | Clamp is mandatory. R15 (1206) must be rated for the 167 V fault |
+| Fault: RTN regulator fails to V_b (167 V) | Unclamped output 9.3 V; the clamp conducts 0.74 mA through R15 into 3V3 | Clamp is mandatory. R15 is a 2 × 110k string for the 167 V fault |
 | Filter | 1 nF with 12.3 kΩ Thevenin: τ = 12 µs | Sample ≥ 60 µs (5τ) after both guides return to rest (plan §5: check index only at a settled phase) |
 | Reset/unpowered | Q is driven by the tube only; with the RP2040 unpowered the clamp to an unpowered 3V3 rail limits the pin | Check the RP2040's unpowered-pin limits in 1B |
 
@@ -389,19 +391,21 @@ P1 `VIN` reading ~4.6 V confirms the back-feed path.
 
 * **Passives are 1206 SMD by default** (user, 2026-10-06): easier hand soldering and more voltage
   margin. Deviate only with a recorded reason (e.g. a part available only in another package).
-* **Resistor working voltage is per series, not per size.** Standard 1206 thick-film series are
-  typically rated about 200 V; confirm the chosen series' datasheet. Any resistor that sees more
-  than its rating with margin is split into a series string or uses a high-voltage 1206 series.
-  Known cases on the dekatron board:
+* **High voltage is handled with series strings of standard 1206 parts** (user, 2026-10-06),
+  built from the user's 1206 kit rather than special high-voltage resistors. Design rule:
+  **≤ 150 V across any single resistor** (75 % of the typical 200 V standard-1206 rating; the
+  kit's own rating is unknown). Values are chosen from E24.
+* Lay strings out in a line along the voltage gradient, so the spacing between their ends also
+  grows with the voltage (clearance rules: D13).
 
-| Resistor | Voltage across it | Treatment |
+| Resistor | Voltage across it | String |
 |---|---|---|
-| Anode resistor (680k/820k, D1) | ≈ 250-300 V while the tube conducts | Two in series (D1 already specifies this) |
-| Bleeder (4.7 MΩ, D3) | Full HV, up to 500 V | Series string (e.g. three parts) or a high-voltage 1206 series |
-| HV monitor divider top (D2) | Full HV, up to 500 V | Same as the bleeder |
-| Feedback divider top (V_b, D2) | Up to 167 V | Single standard 1206 is marginal: use two in series |
-| Guide pull-ups 470k (D8) | ≤ 90 V | Single 1206 |
-| Index R15 220k (D9) | 50 V; 167 V in the RTN-failure case | Single 1206 only if the series is rated ≥ 200 V; otherwise two |
+| Anode resistor (D1) | ≈ 250-300 V while the tube conducts | 3 × 220k (450 V) or 3 × 270k (500 V); ≤ 100 V per part |
+| Bleeder (D3) | Full HV, up to 500 V | 4 × 1.2M = 4.8 MΩ; 125 V per part, 94 µA at 450 V |
+| HV monitor divider top (D2) | Full HV, up to 500 V | 4 parts, ≤ 125 V each; values in 1B |
+| Feedback divider top (V_b, D2) | Up to 167 V | 2 × 750k = 1.5 MΩ; 84 V per part; bottom ≈ 10.1 kΩ sets 150 V |
+| Index R15 (D9) | 50 V; 167 V if the RTN regulator fails | 2 × 110k = 220 kΩ; 84 V per part in the fault case |
+| Guide pull-ups 470k (D8) | ≤ 90 V | Single part |
 
 ## Display harness
 
