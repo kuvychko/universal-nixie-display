@@ -38,12 +38,29 @@ Model notes (from TI's header, plus what we found):
   controller never switches, with no error message. Use `.tran 5n <tstop> 0 5n uic`.
 * Run benches with output to a file (`> bench.log`), not through a pipe: piped output appears only
   at the end and makes a slow run look hung.
+* **Relaxed tolerances** (`.options reltol=0.003 abstol=1n vntol=10u chgtol=1e-13 itl4=50`) are
+  needed once the tripler is present: with defaults the solver stalls at light-load mode changes
+  (pulse skipping resuming), reported at nodes inside the model's driver.
+* **Initial conditions:** set node voltages with `.ic` *and* run with `uic`. Without `uic` the
+  operating point fails and its fallback discards the `.ic` values; per-capacitor `IC=` is not
+  honoured around a series stack; and the internal node of a C + ESR subcircuit needs its own
+  `.ic` (e.g. `v(xcp1.m)`), or every capacitor starts discharged.
+* **Tube model:** behavioural (`BLATCH`/`BTUBE`). Hard-edged elements (a hysteretic `SW`, a
+  conditional latch) stall the solver. Strike is judged on V(hv, rtn), the dark-tube anode
+  voltage; judging it on the anode itself is circular and lets a small pre-strike current hold
+  the anode just below the strike voltage. The 380 V strike voltage is an assumption.
+* **Pump surge and parasitics:** without ESR on the tripler capacitors the switch / pump-capacitor
+  / diode loop has no impedance and the solver fails; ESL is omitted because nH parasitics ring
+  faster than a 5 ns step resolves.
 
 ## Benches
 
 | Bench | Purpose | Status |
 |---|---|---|
 | `lm5156_smoke.cir` | Model runs in ngspice and regulates a 12 V → 150 V boost; illustrative values | **Passes** (2026-10-06) |
+| `hv_warm.cir` | Draft power sheet, steady state with HV feedback; stack precharged so regulation arrives in ~1 ms | **Passes**; results in [hardware.md](../../../docs/hardware.md#simulation-results) |
+| `hv_discharge.cir` | Passive discharge from 450 V (no controller; seconds to run) | **Passes**: all nodes < 50 V in 1.47 s |
+| `hv_startup.cir` | Cold start from 0 V, 40 ms | In progress (long run) |
 
 `lm5156_smoke.cir` results (100 µH, 100 kHz, 0.15 Ω sense, 1 µF output, 34 kΩ load = 4.4 mA, 10 nF
 soft-start; generic MOSFET and diode models):

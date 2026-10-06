@@ -121,10 +121,10 @@ the anode resistor is paired with it. It is a string of three 1206 parts (see
 
 Proposed structure, to be refined and simulated in Phase 1B:
 
-* Boost stage regulated at the **boost node, V_b = HV/3** (150 V for 450 V, 167 V for 500 V),
-  as in the reference. Multiplier droop at ~1 mA is small, so regulating V_b sets HV closely
-  enough for a tube whose current is set by its anode resistor. The RP2040 measures HV through
-  a high-value divider for diagnostics only.
+* Boost stage, **feedback taken from HV** (changed in Phase 1B). Regulating V_b, as the reference
+  does, left HV at 442 V with a dark tube: the controller idles once V_b is satisfied while the
+  bleeders drain the stack top, and the stack runs ~8 V per stage short of 3 × V_b. With HV
+  feedback V_b floats to ~157 V for 450 V. The RP2040 also measures HV for diagnostics.
 * Switch: an external MOSFET rated ≥ 250 V, driven from 12 V (the 5 V-input reason the reference
   used bipolar switches does not apply here).
 * Controller IC: **TI LM5156H** proposed; see [Controller IC](#controller-ic).
@@ -176,8 +176,8 @@ the RP2040. The RP2040 measures the 12 V input itself and withholds `HV_EN` when
 
 **Independent overvoltage shutdown, proposed:** if the top resistor of the feedback divider fails
 open, FB falls to 0 and the converter runs to its current limit with no voltage limit. A second,
-independent divider from V_b drives a comparator or transistor that pulls EN/UVLO low above
-roughly 110 % of the 500 V-rating setpoint. The RP2040 also measures HV and can drop `HV_EN`,
+independent divider from **HV** (the regulated quantity since Phase 1B) drives the TLV3011
+comparator, which pulls EN/UVLO low above roughly 110 % of the 500 V setting (550 V). The RP2040 also measures HV and can drop `HV_EN`,
 but that does not replace a hardware limit.
 
 **Variant choice (LM5156H vs LM51561H):** hiccup mode limits stress during a sustained HV short
@@ -192,7 +192,9 @@ that. Both fit the same footprint.
 | Tube via anode resistor | ≤ 0.43 mA | D1 worst case |
 | Bleeder 4.7 MΩ | 96 µA (106 µA at 500 V) | Discharge 450 → 50 V in 5-10 s for 0.5-1 µF effective output capacitance; measure in 1D (D12) |
 | HV monitor divider 8.85 MΩ | 51 µA | `HV_SENSE`, see [RP2040-Zero pin assignment](#rp2040-zero-pin-assignment) |
-| **Total / design value** | 0.58 mA / **1 mA** | ~1.7× margin |
+| Feedback divider 4.41 MΩ | 102 µA | Feedback moved to HV in Phase 1B |
+| OVP divider (4 parts, ~9 MΩ) | ~50 µA | Independent OVP on HV |
+| **Total / design value** | ≈ 0.73 mA / **1 mA** | ~1.4× margin |
 
 | Load at boost node V_b | Current | Basis |
 |---|---|---|
@@ -607,6 +609,80 @@ their meaning (plan §8). A cumulative count lets the ESP32 poll without losing 
 
 The display module's IO19, IO23 and IO35 stay unused (free for later), and microSD stays omitted
 (plan §8).
+
+## Power sheet (Phase 1B)
+
+Draft values for the `power` hierarchical sheet: 12 V input, 5 V, and the HV converter. The G+
+and RTN regulators belong to the `tube` sheet. Simulation benches live in
+`hardware/dekatron/simulation/` ([README](../hardware/dekatron/simulation/README.md)).
+
+### HV boost stage
+
+| Item | Value | Basis |
+|---|---|---|
+| Controller | LM5156H (D2) | |
+| Switching frequency | 100 kHz, R_T = 220 kΩ | Low end: DCM at light load, low switching loss at 150 V |
+| Inductor | 100 µH, Bourns SRR1260-101M (I_sat 1.7 A, DCR 180 mΩ max, shielded) | DCM check below |
+| Sense resistor | 0.13 Ω → cycle limit 0.71-0.82 A (100 mV ±7 %) | Peak power ½·L·I²·f ≈ 2.2 W in DCM vs. ≈ 0.92 W needed (0.73 W at 167 V, 80 % assumed) |
+| DCM margin | t_on + t_off = L·I_pk·(1/V_IN + 1/(V_b − V_IN)) ≈ 6.6 µs < 10 µs at 0.77 A, 10.8 V in | Stays DCM even at the current limit and −10 % input |
+| CS filter | 100 Ω + 470 pF (47 ns) | **Required:** see pump surge below |
+| MOSFET | onsemi FDD7N25LZ: 250 V, logic level (V_th 2 V, R_DS(on) specified at 5 V drive), 0.55 Ω at 10 V, DPAK | LM5156 gate drive is 6.85 V |
+| Boost diode | ES1J: 600 V, 1 A, t_rr 35 ns, SMA | |
+| Soft-start | C_SS = 47 nF (10 µA → 4.7 ms ramp) | LM5156H (no hiccup); start-up is energy-limited anyway |
+| Compensation | 10 kΩ + 10 nF, 100 pF to ground | Smoke-test values; load-step check pending |
+| Feedback | **From HV:** 4 × 1.1M / 9.8k → HV = 450 V (1.00 V ref); 500 V option: bottom ≈ 8.82k | Moved from V_b in simulation (see results). ≤ 150 V per part: 137 V each at 550 V |
+| V_b bleeder | 2 × 1.2M (2.4 MΩ, 63 µA) | V_b's own discharge path when link L3 separates the boost from the tripler (D11) |
+
+**MOSFET margin: open.** With HV feedback the stack's per-stage shortfall pushes V_b up: the
+simulated switch-node peak is **161 V at the 450 V setting** (1.55× margin on 250 V). Scaling to
+the 500 V setting during an OVP trip (550 V) gives about 195 V: **1.28×**, below the 1.5× rule
+(D13). The node is clamped by the boost diode to V_b + V_F, but the margin is thin. **Action: find
+a ≥ 300 V MOSFET specified for ≤ 6 V gate drive**, or restrict the board to the 450 V setting.
+
+### Tripler
+
+Series-stack Cockcroft-Walton driven from the switch node: pump capacitors CP1-CP2 in series from
+the switch node, DC capacitors C1-C3 stacked from ground, diodes D1-D5 (ES1J). **Every capacitor
+and diode sees at most V_b** (185 V at OVP), so HV = 3 × V_b with no part across the full HV.
+
+| Item | Value | Basis |
+|---|---|---|
+| Capacitors | 0.47 µF, 400 V, PET film, THT (WIMA MKS4 class) | 400 V ≥ 1.5 × 185 V. Film instead of MLCC: no DC-bias capacitance loss, no piezo noise from a pulse-skipping supply. Deviation from the 1206 default, recorded here |
+| Diodes | ES1J (600 V) | 3.2× V_b at OVP |
+| Pump surge resistor | **47 Ω** between the switch node and CP1 | **Required:** see below |
+| Ripple | < 1 V at 0.58 mA (I/(f·C) ≈ 12 mV per stage) | Checked in simulation |
+
+**Pump surge (found in simulation).** At every turn-on the switch node falls and the pump
+capacitors recharge from V_b *through the MOSFET and the sense resistor*. Without limiting, the
+switch carried a 14 A spike and the CS pin saw 0.99 V even through the RC filter, above its 0.3 V
+absolute maximum and ten times the current-limit threshold, so every cycle ended early. A 47 Ω
+surge resistor brings the spike to ~1.9 A and the CS pin to ≤ 0.1 V. It costs little: average
+pump current is ~1.2 mA. 100 Ω also works but charges the stack about half as fast.
+
+### Simulation results
+
+| Bench | Case | Result |
+|---|---|---|
+| `hv_discharge.cir` | Stop from 450 V, passive paths only | **Every node < 50 V in 1.47 s** (D12 target 10 s). Settles near 11 V while 12 V is present (input reaches the stack through the inductor and boost diode) |
+| `hv_warm.cir` | Steady state, HV feedback, tube lit (stack precharged to 435 V) | **HV 449.2 V, 2.8 V p-p ripple, tube 378 µA** (D1 predicts 379 µA), V_b 156.8 V, PGOOD high |
+| `hv_warm.cir`, tube held dark | Steady state with no tube current | **HV 453.3 V, 1.7 V p-p**, V_b 157.9 V, PGOOD high. Load regulation dark → lit 0.9 % |
+| `hv_warm.cir`, V_b feedback (superseded) | Same, regulating V_b = 150 V | HV only 442 V with the tube dark: the reason feedback moved to HV |
+| `hv_warm.cir` stresses | Peaks over the run | Switch node 161 V; capacitors ≤ 159 V (400 V parts); diode reverse ≤ 149 V (600 V); CS pin ≤ 0.10 V (0.3 V abs max); switch current spike 1.86 A with the 47 Ω pump resistor |
+| `hv_startup.cir` | Cold start from 0 V | Reaches V_b ≈ 151 V and HV ≈ 427 V at 10 ms (V_b feedback); stalled in the solver at a light-load mode change. Rerunning with HV feedback and relaxed tolerances |
+
+Model limitations: generic MOSFET and diode models (FDD7N25LZ- and ES1J-like), film capacitors as
+C + 0.1 Ω ESR (ESL omitted: nH parasitics ring faster than the 5 ns step resolves), and a
+behavioural tube whose 380 V strike voltage is an assumption, not tube data. Efficiency is not
+measured yet: the 1 ms averaging window falls inside the converter's burst pauses.
+
+### 5 V and input (selected, simulation pending)
+
+| Item | Part | Basis |
+|---|---|---|
+| 5 V buck | TI TPS54202: 4.5-28 V in, 2 A, 500 kHz, SOT-23-6, Eco-mode; unencrypted PSpice model available | D5; 28 V > TVS clamp |
+| Ideal diodes (D6) | TI LM66100: 1.5-5.5 V, 1.5 A, 79 mΩ at 5 V, reverse blocking, SC-70-6 | One block per external 5 V feed |
+| OVP comparator | TI TLV3011 (open-drain; 1.242 V reference ±1 %, 1.8-5.5 V supply) from 5 V, sensing HV through its own 4-part string; output pulls EN/UVLO low and drives `OVP_TRIP` | TLV3012 is push-pull and cannot share the EN node |
+| Reverse-polarity MOSFET, fuse, PTC, TVS | Part numbers chosen at schematic entry | D4 |
 
 ## Nixie controller/mount
 

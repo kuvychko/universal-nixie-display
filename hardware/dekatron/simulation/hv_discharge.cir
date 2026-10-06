@@ -1,0 +1,70 @@
+* HV discharge after HV_EN falls: passive paths only (D12 target: every node < 50 V within 10 s)
+*
+* Starts from the 450 V operating state with the converter stopped (switch off), so the
+* switch node rests at V_IN through the inductor. Paths: bleeder 4.8M, HV monitor 8.847M and
+* feedback divider 4.41M at HV, V_b bleeder 2.4M, the tube until it extinguishes. Same tripler as
+* hv_startup.cir. Diodes are a generic ES1J-like model; capacitor values are the draft 0.47 uF.
+* Run from this directory:  ngspice_con -b hv_discharge.cir > hv_discharge.log
+
+.param VB0=150 VSTRIKE=380 VMAINT=150 VRTN=50
+
+VIN   vin 0 12
+L1    vin lx 100u
+RL1   lx sw 0.18
+* MOSFET off: drain-source leakage and capacitance only
+CDS   sw 0 90p
+D1    sw vb DES1J
+C1    vb 0 0.47u
+* Feedback divider from HV (4 x 1.1M / 9.8k) and a V_b bleeder (2 x 1.2M): V_b needs its own
+* path when link L3 separates the boost from the tripler during bring-up
+RFT   hv fb 4.4Meg
+RFB   fb 0 9.8k
+RBLB  vb 0 2.4Meg
+
+RPUMP sw swp 47
+CP1   swp p1 0.47u
+CP2   p1 p2 0.47u
+C2    vb n2 0.47u
+C3    n2 hv 0.47u
+D2    vb p1 DES1J
+D3    p1 n2 DES1J
+D4    n2 p2 DES1J
+D5    p2 hv DES1J
+
+RBL   hv 0 4.8Meg
+RMON  hv 0 8.847Meg
+RA    hv anode 660k
+* Tube: behavioural, with no hard edges (a hysteretic SW element and a conditional latch both
+* stalled the solver). A strike latch sets when anode-cathode exceeds VSTRIKE and clears when it falls to VMAINT + 5 V; it is
+* smoothed by a 1 us RC. While lit, current rises smoothly above VMAINT through ~1 kohm dynamic
+* resistance.
+* Smooth latch: s1 = strike step, s2 = "still above extinction" step; lat = s1 + (1 - s1) * s2 * latf
+* Strike is judged on V(hv,rtn), the voltage the anode would have while dark (no current through
+* the anode string); judging it on V(anode,rtn) is circular and lets the model settle with a small
+* pre-strike current holding the anode just below VSTRIKE. Extinction uses the actual anode voltage.
+BLATCH lat 0 V = 0.5*(1+tanh((V(hv,rtn)-{VSTRIKE})/2)) + (1-0.5*(1+tanh((V(hv,rtn)-{VSTRIKE})/2))) * 0.5*(1+tanh((V(anode,rtn)-{VMAINT}-5)/2)) * V(latf)
+RLAT   lat latf 1k
+CLAT   latf 0 1n
+* Current is gated by a sharp function of the latch (0.5*(1+tanh(200*(latf-0.5)))): a partly-set
+* latch must not leak current, or a dark tube draws enough through the anode string to never strike
+BTUBE  anode rtn I = 0.5*(1+tanh(200*(V(latf)-0.5))) * (0.5/1k) * ((V(anode,rtn)-{VMAINT}) + sqrt((V(anode,rtn)-{VMAINT})^2 + 1))
+RTLEAK anode rtn 10G
+VRTNS  rtn 0 {VRTN}
+
+.model DES1J D(Is=5e-9 Rs=0.15 N=1.9 Cjo=12p Tt=25n BV=600 Ibv=1u)
+
+* Operating state at stop: switch node at V_IN, each capacitor holding V_b. Set as node voltages:
+* per-capacitor IC= with uic is not honoured around this series stack (it starts with hv < 0).
+.ic v(latf)=1 v(lat)=1 v(sw)=12 v(swp)=12 v(vb)={VB0} v(p1)={VB0+12} v(n2)={2*VB0} v(p2)={2*VB0+12} v(hv)={3*VB0}
+.tran 1m 15 0 5m
+.control
+run
+foreach n hv n2 vb p1 p2
+  meas tran t50_$n WHEN v($n)=50 FALL=LAST
+  meas tran v10_$n FIND v($n) AT=10
+end
+meas tran hv_at1 FIND v(hv) AT=1
+meas tran hv_t0  FIND v(hv) AT=1m
+meas tran vb_t0  FIND v(vb) AT=1m
+.endc
+.end

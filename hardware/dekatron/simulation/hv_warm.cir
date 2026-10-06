@@ -1,0 +1,142 @@
+* HV supply warm start: stack precharged to its operating voltages, so regulation is reached in
+* ~1 ms instead of a full cold start. Feedback from HV (decided after
+* comparing with V_b feedback, which left HV at 442 V with a dark tube). The precharged stack
+* (435 V) is above the assumed strike voltage, so the tube strikes at once.
+*
+* Purpose (Phase 1B power sheet): start-up into a dark tube, tube strike, steady state at the
+* 450 V setpoint. Measures V_b / HV regulation, inductor peak vs. current limit, switch-node peak
+* (MOSFET stress), capacitor and diode stress, and RTN-side tube current.
+*
+* Values: Phase 1B draft (docs/hardware.md, "Power sheet"). The LM5156 model is TI's (see
+* README.md); MOSFET, diodes and the tube are approximate generic models written for this bench:
+*   M1  ~ FDD7N25LZ  (250 V, Vth ~2 V, Rds(on) ~0.55 ohm)
+*   D*  ~ ES1J       (600 V, trr 35 ns)
+*   Tube: dark until anode-cathode > V_STRIKE, then a 150 V maintaining drop until the current
+*         falls below hold. V_STRIKE = 380 V is an assumption, not tube data; the A101 data gives
+*         only the supply voltage (425 V min). Cathodes return to an ideal 50 V RTN source.
+* Run from this directory:  ngspice_con -b hv_startup.cir > hv_startup.log
+
+.include models/vendor/ti/LM5156-Q1_PSPICE_TRANS/LM5156-Q1_TRANS.ngspice.lib
+
+.param VSTRIKE=380 VMAINT=150 VRTN=50 RGATE=2
+
+VIN   vin  0  12
+* HV_EN: on at 100 us through 10k, 100k pull-down on EN/UVLO
+VEN   en_drv 0 PULSE(0 3.3 100u 1u 1u 1 2)
+REN   en_drv uvlo 10k
+RPD   uvlo 0 100k
+
+XU1   vin comp cs vcc fb gate 0 pgood rt ss uvlo vcc LM5156-Q1_TRANS
+CVCC  vcc 0 1u
+CBIAS vin 0 1u
+RRT   rt 0 220k
+CSS   ss 0 2.2n
+RC    comp c1 10k
+CC    c1 0 10n
+CHF   comp 0 100p
+RPG   pgood v3 100k
+V3    v3 0 3.3
+
+* Boost stage
+CIN   vin 0 22u
+L1    vin lx 100u
+RL1   lx sw 0.18
+RG    gate g1 {RGATE}
+M1    sw g1 src M250
+RS    src 0 0.13
+* CS filter: the pump capacitors recharge through the switch at turn-on, a current spike that would
+* otherwise reach the CS pin (abs max 0.3 V) directly
+RCSF  src cs 100
+CCSF  cs 0 470p
+D1    sw vb DES1J
+XC1   vb 0 CFILM
+* Feedback: V_b = 1.00 V * (1 + 1.5M / 10.07k) = 150 V
+RFT   hv fb 4.4Meg
+RFB   fb 0 9.8k
+RBLB  vb 0 2.4Meg
+
+* Series-stack tripler: every capacitor and diode sees at most V_b
+* Film capacitors with ESR: without it the switch / pump-capacitor / diode loop has no impedance and
+* the solver fails ("timestep too small" at node cs) at the first hard pump edges. ESL is left out:
+* nH-scale parasitics ring at ~100 MHz, which a 5 ns step cannot resolve.
+* Pump surge resistor: limits the pump-capacitor recharge current that flows through the switch
+* at turn-on (14 A spike, 0.99 V at CS without it; 1.9 A and <= 0.1 V at CS with 47 ohm)
+RPUMP sw swp 47
+XCP1  swp p1 CFILM
+XCP2  p1 p2 CFILM
+XC2   vb n2 CFILM
+XC3   n2 hv CFILM
+.subckt CFILM a b
+C1 a m 0.47u
+R1 m b 0.1
+.ends
+D2    vb p1 DES1J
+D3    p1 n2 DES1J
+D4    n2 p2 DES1J
+D5    p2 hv DES1J
+
+* Always-connected bleeder (4 x 1.2M) and HV monitor (4 x 2.2M + 47k)
+RBL   hv 0 4.8Meg
+RMON  hv 0 8.847Meg
+
+* Anode string 3 x 220k, then the tube model to the 50 V RTN
+RA    hv anode 660k
+* Tube: behavioural, with no hard edges (a hysteretic SW element and a conditional latch both
+* stalled the solver). A strike latch sets when anode-cathode exceeds VSTRIKE and clears when it falls to VMAINT + 5 V; it is
+* smoothed by a 1 us RC. While lit, current rises smoothly above VMAINT through ~1 kohm dynamic
+* resistance.
+* Smooth latch: s1 = strike step, s2 = "still above extinction" step; lat = s1 + (1 - s1) * s2 * latf
+* Strike is judged on V(hv,rtn), the voltage the anode would have while dark (no current through
+* the anode string); judging it on V(anode,rtn) is circular and lets the model settle with a small
+* pre-strike current holding the anode just below VSTRIKE. Extinction uses the actual anode voltage.
+BLATCH lat 0 V = 0.5*(1+tanh((V(hv,rtn)-{VSTRIKE})/2)) + (1-0.5*(1+tanh((V(hv,rtn)-{VSTRIKE})/2))) * 0.5*(1+tanh((V(anode,rtn)-{VMAINT}-5)/2)) * V(latf)
+RLAT   lat latf 1k
+CLAT   latf 0 1n
+* Current is gated by a sharp function of the latch (0.5*(1+tanh(200*(latf-0.5)))): a partly-set
+* latch must not leak current, or a dark tube draws enough through the anode string to never strike
+BTUBE  anode rtn I = 0.5*(1+tanh(200*(V(latf)-0.5))) * (0.5/1k) * ((V(anode,rtn)-{VMAINT}) + sqrt((V(anode,rtn)-{VMAINT})^2 + 1))
+RTLEAK anode rtn 10G
+VRTNS  rtn 0 {VRTN}
+
+.model M250 VDMOS(nchan Vto=2.0 Kp=6 Rd=0.35 Rs=0.05 Cgdmax=120p Cgdmin=8p Cgs=450p Cjo=90p Is=1e-12 Rb=0.1 BV=250)
+.model DES1J D(Is=5e-9 Rs=0.15 N=1.9 Cjo=12p Tt=25n BV=600 Ibv=1u)
+
+.ic v(vb)=145 v(sw)=12 v(swp)=12 v(p1)=157 v(n2)=290 v(p2)=302 v(hv)=435 v(latf)=0 v(lat)=0
++ v(xc1.m)=0 v(xcp1.m)=157 v(xcp2.m)=302 v(xc2.m)=290 v(xc3.m)=435
+* Relaxed tolerances: with defaults the TI model stalls the solver at light-load mode changes
+.options reltol=0.003 abstol=1n vntol=10u chgtol=1e-13 itl4=50
+.tran 5n 4m 0 5n uic
+.control
+run
+rusage totaltime
+meas tran vb_ss     AVG v(vb)                from=3m to=4m
+meas tran hv_ss     AVG v(hv)                from=3m to=4m
+meas tran hv_rip    PP  v(hv)                from=3m to=4m
+meas tran itube_ss  AVG i(VRTNS)             from=3m to=4m
+meas tran lat_end FIND v(latf) AT=4m
+meas tran t_lit WHEN v(latf)=0.5 RISE=1
+meas tran hv_min MIN v(hv) from=0.5m to=4m
+meas tran hv_max MAX v(hv) from=0.5m to=4m
+meas tran vb_max MAX v(vb) from=0.5m to=4m
+meas tran ilim_pk   MAX i(L1)                from=0.5m to=4m
+meas tran il_ss     MAX i(L1)                from=3m to=4m
+meas tran vsw_pk    MAX v(sw)                from=0.5m to=4m
+let vcp1 = v(p1)-v(swp)
+let vc2 = v(n2)-v(vb)
+let vc3 = v(hv)-v(n2)
+let vcp2 = v(p2)-v(p1)
+let vd5r = v(hv)-v(p2)
+meas tran vcp1_max  MAX vcp1                 from=0.5m to=4m
+meas tran vcp1_min  MIN vcp1                 from=0.5m to=4m
+meas tran vc2_max   MAX vc2                  from=0.5m to=4m
+meas tran vc3_max   MAX vc3                  from=0.5m to=4m
+meas tran vcp2_max  MAX vcp2                 from=0.5m to=4m
+meas tran vd5_rev   MAX vd5r                 from=0.5m to=4m
+meas tran pg_ss     AVG v(pgood)             from=3m to=4m
+let isrc = v(src)/0.13
+meas tran isw_pk MAX isrc from=0.5m to=4m
+meas tran vcs_pk MAX v(cs) from=0.5m to=4m
+let iin = -i(VIN)
+meas tran iin_ss    AVG iin                  from=3m to=4m
+.endc
+.end
