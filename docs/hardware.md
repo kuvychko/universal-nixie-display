@@ -191,7 +191,8 @@ that. Both fit the same footprint.
 |---|---|---|
 | Tube via anode resistor | ≤ 0.43 mA | D1 worst case |
 | Bleeder 4.7 MΩ | 96 µA (106 µA at 500 V) | Discharge 450 → 50 V in 5-10 s for 0.5-1 µF effective output capacitance; measure in 1D (D12) |
-| **Total / design value** | 0.53 mA / **1 mA** | ~2× margin |
+| HV monitor divider 8.85 MΩ | 51 µA | `HV_SENSE`, see [RP2040-Zero pin assignment](#rp2040-zero-pin-assignment) |
+| **Total / design value** | 0.58 mA / **1 mA** | ~1.7× margin |
 
 | Load at boost node V_b | Current | Basis |
 |---|---|---|
