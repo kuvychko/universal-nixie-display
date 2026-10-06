@@ -35,8 +35,8 @@ pinout and sectional test provisions defined.
 | D5 | 5 V buck capacity | **Proposed** | ≈ 0.63 A peak estimate, buck rated 2 A; 12 V adapter 2 A; see [Power budget](#power-budget) |
 | D6 | USB power paths: VBUS isolation/selection for ESP32 USB and standalone RP2040 debug | **Decided** 2026-10-06 | Ideal diode on every external 5 V feed (one design block); no reliance on a USB isolator; see [USB power paths](#usb-power-paths-d6) |
 | D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | **Proposed** (HV part) | LM5156H EN/UVLO pulled down; the RP2040 `HV_EN` drives it directly; see [Controller IC](#controller-ic). Guide drivers: base pull-downs so reset = guides at rest. Confirm RP2040 GPIO reset state in its datasheet |
-| D8 | Guide driver circuit and its input current at 3.3 V | Open | Reference drive is ~5 V logic |
-| D9 | Index sense: threshold, level translation to 3.3 V, protection | Open | One sensed reference cathode in Rev A |
+| D8 | Guide driver circuit and its input current at 3.3 V | **Proposed** | MMBTA42 low-side switch per guide; 0.24 mA from the RP2040; see [Guide drivers](#guide-drivers-d8) |
+| D9 | Index sense: threshold, level translation to 3.3 V, protection | **Proposed** | MMBTA92 level shifter, 220k/13k divider, Schottky clamp; 2.67-2.95 V out; see [Index sense](#index-sense-d9) |
 | D10 | A101 socket pinout, verified against the tube drawing | Partly resolved | Two independent sources agree (see [Pinout](#a101-pinout)); the reference page's "pin 12" text is the outlier. Still check continuity on the physical socket and a tube |
 | D11 | Sectional test provisions: removable links, test points, dummy-load landing | Open | HV converter must be isolatable from the tube section |
 | D12 | Discharge path and target discharge time | Open | Measure in 1D |
@@ -200,6 +200,74 @@ that. Both fit the same footprint.
 
 At an assumed 75 % efficiency that is ~75-80 mA from 12 V. The HV section is a small part of the
 12 V budget; the 5 V rail and the Nixie module dominate (D5).
+
+### Guide drivers (D8)
+
+One identical channel per guide (G1, G2):
+
+```
+G+ (90 V) ──[R_PU 470k]──┬──────────── guide pin (G1 = pin 5, G2 = pin 10)
+                         │
+                         C
+ GUIDE_n ──[R_B 10k]──┬──B  Q: MMBTA42 (NPN, 300 V, SOT-23)
+ (RP2040)             │  E
+                  [R_BE 47k]│
+                      │  │
+                     GND GND
+```
+
+| Item | Value | Basis |
+|---|---|---|
+| Rest | Guide at G+ = RTN + 40 V (D1) | Transistor off |
+| Pulse | Guide pulled to V_CE(sat) ≈ 0 V, i.e. −50 V vs. the cathodes | Reference practice (D1) |
+| Collector current, on | 0.62 mA: 0.19 mA pull-up + ≤ 0.43 mA glow current while the glow sits on the guide | D1 worst-case tube current |
+| Base current | 0.24 mA from 3.3 V: (3.3 − 0.75)/10k minus 0.75/47k | Forced β ≈ 2.6 against h_FE ≥ 25 at 1 mA (Nexperia MMBTA42): deep saturation |
+| RP2040 load | 0.24 mA per pin | Trivial |
+| Voltage stress | V_CE ≤ G+ = 90 V | MMBTA42 V_CEO 300 V |
+| Release (rise) | τ = 470k × (C_re ≤ 3 pF + electrode and wiring) ≈ 5-9 µs for 10-20 pF; 10-90 % in 10-21 µs | Small against the 5 ms step period at 200 steps/s |
+| Reset state | R_BE holds Q off: both guides at rest while the RP2040 is unpowered, in reset or in BOOTSEL | D7 |
+
+* **Why the glow moves on.** While the glow sits on a guide, its current flows through Q to ground.
+  When Q releases, the guide can only rise through 470 kΩ; 0.4 mA through 470 kΩ would need
+  188 V, more than G+, so the glow cannot stay and transfers to the next main cathode.
+* **RTN must not depend on tube current.** While the glow is on a guide, the tube current bypasses
+  RTN entirely. The RTN shunt regulator therefore needs its own bias feed, sized so it stays in
+  regulation with zero tube current (the 1 mA allowance in D3). Simulate this in 1B.
+* **Step sequence** (one main-cathode step clockwise; reverse the order for the other direction):
+  G1 on → G2 on → G1 off → G2 off, all from rest. Phase durations are firmware parameters, set at
+  bring-up within the 200 steps/s budget; the datasheet limit is 1 kHz counting.
+* **Resistor voltage ratings.** The 470 kΩ pull-up sees up to 90 V: use 0805 (typically 150 V
+  working) or larger, never 0603 (typically 75 V). Record per-part ratings in the BOM (D13).
+
+### Index sense (D9)
+
+```
+RTN (50 V) ──┬───────────────[R_E 220k]──┐
+             │                           │
+             B   Q: MMBTA92 (PNP, 300 V) E ──── K1 (pin 13, index cathode)
+                                         C
+                                         │
+                                   [R15 220k]
+                                         │
+ NDX (RP2040, ADC-capable pin) ──────────┼──[C 1 nF]── GND
+                                         ├──[R16 13k]── GND
+                                         └──|>|── 3V3   (Schottky clamp)
+```
+
+| Item | Value | Basis |
+|---|---|---|
+| Glow on K1 | K1 rises to RTN + V_EB; Q saturates; collector ≈ RTN + 0.4 V | Reference circuit topology |
+| Output high | (RTN + 0.4) × 13k / 233k = **2.67 / 2.81 / 2.95 V** at RTN = 47.5 / 50 / 52.5 V (±5 % zener) | RP2040 V_IH ≈ 2.0 V at 3.3 V IOVDD: confirm in its datasheet |
+| Output low | 0 V: R_E holds K1 at RTN, Q off, R16 pulls down | |
+| Current split, glow on K1 | 0.22 mA through the divider, the rest of the ~0.4 mA via the base into RTN | RTN regulator sinks it (D8 note) |
+| Fault: RTN regulator fails to V_b (167 V) | Unclamped output 9.3 V; the clamp conducts 0.74 mA through R15 into 3V3 | Clamp is mandatory. A 1206 part for R15 (167 V fault) |
+| Filter | 1 nF with 12.3 kΩ Thevenin: τ = 12 µs | Sample ≥ 60 µs (5τ) after both guides return to rest (plan §5: check index only at a settled phase) |
+| Reset/unpowered | Q is driven by the tube only; with the RP2040 unpowered the clamp to an unpowered 3V3 rail limits the pin | Check the RP2040's unpowered-pin limits in 1B |
+
+* **Use an ADC-capable pin** (RP2040 GPIO26-29). Firmware normally reads it digitally (Schmitt
+  input), and the analog level is available for diagnostics, e.g. a weak or intermittent glow.
+* The other nine cathodes return to RTN directly. Per plan §5, each is broken out through a link or
+  test pad so more sensing channels can be added later without a respin.
 
 ### A101 pinout
 
