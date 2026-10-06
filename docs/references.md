@@ -34,6 +34,8 @@ revision as it is used.
 | `aod5n40.pdf` | AOS AOD5N40, 400 V MOSFET (HV boost switch) | https://www.aosmd.com/res/datasheets/AOD5N40.pdf | — |
 | `tps54202.pdf` | TPS54202 2 A buck (reference design Figure 7-1) | https://www.ti.com/lit/gpn/tps54202 | SLVSD26C, Feb 2026 |
 | `rp2040.pdf` | RP2040 datasheet (pad reset state Table 341; IO characteristics Table 625) | https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf | — |
+| (not stored) | RP2040-Zero pinout figure (top view) | https://www.waveshare.com/w/upload/1/1f/900px-RP2040-Zero-details-7.jpg | — |
+| (not stored) | RP2040-Zero STEP model (castellation geometry) | https://files.waveshare.com/upload/f/f7/RP2040_Zero_stp.zip | 2022-01-08 |
 | `rp2040_zero_sch.pdf` | Waveshare RP2040-Zero schematic | https://www.waveshare.com/w/upload/4/4c/RP2040_Zero.pdf | — |
 | `cyd/ESP32-2432S028-MCU.jpg`, `-LCM.jpg` | ESP32-2432S028 schematic (vendor original V0.1, 2022-07-15) | https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display (OriginalDocumentation/5-Schematic) | V0.1 |
 | `ad01/*.gif` | AD01 dekatron shield schematic, BOM, hook-up | threeneurons (see above) | April 2017 |

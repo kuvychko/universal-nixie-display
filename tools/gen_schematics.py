@@ -48,6 +48,7 @@ def U(key: str) -> str:
 ROOT_UUID = U("sheet:root")
 POWER_UUID = U("sheet:power")
 TUBE_UUID = U("sheet:tube")
+MCU_UUID = U("sheet:mcu")
 
 # --------------------------------------------------------------------------------------
 # Design parameters that are still open (see docs/hardware.md)
@@ -282,9 +283,90 @@ def tlv3011_symbol_text() -> str:
 )'''
 
 
+# RP2040-Zero (Waveshare), soldered by its castellated edge pads.
+# Pin order follows Waveshare's top-view pinout (wiki "RP2040-Zero-details-7"): USB at the top;
+# left column top to bottom 5V, GND, 3V3, GP29, GP28, GP27, GP26, GP15, GP14; bottom row left to
+# right GP13..GP9; right column top to bottom GP0..GP8. Geometry from Waveshare's STEP model
+# (RP2040_Zero_stp.zip): 2.54 mm pitch, side columns 15.24 mm apart, bottom row level with the
+# lowest side pads; board 18 x 23.5 mm. Symbol/pad numbering runs counter-clockwise from 5V.
+ZERO_LEFT = ["5V", "GND", "3V3", "GP29", "GP28", "GP27", "GP26", "GP15", "GP14"]
+ZERO_BOTTOM = ["GP13", "GP12", "GP11", "GP10", "GP9"]
+ZERO_RIGHT_UP = ["GP8", "GP7", "GP6", "GP5", "GP4", "GP3", "GP2", "GP1", "GP0"]
+ZERO_PINS = ZERO_LEFT + ZERO_BOTTOM + ZERO_RIGHT_UP          # pad numbers 1..23
+
+
+def rp2040_zero_symbol_text() -> str:
+    pins = []
+    for i, name in enumerate(ZERO_PINS, start=1):
+        if name == "5V":
+            t = "power_in"
+        elif name == "3V3":
+            t = "power_out"
+        elif name == "GND":
+            t = "power_in"
+        else:
+            t = "bidirectional"
+        # 5.08 mm pin pitch: global labels on adjacent pins would overlap at 2.54 mm
+        if i <= 9:                       # left side, top to bottom
+            x, y, a = -15.24, 20.32 - (i - 1) * 5.08, 0
+        elif i <= 14:                    # bottom, left to right
+            x, y, a = -10.16 + (i - 10) * 5.08, -30.48, 90    # below the side pins' names
+        else:                            # right side, bottom to top
+            x, y, a = 15.24, -20.32 + (i - 15) * 5.08, 180
+        pins.append(_pin(t, x, y, a, name, str(i)))
+    return f'''(symbol "RP2040-Zero" (exclude_from_sim no) (in_bom yes) (on_board yes)
+	{_sprop("Reference", "U", -12.7, 24.13)}
+	{_sprop("Value", "RP2040-Zero", 2.54, 24.13)}
+	{_sprop("Footprint", "dekatron:RP2040-Zero_Castellated", 0, 0, True)}
+	{_sprop("Datasheet", "https://www.waveshare.com/wiki/RP2040-Zero", 0, 0, True)}
+	{_sprop("Description", "Waveshare RP2040-Zero module, soldered by its 23 castellated edge pads", 0, 0, True)}
+	(symbol "RP2040-Zero_0_1"
+		(rectangle (start -12.7 22.86) (end 12.7 -27.94) (stroke (width 0.254) (type default)) (fill (type background)))
+	)
+	(symbol "RP2040-Zero_1_1"
+		{" ".join(pins)}
+	)
+	(embedded_fonts no)
+)'''
+
+
+def rp2040_zero_footprint_text() -> str:
+    """Carrier footprint: one SMD pad under each castellation, extended ~1.4 mm past the module edge
+    so an iron reaches the joint. Origin at the centre of the pad pattern; USB toward -y."""
+    pads = []
+    for i, name in enumerate(ZERO_PINS, start=1):
+        if i <= 9:
+            cx, cy, w, h = -8.82, -10.16 + (i - 1) * 2.54, 3.2, 1.5
+        elif i <= 14:
+            cx, cy, w, h = -5.08 + (i - 10) * 2.54, 11.36, 1.5, 3.2
+        else:
+            cx, cy, w, h = 8.82, 10.16 - (i - 15) * 2.54, 3.2, 1.5
+        pads.append(f'\t(pad "{i}" smd roundrect (at {cx} {round(cy, 3)}) (size {w} {h}) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.15))')
+    fab = [(-9.0, -11.96, 9.0, -11.96), (9.0, -11.96, 9.0, 11.54), (9.0, 11.54, -9.0, 11.54), (-9.0, 11.54, -9.0, -11.96)]
+    lines = "\n".join(f'\t(fp_line (start {a} {b}) (end {c} {d}) (stroke (width 0.1) (type default)) (layer "F.Fab"))' for a, b, c, d in fab)
+    crt = [(-10.7, -12.5, 10.7, -12.5), (10.7, -12.5, 10.7, 13.2), (10.7, 13.2, -10.7, 13.2), (-10.7, 13.2, -10.7, -12.5)]
+    clines = "\n".join(f'\t(fp_line (start {a} {b}) (end {c} {d}) (stroke (width 0.05) (type default)) (layer "F.CrtYd"))' for a, b, c, d in crt)
+    silk = [(-6.8, -12.2, 6.8, -12.2)]
+    slines = "\n".join(f'\t(fp_line (start {a} {b}) (end {c} {d}) (stroke (width 0.12) (type default)) (layer "F.SilkS"))' for a, b, c, d in silk)
+    return f'''(footprint "RP2040-Zero_Castellated" (version 20260206) (generator "dekatron-gen") (layer "F.Cu")
+	(descr "Waveshare RP2040-Zero soldered by its castellated edge pads; pads extend ~1.4 mm past the module edge for hand soldering. Geometry from Waveshare STEP model; verify with a 1:1 print against the module before ordering.")
+	(tags "RP2040 Zero castellated module")
+	(property "Reference" "REF**" (at 0 -14 0) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
+	(property "Value" "RP2040-Zero" (at 0 14.5 0) (layer "F.Fab") (effects (font (size 1 1) (thickness 0.15))))
+	(fp_text user "USB" (at 0 -10.5 0) (layer "F.Fab") (effects (font (size 1 1) (thickness 0.15))))
+	(fp_text user "no exposed copper under the module (bottom pads GP17-GP25)" (at 0 0 90) (layer "Cmts.User") (effects (font (size 0.6 0.6) (thickness 0.1))))
+{lines}
+{clines}
+{slines}
+{chr(10).join(pads)}
+	(embedded_fonts no)
+)
+'''
+
+
 def project_symbol_lib_text() -> str:
     return ('(kicad_symbol_lib (version 20251024) (generator "dekatron-gen") (generator_version "10.0")\n'
-            + tlv3011_symbol_text() + "\n)\n")
+            + tlv3011_symbol_text() + "\n" + rp2040_zero_symbol_text() + "\n)\n")
 
 
 # --------------------------------------------------------------------------------------
@@ -364,7 +446,7 @@ class Sheet:
         self.items.append(f'(text {q(s)} (exclude_from_sim no) (at {fmt(x)} {fmt(y)} 0) (effects (font (size {size} {size})) (justify left bottom)) (uuid "{self.key("txt")}"))')
 
     def symbol(self, lib_id, x, y, ref, value, angle=0, mirror=None, unit=1, footprint=None,
-               fields=None, dnp=False, hide_ref=False, horizontal=False, multipin=False):
+               fields=None, dnp=False, hide_ref=False, horizontal=False, multipin=False, textpos=None):
         # no snapping here: power symbols sit on stub tips, which follow the 1.27 mm pin offsets
         lib, name = lib_id.split(":", 1)
         sym = self.lib.get(lib, name)
@@ -385,7 +467,9 @@ class Sheet:
         d = "yes" if dnp else "no"
         lines = [f'(symbol (lib_id {q(lib_id)}) (at {fmt(x)} {fmt(y)} {angle}){m} (unit {unit}) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp {d}) (uuid "{sym_uuid}")']
         # reference / value text: beside the body, or above / below it for horizontal two-pin parts
-        if horizontal:
+        if textpos:
+            rx, ry, vx, vy, just = x + textpos[0], y + textpos[1], x + textpos[0], y + textpos[1] + 1.6, "left"
+        elif horizontal:
             rx, ry, vx, vy, just = x, y - 3.0, x, y + 4.0, "center"
         elif multipin and int(angle) % 180 == 90:
             # rotated transistor: pins point left, right and down, so the free side is above
@@ -431,7 +515,7 @@ class Sheet:
         self.terminate(net, x, y + GRID, 0, GRID)
 
     def part(self, lib_id, ref, value, x, y, nets, angle=0, mirror=None, footprint=None,
-             fields=None, dnp=False, stub=GRID):
+             fields=None, dnp=False, stub=GRID, textpos=None):
         """Place a symbol; terminate every pin with a stub + net label / power symbol / no-connect.
 
         nets maps pin number (or unique pin name) to a net name. "NC" places a no-connect flag.
@@ -443,7 +527,7 @@ class Sheet:
         ends = [xf(p["x"], p["y"], x, y, angle, mirror) for p in pins]
         horizontal = len(pins) == 2 and abs(ends[0][1] - ends[1][1]) < 0.01
         self.symbol(lib_id, x, y, ref, value, angle=angle, mirror=mirror, footprint=footprint,
-                    fields=fields, dnp=dnp, horizontal=horizontal, multipin=len(pins) == 3)
+                    fields=fields, dnp=dnp, horizontal=horizontal, multipin=len(pins) == 3, textpos=textpos)
         seen = set()
         for p in pins:
             if (p["x"], p["y"]) in seen:          # stacked pins (e.g. exposed pad) share one stub
@@ -836,11 +920,88 @@ def build_tube(lib: SymbolLib) -> Sheet:
     return sh
 
 
+# --------------------------------------------------------------------------------------
+# mcu.kicad_sch
+# --------------------------------------------------------------------------------------
+
+MCU_GLOBALS = {"5V_DISP", "5V_MCU", "5V_NIX", "HV_EN", "PGOOD", "OVP_TRIP", "HV_SENSE", "GUIDE1",
+               "GUIDE2", "NDX", "RTN_SENSE", "VIN_PROT"}
+FP_WIRE5 = "Connector_Wire:SolderWire-0.5sqmm_1x05_P4.8mm_D0.9mm_OD2.3mm_Relief"
+
+
+def build_mcu(lib: SymbolLib) -> Sheet:
+    sh = Sheet("mcu", "mcu.kicad_sch", U("file:mcu"), "A3", lib, f"/{ROOT_UUID}/{MCU_UUID}",
+               global_nets=MCU_GLOBALS, title="MCU: RP2040-Zero, ADC conditioning, I2C, harness landings")
+    R, C, TP = "Device:R", "Device:C", "Connector:TestPoint"
+    H = 90
+
+    def r(ref, val, x, y, a, b, fn, angle=0, rating=""):
+        sh.part(R, ref, val, x, y, {"1": a, "2": b}, angle=angle, footprint=FP_R, fields=F(fn, rating=rating))
+
+    def c(ref, val, x, y, a, b, fn, rating=""):
+        sh.part(C, ref, val, x, y, {"1": a, "2": b}, footprint=FP_C, fields=F(fn, rating=rating))
+
+    def tp(ref, net, x, y):
+        sh.part(TP, ref, net, x, y, {"1": net}, footprint=FP_TP, fields=F(f"Test point {net}"))
+
+    def note(t, x, y):
+        sh.text(t, x, y, 1.8)
+
+    # ---- RP2040-Zero ------------------------------------------------------------------------
+    note("RP2040-Zero (pin map: docs/hardware.md); castellated, soldered by its edge pads; USB-C at the board edge", 20, 22)
+    nets = {"5V": "5V_MCU", "GND": "GND", "3V3": "+3V3",
+            "GP0": "UART_TX", "GP1": "UART_RX", "GP2": "SDA", "GP3": "SCL", "GP4": "GUIDE1", "GP5": "GUIDE2",
+            "GP6": "HV_EN", "GP7": "PGOOD", "GP8": "OVP_TRIP", "GP9": "GP9", "GP10": "GP10", "GP11": "GP11",
+            "GP12": "GP12", "GP13": "GP13", "GP14": "GP14", "GP15": "GP15",
+            "GP26": "NDX", "GP27": "VIN_SENSE", "GP28": "HV_SENSE", "GP29": "RTN_SENSE"}
+    sh.part("dekatron:RP2040-Zero", "U301", "RP2040-Zero", 90, 80, nets, textpos=(-12.7, -27.5),
+            fields=F("Dekatron controller MCU", "RP2040-Zero", "Waveshare", "headerless, castellated"))
+    c("C301", "10uF", 25, 50, "5V_MCU", "GND", "5V_MCU bulk at the module", rating="16 V X7R")
+    c("C302", "0.1uF", 35, 50, "+3V3", "GND", "3V3 bypass", rating="50 V X7R")
+    for i, (ref, net) in enumerate((("TP301", "UART_TX"), ("TP302", "UART_RX"), ("TP303", "GP9"), ("TP304", "GP10"),
+                                    ("TP305", "GP11"), ("TP306", "GP13"), ("TP307", "GP14"), ("TP308", "GP15"),
+                                    ("TP309", "+3V3"), ("TP310", "5V_MCU"), ("TP311", "GND"))):
+        tp(ref, net, 150 + (i % 6) * 14, 45 + (i // 6) * 25)
+
+    # ---- ADC conditioning --------------------------------------------------------------------
+    y = 165
+    note("ADC INPUTS: BAT54S clamp to 3V3 / GND at every pin, local capacitor (NDX keeps its 1 nF on the tube sheet)", 20, y - 42)
+    r("R301", "100k", 25, y - 14, "VIN_PROT", "VIN_SENSE", "VIN_SENSE divider, upper (1.29 V at 12 V)")
+    r("R302", "12k", 25, y + 28, "VIN_SENSE", "GND", "VIN_SENSE divider, lower (2.57 V at 24 V)", rating="1 %")
+    for i, (net, cap) in enumerate((("VIN_SENSE", "100nF"), ("HV_SENSE", "100nF"), ("RTN_SENSE", "100nF"), ("NDX", None))):
+        x = 55 + i * 45
+        sh.part("Diode:BAT54S", f"D{301 + i}", "BAT54S", x, y, {"1": "GND", "2": "+3V3", "3": net}, textpos=(-4, -6),
+                fields=F(f"{net} clamp to 3V3 / GND", "BAT54S", rating="30 V Schottky pair"))
+        if cap:
+            c(f"C{303 + i}", cap, x + 15, y + 8, net, "GND", f"{net} ADC sampling reservoir", rating="25 V X7R")
+
+    # ---- I2C ---------------------------------------------------------------------------------
+    y = 245
+    note("I2C (target, 100 kHz): the bus pull-ups for the whole instrument live here (the display module has none)", 20, y - 30)
+    r("R303", "4.7k", 30, y, "+3V3", "SDA", "SDA pull-up")
+    r("R304", "4.7k", 45, y, "+3V3", "SCL", "SCL pull-up")
+    tp("TP312", "SDA", 60, y)
+    tp("TP313", "SCL", 75, y)
+
+    # ---- Harness landings ----------------------------------------------------------------------
+    note("HARNESS LANDINGS (D14, soldered): DISP to the ESP32 module, NIX_LV to the Nixie controller", 130, y - 20)
+    sh.part("Connector_Generic:Conn_01x05", "J301", "DISP", 150, y,
+            {"1": "5V_DISP", "2": "GND", "3": "GND", "4": "SCL", "5": "SDA"}, footprint=FP_WIRE5,
+            fields=F("Harness DISP: 5V (P1 5V), GND (P1 GND), GND (3V3-plug GND), SCL (IO18), SDA (IO27)"))
+    sh.part("Connector_Generic:Conn_01x06", "J302", "NIX_LV", 210, y,
+            {"1": "5V_NIX", "2": "GND", "3": "SDA", "4": "SCL", "5": "GND", "6": "NIX_SPARE"}, footprint=FP_WIRE6,
+            fields=F("Harness NIX_LV to the Nixie controller board"))
+    sh.part(R, "LK15", "0", 250, y + 22, {"1": "GP12", "2": "NIX_SPARE"}, angle=H, footprint=FP_R,
+            fields=F("GP12 to the NIX_LV spare wire (0 ohm, fit when used)"))
+    return sh
+
+
 def build_root(lib: SymbolLib) -> Sheet:
     sh = Sheet("root", f"{PROJECT}.kicad_sch", ROOT_UUID, "A4", lib, "/", title="Dekatron controller / PSU")
     sh.sheet("power", "power.kicad_sch", POWER_UUID, 40, 40, 60, 30, page="2")
     sh.sheet("tube", "tube.kicad_sch", TUBE_UUID, 120, 40, 60, 30, page="3")
-    sh.text("Sheets: power, tube. The mcu sheet follows in Phase 1B.", 40, 100, 2)
+    sh.sheet("mcu", "mcu.kicad_sch", MCU_UUID, 200, 40, 60, 30, page="4")
+    sh.text("Sheets: power, tube, mcu. Inter-sheet nets are global labels.", 40, 100, 2)
     return sh
 
 
@@ -887,7 +1048,7 @@ def project_json() -> str:
             ]},
         "pcbnew": {"last_paths": {}, "page_layout_descr_file": ""},
         "schematic": {"legacy_lib_dir": "", "legacy_lib_list": []},
-        "sheets": [[ROOT_UUID, "Root"], [POWER_UUID, "power"], [TUBE_UUID, "tube"]],
+        "sheets": [[ROOT_UUID, "Root"], [POWER_UUID, "power"], [TUBE_UUID, "tube"], [MCU_UUID, "mcu"]],
         "text_variables": {},
     }
     return json.dumps(pro, indent=2) + "\n"
@@ -896,6 +1057,12 @@ def project_json() -> str:
 SYM_TABLE = f'''(sym_lib_table
   (version 7)
   (lib (name "{PROJECT}")(type "KiCad")(uri "${{KIPRJMOD}}/lib/{PROJECT}.kicad_sym")(options "")(descr "Project-local symbols"))
+)
+'''
+
+FP_TABLE = f'''(fp_lib_table
+  (version 7)
+  (lib (name "{PROJECT}")(type "KiCad")(uri "${{KIPRJMOD}}/lib/{PROJECT}.pretty")(options "")(descr "Project-local footprints"))
 )
 '''
 
@@ -944,15 +1111,19 @@ def main():
 
     power = build_power(lib)
     tube = build_tube(lib)
+    mcu = build_mcu(lib)
     root = build_root(lib)
 
     write_once(os.path.join(HW, f"{PROJECT}.kicad_pro"), project_json())
     write(os.path.join(HW, f"{PROJECT}.kicad_sch"), root.render(is_root=True))
     write(os.path.join(HW, "power.kicad_sch"), power.render())
     write(os.path.join(HW, "tube.kicad_sch"), tube.render())
+    write(os.path.join(HW, "mcu.kicad_sch"), mcu.render())
+    write(os.path.join(HW, "fp-lib-table"), FP_TABLE)
+    write(os.path.join(HW, "lib", f"{PROJECT}.pretty", "RP2040-Zero_Castellated.kicad_mod"), rp2040_zero_footprint_text())
     write(os.path.join(HW, "sym-lib-table"), SYM_TABLE)
     write(os.path.join(HW, "lib", f"{PROJECT}.kicad_sym"), project_symbol_lib_text())
-    write_bom(os.path.join(HW, "bom.csv"), [power, tube])
+    write_bom(os.path.join(HW, "bom.csv"), [power, tube, mcu])
 
 
 if __name__ == "__main__":

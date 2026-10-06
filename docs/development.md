@@ -37,16 +37,18 @@ anyone edits the project in KiCad, delete it and re-run; afterwards edit it in K
 python tools/gen_schematics.py
 ```
 
-### ERC baseline (power and tube sheets, 2026-10-06)
+### ERC baseline (all sheets: power, tube, mcu; 2026-10-06)
 
-`kicad-cli sch erc --severity-all hardware/dekatron/dekatron.kicad_sch`: **9 violations, all
-expected:**
+`kicad-cli sch erc --severity-all hardware/dekatron/dekatron.kicad_sch`: **1 violation, expected:**
+`pin_to_pin` power output to power output, the LP2951 output driving the LM5156 VCC pin in
+BIAS = VCC mode (intentional, D2). Every inter-sheet global label connects.
 
-* 7 × `isolated_pin_label`: global labels whose other ends are on the mcu sheet, not yet drawn
-  (`HV_EN`, `OVP_TRIP`, `5V_DISP`, `5V_MCU`, `5V_NIX`, `GUIDE1`, `GUIDE2`).
-* 1 × `power_pin_not_driven`: `+3V3` on the PGOOD pull-up, supplied by the RP2040-Zero (mcu sheet).
-* 1 × `pin_to_pin` power output to power output: the LP2951 output drives the LM5156 VCC pin in
-  BIAS = VCC mode (intentional, D2).
+### Project footprint
+
+`hardware/dekatron/lib/dekatron.pretty/RP2040-Zero_Castellated.kicad_mod` (generated) carries the
+module: pads at Waveshare's castellation positions (from their STEP model), extended ~1.4 mm past
+the module edge for hand soldering. Check it with `kicad-cli fp export svg` after changes, and
+print it 1:1 against a real module before ordering boards (bring-up step 0).
 
 ## Simulation
 

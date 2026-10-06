@@ -10,6 +10,7 @@ bench-HV connection must not back-feed the onboard converter. Use rated probes f
 
 | Step | Section | Acceptance | Result |
 |---|---|---|---|
+| −1 | Before ordering boards | Print the PCB 1:1 and lay a real RP2040-Zero on the U301 footprint: castellations centred on their pads, USB toward the board edge | — |
 | 0 | All harnesses, unpowered, tube removed | Continuity from each board pad to its far end per [hardware.md Harness landings](hardware.md#harness-landings-d14); for `TUBE`, to the socket pins per [A101 pinout](hardware.md#a101-pinout): anode 8, index K1 13, G1 5, G2 10, the nine RTN cathodes. Socket numbering is easy to mirror (top vs. underside view). No pad-to-pad shorts, especially anode to anything | — |
 | 1 | 12 V input, 5 V and 3.3 V rails | Rails in tolerance, no back-feed from USB | — |
 | 2 | HV converter on rated dummy loads, tube section isolated by links | Output, ripple, startup overshoot, load response, temperature, input power, discharge time recorded within limits defined in 1B | — |

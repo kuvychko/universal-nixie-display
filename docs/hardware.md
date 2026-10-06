@@ -783,6 +783,26 @@ With the 51 V zener's tolerance (48.5-53.6 V) the index output spans **2.73-3.01
 twelve ≤ 100 V wires on two 6-pad groups (J202, J203), each with strain-relief holes. Silkscreen
 carries signal names and tube pin numbers.
 
+## MCU sheet (Phase 1B)
+
+`mcu.kicad_sch`: RP2040-Zero, ADC conditioning, I2C pull-ups, `DISP` and `NIX_LV` harness landings.
+
+* **RP2040-Zero:** project symbol and footprint (no stock part). Pin order from Waveshare's top-view
+  pinout (USB up: left column 5V, GND, 3V3, GP29, GP28, GP27, GP26, GP15, GP14; right column
+  GP0-GP8; bottom row GP13-GP9). Geometry from Waveshare's STEP model: 2.54 mm pitch, side
+  columns 15.24 mm apart, bottom row level with the lowest side pads, board 18 × 23.5 mm. The pad
+  pattern is left-right symmetric, so the STEP model's orientation does not affect it. Carrier
+  pads are 1.5 × 3.2 mm, extending ~1.4 mm past the module edge. No exposed copper under the
+  module: its underside carries GP17-GP25 and GND pads.
+* **Pin map** as in [RP2040-Zero pin assignment](#rp2040-zero-pin-assignment); GP9-GP11 and
+  GP13-GP15 go to test pads, GP12 to the `NIX_LV` spare wire through LK15.
+* **ADC inputs** (`VIN_SENSE`, `HV_SENSE`, `RTN_SENSE`, `NDX`): BAT54S clamp to 3V3 and GND at each
+  pin, 100 nF reservoir on the three analog-only inputs (`NDX` keeps its 1 nF filter on the tube
+  sheet). `VIN_SENSE` divider 100k / 12k is on this sheet.
+* **I2C:** the instrument's single pull-up pair, 4.7 kΩ to this board's 3V3.
+* **Harness landings:** `DISP` (J301, 5 wires) and `NIX_LV` (J302, 6 wires), soldered wire pads with
+  strain relief (D14).
+
 ## Nixie controller/mount
 
 Phase 2. Six IN-14 tubes, six K155ID1, current limiting, separate HV switches for decimal points,
