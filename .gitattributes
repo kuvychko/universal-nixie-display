@@ -1,0 +1,26 @@
+# KiCad reads and writes LF on every platform, and any generator scripts will write LF too.
+# Without this, core.autocrlf=true wants CRLF in the working tree and regenerated files show
+# up permanently "modified" with an empty diff - which hides real board changes.  Pin to LF.
+* text=auto eol=lf
+
+# Images, datasheets and captures.
+*.png binary
+*.jpg binary
+*.pdf binary
+*.zip binary
+
+# SOLIDWORKS parts and their 3D-print / 3D-viewer exports.
+*.SLDPRT binary
+*.SLDASM binary
+*.3MF binary
+*.3mf binary
+*.3DXML binary
+*.step binary
+*.STEP binary
+
+# Simulation raw data (LTspice/ngspice).
+*.raw binary
+
+# Fabrication files are a record of what was sent to the fab, byte for byte.  KiCad writes
+# them with CRLF; eol=lf above would rewrite them.
+hardware/*/fab/** -text

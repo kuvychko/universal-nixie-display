@@ -1,0 +1,62 @@
+# --- KiCad ---
+# Backups and autosaves
+*-backups/
+*.kicad_sch-bak
+*.kicad_pcb-bak
+*.kicad_pro-bak
+*.bak
+*.bck
+_autosave-*
+\#auto_saved_files#
+*.lck
+*.kicad_prl
+fp-info-cache
+~*.lck
+
+# Generated outputs (regenerate from source)
+*.net
+*.drl
+*.gbr
+*.gbrjob
+*.pos
+*.rpt
+*.erc
+*.drc
+production/
+fabrication/
+build/
+
+# ...except released fabrication files, kept exactly as sent to the fab.
+!hardware/*/fab/*.gbr
+!hardware/*/fab/*.gbrjob
+!hardware/*/fab/*.drl
+hardware/*/fab/*.zip
+
+# --- Simulation scratch (keep netlists, benches and summarised results) ---
+*.log
+*.op.raw
+*.fc.raw
+
+# --- Datasheets and vendor files (copyrighted, do not redistribute) ---
+docs/datasheets/
+
+# --- SOLIDWORKS ---
+~$*
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
+.idea/
+.history/
+
+# --- PlatformIO / Pico SDK ---
+firmware/*/.pio/
+firmware/*/build/
+
+# --- Python tooling ---
+__pycache__/
+*.pyc
+.venv/
