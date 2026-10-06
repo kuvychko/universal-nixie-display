@@ -34,7 +34,7 @@ pinout and sectional test provisions defined.
 | D4 | 12 V input protection: reverse polarity, fuse/PTC, TVS, inrush | **Proposed** | Barrel adapters of either polarity exist, so reverse-polarity protection is mandatory. Input arrives by wire from the chassis jack, not a board-mounted jack |
 | D5 | 5 V buck capacity | **Proposed** | ≈ 0.63 A peak estimate, buck rated 2 A; 12 V adapter 2 A; see [Power budget](#power-budget) |
 | D6 | USB power paths: VBUS isolation/selection for ESP32 USB and standalone RP2040 debug | **Decided** 2026-10-06 | Ideal diode on every external 5 V feed (one design block); no reliance on a USB isolator; see [USB power paths](#usb-power-paths-d6) |
-| D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | **Proposed** (HV part) | LM5156H EN/UVLO pulled down; the RP2040 `HV_EN` drives it directly; see [Controller IC](#controller-ic). Guide drivers: base pull-downs so reset = guides at rest. Confirm RP2040 GPIO reset state in its datasheet |
+| D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | **Proposed** (HV part) | LM5156H EN/UVLO pulled down; the RP2040 `HV_EN` drives it directly; see [Controller IC](#controller-ic). Guide drivers: base pull-downs so reset = guides at rest. RP2040 GPIO reset state confirmed (pulled-down inputs) |
 | D8 | Guide driver circuit and its input current at 3.3 V | **Proposed** | MMBTA42 low-side switch per guide; 0.24 mA from the RP2040; see [Guide drivers](#guide-drivers-d8) |
 | D9 | Index sense: threshold, level translation to 3.3 V, protection | **Proposed** | MMBTA92 level shifter, 220k/13k divider, Schottky clamp; 2.67-2.95 V out; see [Index sense](#index-sense-d9) |
 | D10 | A101 socket pinout, verified against the tube drawing | **Decided** 2026-10-06 | User's tube is an A-101 in a stock socket for this tube (RSH30 base / PL30-2p socket), so the socket follows the tube pinout in [A101 pinout](#a101-pinout). Wiring check before first HV: [bringup.md](bringup.md) |
@@ -259,7 +259,7 @@ RTN (50 V) ──┬───────────────[R_E 220k]─�
 | Item | Value | Basis |
 |---|---|---|
 | Glow on K1 | K1 rises to RTN + V_EB; Q saturates; collector ≈ RTN + 0.4 V | Reference circuit topology |
-| Output high | (RTN + 0.4) × 13k / 233k = **2.67 / 2.81 / 2.95 V** at RTN = 47.5 / 50 / 52.5 V (±5 % zener) | RP2040 V_IH ≈ 2.0 V at 3.3 V IOVDD: confirm in its datasheet |
+| Output high | (RTN + 0.4) × 13k / 233k = **2.67 / 2.81 / 2.95 V** at RTN = 47.5 / 50 / 52.5 V (±5 % zener) | RP2040 V_IH = 2.0 V min at IOVDD 3.3 V (datasheet Table 625) |
 | Output low | 0 V: R_E holds K1 at RTN, Q off, R16 pulls down | |
 | Current split, glow on K1 | 0.22 mA through the divider, the rest of the ~0.4 mA via the base into RTN | RTN regulator sinks it (D8 note) |
 | Fault: RTN regulator fails to V_b (167 V) | Unclamped output 9.3 V; the clamp conducts 0.74 mA through R15 into 3V3 | Clamp is mandatory. R15 is a 2 × 110k string for the 167 V fault |
@@ -378,6 +378,61 @@ Rules for every landing:
 * With this board unpowered, the I2C bus idles low through the pull-ups to an unpowered rail.
   Firmware on both sides treats a missing peer as absent without hanging (plan Phase 3 exit
   criterion).
+
+### RP2040-Zero pin assignment
+
+Only the castellated edge pads are used: **GP0-GP15 and GP26-GP29** (20 GPIOs; Waveshare
+schematic, header P1). GP17-GP25 exist only as pads under the module, which a headerless module
+soldered by its edges cannot reliably reach. GP16 drives the module's WS2812 LED, which firmware
+keeps dim or off (D5).
+
+| Pin | Signal | Dir | Function | Notes |
+|---|---|---|---|---|
+| GP0 | `UART_TX` | out | UART0 TX | Test pad: debug console that keeps working while USB is busy flashing or enumerating |
+| GP1 | `UART_RX` | in | UART0 RX | Test pad |
+| GP2 | `SDA` | bidir | I2C1 SDA (target) | To `DISP` and `NIX_LV`; 4.7 kΩ pull-up to this board's 3V3 |
+| GP3 | `SCL` | bidir | I2C1 SCL (target) | Same |
+| GP4 | `GUIDE1` | out | PIO | G1 driver base (D8) |
+| GP5 | `GUIDE2` | out | PIO | G2 driver base (D8); adjacent to GP4 so one PIO program drives both |
+| GP6 | `HV_EN` | out | GPIO | LM5156 EN/UVLO through its series resistor; external pull-down (D7) |
+| GP7 | `PGOOD` | in | GPIO | LM5156 PGOOD, open drain, 10 kΩ pull-up to 3V3 |
+| GP8 | `OVP_TRIP` | in | GPIO | Independent OVP comparator output, so firmware can report why HV dropped (D2) |
+| GP9 | `ENC_A` | in | GPIO/PIO | Encoder fallback (plan §8): unpopulated 0 Ω links from the `DISP` encoder lines |
+| GP10 | `ENC_B` | in | GPIO/PIO | Same |
+| GP11 | `ENC_SW` | in | GPIO | Same |
+| GP12 | `NIX_SPARE` | — | GPIO | To the `NIX_LV` spare wire through a 0 Ω link (e.g. global blank) |
+| GP13-GP15 | — | — | spare | Broken out to test pads |
+| GP16 | `LED` | out | WS2812 | On the module |
+| GP26 | `NDX` | in | ADC0 / Schmitt input | Index (D9); digital read normally, analog level for diagnostics |
+| GP27 | `VIN_SENSE` | in | ADC1 | Protected 12 V: 100k / 12k → 1.29 V at 12 V, 2.57 V at the 24 V TVS clamp |
+| GP28 | `HV_SENSE` | in | ADC2 | HV: 4 × 2.2M / 47k → 2.39 V at 450 V, 2.92 V at 550 V (OVP); 137 V per part at 550 V |
+| GP29 | `RTN_SENSE` | in | ADC3 | RTN: 2 × 100k / 10k → 2.38 V at 50 V, 2.86 V at 60 V |
+
+Facts this relies on, from the RP2040 datasheet:
+
+* **Reset state** (Table 341, PADS_BANK0): every GPIO resets as an input with the pull-down
+  enabled (PDE = 1, PUE = 0, IE = 1, Schmitt on). The board does not rely on this: `HV_EN`, the
+  guide bases and the encoder lines have external resistors that hold the safe state while the
+  module is unpowered.
+* **Input thresholds at IOVDD = 3.3 V** (Table 625): V_IH 2.0 V min, V_IL 0.8 V max, 0.2 V
+  hysteresis with Schmitt enabled. The index output's worst case, 2.67 V (D9), clears V_IH by
+  0.67 V.
+* **ADC reference:** the Zero feeds ADC_VREF from its 3.3 V LDO through 200 Ω (Waveshare
+  schematic), so readings are ratiometric to that rail, good to a few percent. That is enough
+  for diagnostics; nothing here regulates from ADC readings.
+
+Rules for the analog inputs:
+
+* Every ADC input whose source can exceed 3.3 V in a fault (`NDX`, `HV_SENSE`, `RTN_SENSE`,
+  `VIN_SENSE`) gets a Schottky clamp to 3V3. For example, an open `RTN_SENSE` bottom resistor
+  would otherwise present 7.95 V with RTN failed to V_b.
+* Each ADC input gets a local capacitor (~100 nF; 1 nF on `NDX`, which needs speed, D9) so the
+  ADC's sampling charge comes from the capacitor, not from the high-impedance divider.
+* Firmware disables the digital input buffer on ADC pins that are read only as analog
+  (`VIN_SENSE`, `HV_SENSE`, `RTN_SENSE`).
+* The HV monitor string is always connected and adds 51 µA at 450 V to the HV load (D3 total
+  becomes ≈ 0.58 mA, within the 1 mA design value). It also discharges HV, but the D12 budget
+  counts only the bleeder.
 
 ### A101 pinout
 

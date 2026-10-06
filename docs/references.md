@@ -30,6 +30,7 @@ revision as it is used.
 | `uc3843.pdf` | UCx84x PWM controllers | https://www.ti.com/lit/ds/symlink/uc3843.pdf | SLUS223H, Oct 2024 |
 | `mmbta42.pdf` | MMBTA42 NPN 300 V (guide drivers) | https://assets.nexperia.com/documents/data-sheet/MMBTA42.pdf | 12 Oct 2023 |
 | `mmbta92.pdf` | MMBTA92 PNP 300 V (index sense) | https://assets.nexperia.com/documents/data-sheet/MMBTA92.pdf | 30 Jun 2023 |
+| `rp2040.pdf` | RP2040 datasheet (pad reset state Table 341; IO characteristics Table 625) | https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf | — |
 | `rp2040_zero_sch.pdf` | Waveshare RP2040-Zero schematic | https://www.waveshare.com/w/upload/4/4c/RP2040_Zero.pdf | — |
 | `cyd/ESP32-2432S028-MCU.jpg`, `-LCM.jpg` | ESP32-2432S028 schematic (vendor original V0.1, 2022-07-15) | https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display (OriginalDocumentation/5-Schematic) | V0.1 |
 | `ad01/*.gif` | AD01 dekatron shield schematic, BOM, hook-up | threeneurons (see above) | April 2017 |
