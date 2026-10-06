@@ -38,10 +38,10 @@ pinout and sectional test provisions defined.
 | D8 | Guide driver circuit and its input current at 3.3 V | **Proposed** | MMBTA42 low-side switch per guide; 0.24 mA from the RP2040; see [Guide drivers](#guide-drivers-d8) |
 | D9 | Index sense: threshold, level translation to 3.3 V, protection | **Proposed** | MMBTA92 level shifter, 220k/13k divider, Schottky clamp; 2.67-2.95 V out; see [Index sense](#index-sense-d9) |
 | D10 | A101 socket pinout, verified against the tube drawing | **Decided** 2026-10-06 | User's tube is an A-101 in a stock socket for this tube (RSH30 base / PL30-2p socket), so the socket follows the tube pinout in [A101 pinout](#a101-pinout). Wiring check before first HV: [bringup.md](bringup.md) |
-| D11 | Sectional test provisions: removable links, test points, dummy-load landing | Open | HV converter must be isolatable from the tube section |
-| D12 | Discharge path and target discharge time | Open | Measure in 1D |
-| D13 | Clearance/creepage rules for ~450 V, component voltage ratings | Open | Becomes the board's DRC rules. Passives are 1206; HV resistors are series strings, ≤ 150 V per part ([Component conventions](#component-conventions)) |
-| D14 | Connectors: 12 V in, 5 V out, I2C, programming access | Open | Keyed, pinout by signal name. 12 V in is a wire-to-board connector from the chassis jack; 12 V also onward to the Nixie HV module |
+| D11 | Sectional test provisions: removable links, test points, dummy-load landing | **Proposed** | Links L1-L14, HV inhibit jumper, dummy-load footprints, test-point list; see [Test provisions](#test-provisions-d11) |
+| D12 | Discharge path and target discharge time | **Proposed** | Always-connected 4.8 MΩ bleeder; target < 50 V within 10 s without firmware; C_eff ≤ 0.87 µF; see [Discharge](#discharge-d12) |
+| D13 | Clearance/creepage rules for ~450 V, component voltage ratings | **Proposed** | Four net classes, `HV` ≥ 3.0 mm; 1206 strings ≤ 150 V per part; see [Clearance and ratings](#clearance-and-ratings-d13) |
+| D14 | Connectors: 12 V in, 5 V out, I2C, programming access | **Proposed** | JST VH/XH low-voltage set with unique pin counts; Mini-Fit Jr (600 V) tube harness; see [Connectors](#connectors-d14) |
 
 ### A101 operating point (D1)
 
@@ -270,6 +270,104 @@ RTN (50 V) ──┬───────────────[R_E 220k]─�
   input), and the analog level is available for diagnostics, e.g. a weak or intermittent glow.
 * The other nine cathodes return to RTN directly. Per plan §5, each is broken out through a link or
   test pad so more sensing channels can be added later without a respin.
+
+### Test provisions (D11)
+
+Plan §9 brings the board up section by section on the final PCB, so each section can be cut off.
+Links are **0 Ω 1206** on low-voltage nets and **wire-link footprints at ≥ 7.62 mm pitch** on HV
+nets (desolder to open; the open gap then meets the HV clearance rule).
+
+| Link | Opens | Used in bring-up step |
+|---|---|---|
+| L1 | Protected 12 V → HV boost (BIAS and inductor) | 1: low-voltage rails without the converter |
+| L2 | 5 V buck output → board 5 V loads and external feeds | 1: check the buck unloaded |
+| L3 | V_b → tripler input | 2: boost stage alone on a dummy load at V_b |
+| L4 | Tripler output (after the bleeder) → anode resistor string | 2: HV on a dummy load, tube section isolated |
+| L5 | V_b → G+ / RTN regulators | 3: bias rails brought up separately |
+| L6-L14 | Each RTN cathode (K0, K2-K9) → RTN | Plan §5 cathode access; also isolates single cathodes |
+| JP_HVINH | 2-pin header: shunt fitted = EN/UVLO held low | Any time: HV cannot start, whatever the firmware does |
+
+* **Dummy-load footprints**, unpopulated in normal use: a 1206 string at V_b (about 34 kΩ for
+  4.4 mA) and one at HV (4-6 parts for 0.5-1 mA at 450-500 V, ≤ 150 V per part). Populated for
+  step 2, removed afterwards.
+* **Test points**: `VIN_PROT`, `5V`, `3V3`, `VCC` (LM5156), `SW` (switch node, with an adjacent
+  ground for a short scope-ground spring), `V_B`, `HV` (`HV`-class clearance, silkscreen warning),
+  `G+`, `RTN`, `G1`, `G2`, `NDX`, `HV_EN`, `PGOOD`, and a `GND` point at each section. HV test
+  points are for bring-up with rated probes only; in the enclosure all HV nodes are inaccessible
+  (plan §4).
+
+### Discharge (D12)
+
+* **Bleeder:** 4.8 MΩ (4 × 1.2M, ≤ 150 V per part) directly across the tripler output, upstream
+  of link L4, so it stays connected whatever is isolated. It is never switched, so discharge needs
+  no firmware.
+* **V_b node:** discharged by the always-connected 1.51 MΩ feedback divider (D2). G+ and RTN
+  discharge through their regulators and feeds.
+* **Target:** every node **below 50 V within 10 s** after `HV_EN` falls or 12 V is lost, by the
+  passive path alone.
+* **Capacitance budget:** τ = 4.8 MΩ × C_eff, so 550 V (OVP trip) → 50 V in 10 s requires
+  **C_eff ≤ 0.87 µF** as seen from the HV node. The tripler and output capacitors are sized in 1B
+  against this; if they exceed it, lower the bleeder (raising its current in D3) rather than relax
+  the target.
+* **Measured in 1D** (plan §9): discharge curve from 450 V and from the 500 V setting.
+* Optional, decide in 1B: a neon indicator across HV through its own string, which glows while HV
+  is present without firmware. It costs about 0.3 mA of HV load.
+
+### Clearance and ratings (D13)
+
+**The board is uncoated:** no credit is taken for solder mask or conformal coating, so rules use
+the IPC-2221B **B2** column (external conductors, uncoated, sea level to 3050 m). 301-500 V row:
+2.5 mm, plus 0.005 mm per volt above 500 V (Altium and Viox IPC-2221B calculators).
+
+| Net class | Members | Design maximum | IPC-2221B B2 | Rule (to any other class) |
+|---|---|---|---|---|
+| `HV` | Tripler stage nodes, HV output, bleeder and monitor string tops, anode string, tube anode | 550 V (OVP trip, 110 % of the 500 V rating) | 2.75 mm | **3.0 mm** |
+| `VB` | V_b, switch node, feedback divider top | 185 V (167 V + OVP) | 1.25 mm (151-300 V row, *verify*) | **1.5 mm** |
+| `BIAS` | G+, RTN, guides, cathodes, index high side | 100 V | 0.6 mm (51-100 V row, *verify*) | **0.8 mm** |
+| `LV` | 12 V and below | 25 V (TVS clamp) | 0.1 mm | Fab minimum |
+
+* *Verify*: these rows were not legible in the sources consulted. Check them against the IPC-2221B
+  table before freezing the KiCad rules; the rules above already carry margin.
+* **Inside series strings** adjacent nodes differ by ≤ 150 V, so string-internal nets get their
+  own net class at the 1.5 mm rule. A 1206 footprint's pad gap (≈ 1.8-1.9 mm; check the chosen
+  footprint) satisfies it. The 3.0 mm `HV` rule applies between a string and anything else.
+* Implemented as KiCad net classes plus custom rules (`.kicad_dru`), recorded in development.md.
+* **Component ratings:** every part rated ≥ 1.5 × its maximum simulated voltage at OVP trip.
+  Multiplier diodes ≥ 600 V (D2). Capacitor ratings follow from the 1B tripler simulation (a
+  capacitor across the full HV needs a 630 V part or a series pair). Resistors: series strings,
+  ≤ 150 V per part ([Component conventions](#component-conventions)).
+* **Wire:** harness conductors that carry HV are 600 V-insulated (e.g. UL1015).
+
+### Connectors (D14)
+
+Every connector is keyed and its pinout is by signal name. **No two connectors on the board share
+both family and pin count**, so no cable fits a wrong socket.
+
+| Ref | Connects | Type | Pins (signal names) |
+|---|---|---|---|
+| J1 | 12 V in from the chassis jack, via the panel switch | JST VH, 2-pin (3.96 mm, power) | `+12V_IN`, `GND` |
+| J2 | 12 V out to the purchased Nixie HV module, via its resettable fuse | JST XH, 2-pin | `+12V_NIX`, `GND` |
+| J3 | ESP32 display harness, splitting into the module's three 1.25 mm plugs | JST XH, 9-pin | `5V_DISP`, `GND`, `3V3_CYD`, `IO35`, `GND`, `IO23`, `IO19`, `SCL`, `SDA` |
+| J4 | Nixie controller board: logic power and I2C | JST XH, 6-pin | `5V_NIX`, `GND`, `SDA`, `SCL`, `GND`, spare (e.g. global blank) |
+| J5 | Tube harness to the A101 socket | Molex Mini-Fit Jr, 2 × 9 (600 V, 4.2 mm) | Anode at a corner with its three nearest positions empty; G1, G2, K1 (index), K0, K2-K9 |
+| JP_HVINH | HV inhibit (D11) | 2.54 mm 1 × 2 header + shunt | EN/UVLO, `GND` |
+| — | RP2040-Zero programming | The Zero's own USB-C, BOOT and RESET | Board edge keeps all three reachable; no separate SWD (the Zero does not expose it on its edge pads) |
+
+Notes:
+
+* **J3** routes `IO19`/`IO23`/`IO35` through this board so the encoder (still open, see
+  [Encoder pins](#encoder-pins-proposal)) can land here. `3V3_CYD` is the module's own 3.3 V, used
+  only for encoder pull-ups and never joined to this board's 3V3. The I2C pull-ups go to this
+  board's 3V3 ([Display harness](#display-harness)).
+* **J4's `5V_NIX`** leaves through the same ideal-diode block as the other 5 V feeds: the Nixie
+  board also carries an RP2040-Zero with its own USB (D6).
+* **J5**: the anode resistor string stays on this board, so the harness only carries
+  current-limited HV (≤ 0.7 mA into a short). The empty positions around the anode put ≥ 8.4 mm
+  (two 4.2 mm pitches) between the anode pad and the nearest used pad, above the 3.0 mm `HV` rule.
+  Bringing all nine RTN cathodes out separately keeps the cathode links (L6-L14) on this board.
+* With this board unpowered, the I2C bus idles low through the pull-ups to an unpowered rail.
+  Firmware on both sides treats a missing peer as absent without hanging (plan Phase 3 exit
+  criterion).
 
 ### A101 pinout
 
