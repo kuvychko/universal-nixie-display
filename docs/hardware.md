@@ -31,9 +31,9 @@ pinout and sectional test provisions defined.
 | D1 | A101 operating point: anode supply, anode resistor, tube current, guide bias and pulse amplitude | **Decided** 2026-10-05 | HV rated for 500 V, set to 450 V at first bring-up; see [A101 operating point](#a101-operating-point-d1) |
 | D2 | HV converter topology (direct boost / boost + multiplier / flyback / 12→5 V + AD01A-style) | **Proposed** | Boost to HV/3 plus Cockcroft-Walton tripler, LM5156H controller; see [HV converter](#hv-converter-d2) |
 | D3 | HV output current budget (tube + bias + bleeder) and margin | **Proposed** | 1 mA at HV, about 4.4 mA at the boost node; see [HV load budget](#hv-load-budget-d3) |
-| D4 | 12 V input protection: reverse polarity, fuse/PTC, TVS, inrush | Open | Barrel adapters of either polarity exist, so reverse-polarity protection is mandatory. Input arrives by wire from the chassis jack, not a board-mounted jack |
-| D5 | 5 V buck capacity | Open | Sum ESP32/TFT, 2× RP2040, 6× K155ID1, converter control; measure CYD draw |
-| D6 | USB power paths: VBUS isolation/selection for ESP32 USB and standalone RP2040 debug | Open | Inspect actual CYD and RP2040-Zero schematics. **Reversed vs. the divider:** there the CYD's 5V pin powered the board from USB; here the board's buck feeds that pin while CH340 USB may also be plugged in. Determine whether the CYD has any diode between VBUS and its 5V header before connecting both |
+| D4 | 12 V input protection: reverse polarity, fuse/PTC, TVS, inrush | **Proposed** | Barrel adapters of either polarity exist, so reverse-polarity protection is mandatory. Input arrives by wire from the chassis jack, not a board-mounted jack |
+| D5 | 5 V buck capacity | **Proposed** | ≈ 0.63 A peak estimate, buck rated 2 A; 12 V adapter 2 A; see [Power budget](#power-budget) |
+| D6 | USB power paths: VBUS isolation/selection for ESP32 USB and standalone RP2040 debug | **Proposed** | Both 5 V feeds leave the board through reverse-blocking ideal diodes; see [USB power paths](#usb-power-paths-d6) |
 | D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | **Proposed** (HV part) | LM5156H EN/UVLO pulled down; the RP2040 `HV_EN` drives it directly; see [Controller IC](#controller-ic). Guide drivers: base pull-downs so reset = guides at rest. Confirm RP2040 GPIO reset state in its datasheet |
 | D8 | Guide driver circuit and its input current at 3.3 V | Open | Reference drive is ~5 V logic |
 | D9 | Index sense: threshold, level translation to 3.3 V, protection | Open | One sensed reference cathode in Rev A |
@@ -165,7 +165,7 @@ Datasheet values that constrain the design (LM5156H, SNVSBV2):
 | Shutdown current | 2.6 µA typ at 12 V | |
 | OVP | FB above 110 % of V_REF | Tracks FB, so it does **not** cover an open feedback divider |
 | PGOOD | Open drain, low when FB < 90 % of V_REF; abs max 18 V | Pull up to 3V3 and read on an RP2040 input |
-| Package | HTSSOP-14 (PWP), 0.65 mm pitch, exposed pad to AGND | Harder to hand-solder than SOIC-8: hot air, or a via-stitched pad soldered from the back |
+| Package | HTSSOP-14 (PWP), 0.65 mm pitch, exposed pad to AGND | **Accepted** (user, 2026-10-06): hand assembly with solder paste under a microscope, at the limit of the user's skill. Footprint: paste-reduced exposed-pad aperture, thermal vias to the bottom ground plane so the pad can also be reflowed from the back, and generous fanout so reworking it is practical |
 
 **Shutdown (D7), proposed scheme:** a pull-down resistor on EN/UVLO and the RP2040's `HV_EN` output
 drives it through a series resistor. Unpowered, in reset or in BOOTSEL, the pin is low and the
@@ -224,12 +224,83 @@ RTN 1-4, 6, 7, 9, 11, 12, G1 5, G2 10). They agree. The AD01 page text once call
 "pin 12", contradicting both. Plan §5 asks for accessible cathode links: break out each RTN pin
 through a link or test pad rather than tying them together under the socket.
 
+### 12 V input protection (D4)
+
+The input arrives by wire from the chassis barrel jack and carries everything: this board, and
+12 V onward to the purchased Nixie HV module. In order from the input connector:
+
+| Element | Proposal | Reason |
+|---|---|---|
+| Power switch | Panel switch in series with the +12 V wire between jack and board, rated ≥ 3 A DC | Plan §4. Placement decided with the enclosure |
+| Fuse | 2 A slow-blow on the board input | Input is ≈ 0.75 A estimated (below); slow-blow survives bulk-capacitor inrush |
+| Reverse polarity | P-channel MOSFET, gate to ground through a resistor with a gate-source zener | Adapters of either polarity exist. A Schottky would waste ~0.3 W at 0.75 A |
+| TVS | SMBJ15A-class (15 V standoff) after the MOSFET | Clamps hot-plug ringing. Every 12 V consumer must be rated above the clamp voltage (~24 V): LM5156 BIAS (65 V abs max) and the 5 V buck (choose ≥ 28 V input) |
+| Bulk capacitance | Electrolytic, ~100 µF, plus local ceramics | Damps the LC ringing that ceramic-only input capacitance causes when a live adapter is plugged in |
+| Nixie module branch | Separate resettable fuse (~0.75 A hold) on the 12 V output to the Nixie module | A fault in the purchased module must not blow the main fuse or reach this board's input |
+| Input monitoring | Divider from protected 12 V to an RP2040 ADC (`VIN_SENSE`) | Firmware withholds `HV_EN` while 12 V is low or absent (D7) |
+
 ### Power budget
 
-_To be filled for D3/D5._
+Estimates for sizing; each has its basis, and measurement replaces it in 1D.
 
-| Load | Rail | Typ | Max | Source |
-|---|---|---|---|---|
+| Load | Rail | Peak estimate | Basis |
+|---|---|---|---|
+| ESP32 display board | 5 V | 350 mA | ~115 mA measured with backlight at 100 % (mischianti.org CYD page); ESP32 Wi-Fi transmit adds up to ~240 mA if Wi-Fi is enabled. **Measure on the actual board** |
+| RP2040-Zero, dekatron board | 5 V | 50 mA | RP2040 plus its on-board WS2812 LED, which firmware keeps dim or off |
+| RP2040-Zero, Nixie board | 5 V | 50 mA | Same |
+| K155ID1 × 6 | 5 V | 150 mA | ≤ 25 mA each as SN74141 equivalent; **confirm K155ID1 data** |
+| Nixie board expanders, dekatron logic | 5 V | 30 mA | Allowance |
+| **5 V total** | | **≈ 630 mA** | Buck rated **2 A** (> 3× margin, covers Wi-Fi bursts and estimate error) |
+| 5 V buck input | 12 V | 0.31 A | 630 mA × 5 V / 85 % |
+| HV converter | 12 V | 0.08 A | D3 at 75 % efficiency |
+| Purchased Nixie HV module | 12 V | 0.36 A | 20 mA × 170 V / 80 % assumed module efficiency; qualify in Phase 2 |
+| **12 V total** | | **≈ 0.75 A** | Adapter: **12 V, 2 A regulated**, 2.1 mm centre-positive (still protected against reversal) |
+
+5 V buck: a 12 V → 5 V synchronous buck IC rated 2 A with ≥ 28 V input rating, chosen in 1B
+(e.g. TPS54202-class in SOT-23-6, which is easy to hand-solder). Its output feeds this board's
+logic and the two external 5 V feeds below.
+
+### USB power paths (D6)
+
+Both 5 V modules have their own USB connector, and both are plugged into a computer at some
+point (ESP32 host interface; RP2040 flashing and debug). What their schematics show:
+
+**ESP32-2432S028R** (original V0.1 schematic, `docs/datasheets/cyd/ESP32-2432S028-MCU.jpg`):
+
+* USB VBUS → **1N5819W Schottky** (D1) → module 5V net. The host is protected from back-feed.
+* P1 `VIN` → **AO3401 P-MOSFET** (Q1, gate grounded) → module 5V net. This is reverse-polarity
+  protection, not reverse blocking: once its body diode conducts, the MOSFET turns on and passes
+  current **both ways**.
+* Consequence: with USB plugged in and this board unpowered, the module drives ~4.6 V *out* of
+  its P1 `VIN` pin into our 5 V rail, trying to power our logic from the computer's USB port.
+
+**RP2040-Zero** (Waveshare `RP2040_Zero.pdf`, `docs/datasheets/rp2040_zero_sch.pdf`):
+
+* USB-C VBUS connects **directly** to `VSYS` (header pin 23, the "5V" pin), which feeds the
+  RT9013-33 LDO. **No diode.** (Some summaries online claim diode separation; the schematic shows
+  none.)
+* Consequence: feeding the Zero's 5V pin from our rail while its USB is plugged in ties our 5 V
+  supply to the computer's VBUS.
+
+**Proposal:** every 5 V feed to a module with its own USB goes through a **reverse-blocking ideal
+diode** (LM66100-class: 1.5-5.5 V, 1.5 A, reverse-current blocking; verify the datasheet in 1B):
+
+| Feed | Normal (12 V on) | Module USB plugged, 12 V on | Module USB plugged, 12 V off |
+|---|---|---|---|
+| `5V_DISP` → CYD P1 `VIN` | Board powers CYD | The higher source supplies the CYD 5V net; CYD's D1 protects the host, our ideal diode protects our rail | CYD runs from USB; ideal diode blocks back-feed into our board |
+| `5V_MCU` → RP2040-Zero `VSYS` | Board powers Zero | The higher source wins: if VBUS is higher, our diode blocks; if ours is higher, current flows into the host's VBUS. **Keep our 5 V nominal ≤ 5.0 V and accept, or add a VBUS-sense that disables our feed** (decide in 1B) | Zero runs from USB (standalone debug); our side stays dark |
+
+A Schottky diode instead of an ideal diode would drop ~0.3-0.4 V. That leaves the CYD's
+AMS1117-3.3 (≈ 1.1 V dropout) with little margin, so an ideal diode is preferred for both feeds.
+
+**Cross-domain hazard to design out:** with the Zero powered from USB and 12 V off, RP2040 outputs
+can drive into unpowered circuits. LM5156 EN/UVLO has an abs max of V_BIAS + 0.3 V, i.e. 0.3 V
+when unpowered. The series resistor on `HV_EN` must limit that current, and firmware must never
+assert `HV_EN` without `VIN_SENSE` reading a valid 12 V. Check the same for I2C pull-ups and guide
+driver bases in 1B.
+
+Verify on the user's actual module that it matches the V0.1 schematic: with only USB connected,
+P1 `VIN` reading ~4.6 V confirms the back-feed path.
 
 ## Display harness
 

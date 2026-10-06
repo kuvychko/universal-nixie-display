@@ -28,6 +28,8 @@ revision as it is used.
 | `lm3478.pdf` | LM3478 boost controller | https://www.ti.com/lit/gpn/lm3478 | SNVS085Y, Jan 2026 |
 | `lm5156h.pdf` | LM5156H / LM51561H boost controller | https://www.ti.com/lit/gpn/lm5156h | SNVSBV2, Sep 2020 |
 | `uc3843.pdf` | UCx84x PWM controllers | https://www.ti.com/lit/ds/symlink/uc3843.pdf | SLUS223H, Oct 2024 |
+| `rp2040_zero_sch.pdf` | Waveshare RP2040-Zero schematic | https://www.waveshare.com/w/upload/4/4c/RP2040_Zero.pdf | — |
+| `cyd/ESP32-2432S028-MCU.jpg`, `-LCM.jpg` | ESP32-2432S028 schematic (vendor original V0.1, 2022-07-15) | https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display (OriginalDocumentation/5-Schematic) | V0.1 |
 | `ad01/*.gif` | AD01 dekatron shield schematic, BOM, hook-up | threeneurons (see above) | April 2017 |
 
 Simulation models to fetch for Phase 1B (TI product pages; may need a TI login): **Unencrypted
