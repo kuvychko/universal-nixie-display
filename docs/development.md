@@ -27,22 +27,23 @@ Record the ERC/DRC baseline here and check that each change does not add to it.
 ### Generator
 
 `tools/gen_schematics.py` writes the dekatron schematics, the project symbol library and a BOM
-(`hardware/dekatron/bom_power.csv`) from the values in `docs/hardware.md`. Every pin ends in a short
+(`hardware/dekatron/bom.csv`) from the values in `docs/hardware.md`. Every pin ends in a short
 stub with a net label, power symbol or no-connect flag, so connectivity is exactly the generator's
 net lists. Inter-sheet nets are global labels. It writes `dekatron.kicad_pro` only if it does not
-exist (KiCad owns it afterwards; it carries the D13 net classes). Re-run after editing the script:
+exist (KiCad owns it afterwards; it carries the D13 net classes). To change the net classes before
+anyone edits the project in KiCad, delete it and re-run; afterwards edit it in KiCad. Re-run after editing the script:
 
 ```
 python tools/gen_schematics.py
 ```
 
-### ERC baseline (power sheet only, 2026-10-06)
+### ERC baseline (power and tube sheets, 2026-10-06)
 
 `kicad-cli sch erc --severity-all hardware/dekatron/dekatron.kicad_sch`: **9 violations, all
 expected:**
 
-* 7 × `isolated_pin_label`: global labels whose other ends are on sheets not yet drawn (`HV_EN`,
-  `OVP_TRIP`, `5V_DISP`, `5V_MCU`, `5V_NIX` to mcu; `HV`, `V_B_BIAS` to tube).
+* 7 × `isolated_pin_label`: global labels whose other ends are on the mcu sheet, not yet drawn
+  (`HV_EN`, `OVP_TRIP`, `5V_DISP`, `5V_MCU`, `5V_NIX`, `GUIDE1`, `GUIDE2`).
 * 1 × `power_pin_not_driven`: `+3V3` on the PGOOD pull-up, supplied by the RP2040-Zero (mcu sheet).
 * 1 × `pin_to_pin` power output to power output: the LP2951 output drives the LM5156 VCC pin in
   BIAS = VCC mode (intentional, D2).

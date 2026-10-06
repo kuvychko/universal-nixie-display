@@ -124,8 +124,28 @@
         "pattern": "*TRP_PUMP"
       },
       {
+        "netclass": "HV",
+        "pattern": "*ANODE"
+      },
+      {
         "netclass": "HVSTR",
         "pattern": "*STR_*"
+      },
+      {
+        "netclass": "BIAS",
+        "pattern": "*GPLUS"
+      },
+      {
+        "netclass": "BIAS",
+        "pattern": "*RTN"
+      },
+      {
+        "netclass": "BIAS",
+        "pattern": "*TUBE_*"
+      },
+      {
+        "netclass": "BIAS",
+        "pattern": "*NDX_C"
       }
     ]
   },
@@ -145,6 +165,10 @@
     [
       "ffb9d6a6-7c3b-5075-b238-678084eb444d",
       "power"
+    ],
+    [
+      "2f366097-8856-550c-8e15-80a7dd2c4e55",
+      "tube"
     ]
   ],
   "text_variables": {}

@@ -47,6 +47,7 @@ def U(key: str) -> str:
 
 ROOT_UUID = U("sheet:root")
 POWER_UUID = U("sheet:power")
+TUBE_UUID = U("sheet:tube")
 
 # --------------------------------------------------------------------------------------
 # Design parameters that are still open (see docs/hardware.md)
@@ -55,11 +56,11 @@ POWER_UUID = U("sheet:power")
 # HV boost inductor: from the user's 6 x 8 mm radial kit (100 uH +/-10 %, rated 0.71 A, DCR 0.35 ohm).
 # The current limit is lowered to fit (0.22 ohm -> 0.42-0.49 A) and the frequency raised to 150 kHz
 # to keep the DCM power margin (docs/hardware.md, "Kit inductor").
-# Buck inductor: still the SMD part until the kit's 15 uH current rating is known.
+# Buck inductor: kit 15 uH, rated 1.31 A (peak ~0.83 A at the 0.63 A load estimate + 0.40 A p-p ripple).
 L_HV = dict(value="100uH", fp="Inductor_THT:L_Radial_D6.0mm_P4.00mm", mpn="(kit, 6 x 8 mm radial)", mfr="",
-            note="Rated 0.71 A, DCR 0.35 ohm; confirm lead pitch")
-L_BUCK = dict(value="15uH", fp="Inductor_SMD:L_Bourns_SRR1260", mpn="SRR1260-150M", mfr="Bourns",
-              note="Isat >= 2.5 A")
+            note="Rated 0.71 A, DCR 0.35 ohm, 4 mm pitch")
+L_BUCK = dict(value="15uH", fp="Inductor_THT:L_Radial_D6.0mm_P4.00mm", mpn="(kit, 6 x 8 mm radial)", mfr="",
+              note="Rated 1.31 A; limits the 5 V rail to ~1.3 A")
 R_SENSE = "0.22"      # HV boost current limit 0.42-0.49 A (kit inductor rated 0.71 A)
 R_T = "147k"          # ~150 kHz
 
@@ -745,10 +746,101 @@ def build_power(lib: SymbolLib) -> Sheet:
     return sh
 
 
+# --------------------------------------------------------------------------------------
+# tube.kicad_sch
+# --------------------------------------------------------------------------------------
+
+TUBE_GLOBALS = {"HV", "V_B_BIAS", "GUIDE1", "GUIDE2", "NDX", "RTN_SENSE"}
+FP_SOT23 = "Package_TO_SOT_SMD:SOT-23"            # MMBTA42 / MMBTA92: 1 B, 2 E, 3 C (Nexperia)
+FP_WIRE1 = "Connector_Wire:SolderWire-0.5sqmm_1x01_D0.9mm_OD2.3mm_Relief"
+FP_WIRE6 = "Connector_Wire:SolderWire-0.5sqmm_1x06_P4.8mm_D0.9mm_OD2.3mm_Relief"
+
+
+def build_tube(lib: SymbolLib) -> Sheet:
+    sh = Sheet("tube", "tube.kicad_sch", U("file:tube"), "A3", lib, f"/{ROOT_UUID}/{TUBE_UUID}",
+               global_nets=TUBE_GLOBALS, title="Tube: G+ / RTN bias, guide drivers, index sense, anode, harness")
+    R, C, DZ, TP = "Device:R", "Device:C", "Device:D_Zener", "Connector:TestPoint"
+    H = 90
+
+    def r(ref, val, x, y, a, b, fn, angle=0, rating=""):
+        sh.part(R, ref, val, x, y, {"1": a, "2": b}, angle=angle, footprint=FP_R, fields=F(fn, rating=rating))
+
+    def c(ref, val, x, y, a, b, fn, rating=""):
+        sh.part(C, ref, val, x, y, {"1": a, "2": b}, footprint=FP_C, fields=F(fn, rating=rating))
+
+    def tp(ref, net, x, y):
+        sh.part(TP, ref, net, x, y, {"1": net}, footprint=FP_TP, fields=F(f"Test point {net}"))
+
+    def note(t, x, y):
+        sh.text(t, x, y, 1.8)
+
+    # ---- Row 1: G+ / RTN zener regulator (D1, D8) ------------------------------------------
+    y = 45
+    note("BIAS (D1, D8): RTN = 51 V zener (sinks tube current), G+ = RTN + 39 V = 90 V; feed 56k from V_b", 20, 22)
+    r("R201", "56k", 30, y, "V_B_BIAS", "GPLUS", "G+ / RTN feed (1.2 mA at V_b 157 V)")
+    sh.part(DZ, "D201", "39V", 55, y, {"1": "GPLUS", "2": "RTN"}, angle=270, footprint=FP_SOD123,
+            fields=F("G+ above RTN: guide bias 39 V", "MMSZ5259B", "onsemi", "39 V, 500 mW"))
+    sh.part(DZ, "D202", "51V", 80, y, {"1": "RTN", "2": "GND"}, angle=270, footprint=FP_SOD123,
+            fields=F("RTN shunt regulator: sinks tube current", "MMSZ5262B", "onsemi", "51 V, 500 mW"))
+    c("C201", "0.1uF 100V", 105, y, "GPLUS", "RTN", "G+ to RTN bypass", rating="100 V X7R")
+    c("C202", "1uF 100V", 125, y, "RTN", "GND", "RTN bypass: absorbs tube and guide current steps", rating="100 V X7R")
+    r("R202", "100k", 150, y - 16, "RTN", "STR_RS1", "RTN_SENSE divider 1/2")
+    r("R203", "100k", 150, y + 16, "STR_RS1", "RTN_SENSE", "RTN_SENSE divider 2/2")
+    r("R204", "10k", 165, y + 16, "RTN_SENSE", "GND", "RTN_SENSE divider, lower (2.43 V at 51 V)", rating="1 %")
+    tp("TP201", "GPLUS", 190, y)
+    tp("TP202", "RTN", 205, y)
+    tp("TP206", "GND", 220, y)
+
+    # ---- Row 2: guide drivers (D8) -----------------------------------------------------------
+    y = 115
+    note("GUIDE DRIVERS (D8): MMBTA42 pulls the guide from G+ to ~0 V; 47k base pull-down keeps guides at rest in reset", 20, y - 30)
+    for i, (n, gx) in enumerate(((1, 30), (2, 130))):
+        g = f"TUBE_G{n}"
+        b = f"G{n}_B"
+        r(f"R{205 + 3 * i}", "470k", gx, y - 12, "GPLUS", g, f"Guide {n} pull-up to G+ (<= 90 V)")
+        sh.part("Transistor_BJT:Q_NPN_BEC", f"Q{201 + i}", "MMBTA42", gx + 20, y, {"1": b, "2": "GND", "3": g},
+                footprint=FP_SOT23, fields=F(f"Guide {n} driver", "MMBTA42", "Nexperia", "300 V NPN"))
+        r(f"R{206 + 3 * i}", "10k", gx + 5, y + 20, f"GUIDE{n}", b, f"Guide {n} base resistor (0.24 mA from 3.3 V)", angle=H)
+        r(f"R{207 + 3 * i}", "47k", gx + 35, y + 22, b, "GND", f"Guide {n} base pull-down (reset = at rest)")
+        tp(f"TP{203 + i}", g, gx + 50, y)
+
+    # ---- Row 3: index sense (D9) --------------------------------------------------------------
+    y = 185
+    note("INDEX SENSE (D9): MMBTA92 level shifter from K1 (pin 13); 220k / 13k -> 2.73-3.01 V; clamp at the RP2040", 20, y - 30)
+    sh.part("Transistor_BJT:Q_PNP_BEC", "Q203", "MMBTA92", 55, y, {"1": "RTN", "2": "TUBE_K1", "3": "NDX_C"},
+            footprint=FP_SOT23, fields=F("Index level shifter", "MMBTA92", "Nexperia", "300 V PNP"))
+    r("R211", "220k", 30, y - 5, "TUBE_K1", "RTN", "Holds K1 at RTN when not lit")
+    r("R212", "110k", 80, y - 16, "NDX_C", "STR_NX1", "Index divider top 1/2 (167 V fault: 84 V per part)")
+    r("R213", "110k", 80, y + 16, "STR_NX1", "NDX", "Index divider top 2/2")
+    r("R214", "13k", 100, y + 16, "NDX", "GND", "Index divider, lower", rating="1 %")
+    c("C204", "1nF", 115, y + 16, "NDX", "GND", "Index filter (tau 12 us)", rating="50 V C0G")
+    tp("TP205", "NDX", 135, y + 16)
+
+    # ---- Row 4: anode string, cathode links, harness (D1, D11, D14) -----------------------------
+    y = 255
+    note("ANODE STRING 3 x 220k (D1; 3 x 270k for 500 V), CATHODE LINKS LK6-LK14 (D11), TUBE HARNESS (D14, soldered)", 20, y - 35)
+    for i, (ref, a, b) in enumerate((("R215", "HV", "STR_A1"), ("R216", "STR_A1", "STR_A2"), ("R217", "STR_A2", "ANODE"))):
+        r(ref, "220k", 30 + i * 18, y - 10, a, b, f"Anode resistor {i + 1}/3 (<= 100 V per part)")
+    sh.part("Connector_Generic:Conn_01x01", "J201", "TUBE_ANODE", 95, y - 10, {"1": "ANODE"}, footprint=FP_WIRE1,
+            fields=F("Tube harness: anode (pin 8), 600 V wire, kept >= 3 mm from other pads"))
+    cathodes = ["TUBE_K0"] + [f"TUBE_K{k}" for k in range(2, 10)]
+    for i, k in enumerate(cathodes):
+        sh.part(R, f"LK{6 + i}", "0", 130 + i * 15, y - 10, {"1": k, "2": "RTN"}, footprint=FP_R,
+                fields=F(f"D11 cathode link: {k[5:]} to RTN (0 ohm, remove to isolate)"))
+    sh.part("Connector_Generic:Conn_01x06", "J202", "TUBE_A", 290, y - 30,
+            {"1": "TUBE_G1", "2": "TUBE_G2", "3": "TUBE_K1", "4": "TUBE_K0", "5": "TUBE_K2", "6": "TUBE_K3"},
+            footprint=FP_WIRE6, fields=F("Tube harness: G1 (5), G2 (10), K1 index (13), K0 (1), K2 (12), K3 (11)"))
+    sh.part("Connector_Generic:Conn_01x06", "J203", "TUBE_B", 290, y + 5,
+            {"1": "TUBE_K4", "2": "TUBE_K5", "3": "TUBE_K6", "4": "TUBE_K7", "5": "TUBE_K8", "6": "TUBE_K9"},
+            footprint=FP_WIRE6, fields=F("Tube harness: K4 (9), K5 (7), K6 (6), K7 (4), K8 (3), K9 (2)"))
+    return sh
+
+
 def build_root(lib: SymbolLib) -> Sheet:
     sh = Sheet("root", f"{PROJECT}.kicad_sch", ROOT_UUID, "A4", lib, "/", title="Dekatron controller / PSU")
     sh.sheet("power", "power.kicad_sch", POWER_UUID, 40, 40, 60, 30, page="2")
-    sh.text("Sheets: power (this revision). tube and mcu sheets follow in Phase 1B.", 40, 100, 2)
+    sh.sheet("tube", "tube.kicad_sch", TUBE_UUID, 120, 40, 60, 30, page="3")
+    sh.text("Sheets: power, tube. The mcu sheet follows in Phase 1B.", 40, 100, 2)
     return sh
 
 
@@ -786,11 +878,16 @@ def project_json() -> str:
                 {"netclass": "VB", "pattern": "V_B_BIAS"},
                 {"netclass": "VB", "pattern": "*SW"},
                 {"netclass": "VB", "pattern": "*TRP_PUMP"},
+                {"netclass": "HV", "pattern": "*ANODE"},
                 {"netclass": "HVSTR", "pattern": "*STR_*"},
+                {"netclass": "BIAS", "pattern": "*GPLUS"},
+                {"netclass": "BIAS", "pattern": "*RTN"},
+                {"netclass": "BIAS", "pattern": "*TUBE_*"},
+                {"netclass": "BIAS", "pattern": "*NDX_C"},
             ]},
         "pcbnew": {"last_paths": {}, "page_layout_descr_file": ""},
         "schematic": {"legacy_lib_dir": "", "legacy_lib_list": []},
-        "sheets": [[ROOT_UUID, "Root"], [POWER_UUID, "power"]],
+        "sheets": [[ROOT_UUID, "Root"], [POWER_UUID, "power"], [TUBE_UUID, "tube"]],
         "text_variables": {},
     }
     return json.dumps(pro, indent=2) + "\n"
@@ -846,14 +943,16 @@ def main():
         lib.defs[f"{PROJECT}:{name}"] = s
 
     power = build_power(lib)
+    tube = build_tube(lib)
     root = build_root(lib)
 
     write_once(os.path.join(HW, f"{PROJECT}.kicad_pro"), project_json())
     write(os.path.join(HW, f"{PROJECT}.kicad_sch"), root.render(is_root=True))
     write(os.path.join(HW, "power.kicad_sch"), power.render())
+    write(os.path.join(HW, "tube.kicad_sch"), tube.render())
     write(os.path.join(HW, "sym-lib-table"), SYM_TABLE)
     write(os.path.join(HW, "lib", f"{PROJECT}.kicad_sym"), project_symbol_lib_text())
-    write_bom(os.path.join(HW, "bom_power.csv"), [power])
+    write_bom(os.path.join(HW, "bom.csv"), [power, tube])
 
 
 if __name__ == "__main__":

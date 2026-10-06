@@ -699,7 +699,7 @@ is verified at bring-up. The part is internally compensated, which makes that lo
 
 | Item | Value | Basis |
 |---|---|---|
-| Inductor | 15 µH, Bourns SRR1260-150M (I_sat 4.6 A, DCR 27 mΩ) | Datasheet Eq. 8: L_min 13.7 µH at K_IND 0.3 (28 V in) |
+| Inductor | **15 µH from the user's radial kit, rated 1.31 A, 4 mm pitch** (was SRR1260-150M) | Datasheet Eq. 8: L_min 13.7 µH at K_IND 0.3. Ripple 0.40 A p-p at 12.6 V in, so the peak is ≈ 0.83 A at the 0.63 A load estimate. The 5 V rail is now limited to ≈ 1.3 A by the inductor, not 2 A by the regulator; overloads fall to the TPS54202's current limit |
 | Output capacitors | 2 × 22 µF 25 V X7R (1210) | Reference design; Eq. 11-13 |
 | Input capacitors | 10 µF 35 V X7R + 0.1 µF | Reference design; 35 V > TVS clamp |
 | Bootstrap | 0.1 µF ceramic | Datasheet 7.2.3.2 |
@@ -729,9 +729,9 @@ constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W be
 
 ### Power sheet parts
 
-The schematic generator writes the power-sheet BOM with references, functions, MPNs and ratings:
-[`hardware/dekatron/bom_power.csv`](../hardware/dekatron/bom_power.csv) (114 lines, incl. 10 DNP dummy-load
-resistors). Passives without an MPN are specified by value, rating, dielectric and size; resistors
+The schematic generator writes the board BOM with references, functions, MPNs and ratings:
+[`hardware/dekatron/bom.csv`](../hardware/dekatron/bom.csv) (power and tube sheets, including 10 DNP
+dummy-load resistors). Passives without an MPN are specified by value, rating, dielectric and size; resistors
 come from the 1206 kit and inductors from the user's radial kit where noted.
 
 | Function | Part |
@@ -741,13 +741,37 @@ come from the 1206 kit and inductors from the user's radial kit where noted.
 | HV inductor / diodes | **Kit 100 µH radial** (0.71 A, 0.35 Ω) / onsemi **ES1J** × 5 |
 | HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4 class) |
 | OVP comparator | TI **TLV3011AIDBVR** (open-drain) |
-| 5 V buck / inductor | TI **TPS54202DDCR** / Bourns **SRR1260-150M** (kit 15 µH if its rating allows) |
+| 5 V buck / inductor | TI **TPS54202DDCR** / **kit 15 µH radial** (1.31 A) |
 | Ideal diodes | TI **LM66100DCKR** × 3 |
 | Fuse / PTC | Littelfuse **0468002.NRHF** / **1812L075/33DR** |
 | Reverse polarity / TVS | AOS **AOD4185** + BZT52C10 / Littelfuse **SMBJ15A** |
 | Bulk capacitor | Panasonic **EEE-FK1V101P** |
 
 TI's own store showed the TI parts out of stock on 2026-10-06; check Mouser stock when ordering.
+
+## Tube sheet (Phase 1B)
+
+`tube.kicad_sch`: G+ / RTN bias, guide drivers (D8), index sense (D9), anode string (D1), cathode
+links (D11) and the soldered tube harness (D14).
+
+**G+ / RTN regulator.** A zener stack fed from `V_B_BIAS` (link LK5): V_b → 56k → **G+** → 39 V
+zener → **RTN** → 51 V zener → GND.
+
+| Item | Value | Basis |
+|---|---|---|
+| RTN | 51 V (MMSZ5262B, ±5 %) | Shunt: sinks the tube current (≤ 0.43 mA) into the zener |
+| G+ | RTN + 39 V = 90 V (MMSZ5259B) | Guide bias 39 V, inside the 36-44 V datasheet range |
+| Feed | 56k: 1.2 mA at V_b 157 V; 1.5 mA at the 500 V setting (≈ 175 V) | Both guide pull-ups take 0.38 mA, leaving ≥ 0.82 mA in the zeners: RTN holds with zero tube current while the glow sits on a guide (D8) |
+| Dissipation | Feed resistor ≤ 128 mW (1206); 51 V zener ≤ 98 mW (500 mW part) | 500 V setting, tube lit |
+| Bypass | 0.1 µF 100 V across G+-RTN; 1 µF 100 V RTN-GND | Absorbs guide and tube current steps |
+| RTN_SENSE | 2 × 100k / 10k → 2.43 V at 51 V | ADC (GP29); clamp at the RP2040 (mcu sheet) |
+
+With the 51 V zener's tolerance (48.5-53.6 V) the index output spans **2.73-3.01 V** (D9 table used
+47.5-52.5 V): still ≥ 0.73 V above the RP2040's 2.0 V V_IH.
+
+**Harness landings** (D14): the anode on its own pad (J201) kept ≥ 3 mm from the others, and the
+twelve ≤ 100 V wires on two 6-pad groups (J202, J203), each with strain-relief holes. Silkscreen
+carries signal names and tube pin numbers.
 
 ## Nixie controller/mount
 
