@@ -60,7 +60,7 @@ Model notes (from TI's header, plus what we found):
 | `lm5156_smoke.cir` | Model runs in ngspice and regulates a 12 V → 150 V boost; illustrative values | **Passes** (2026-10-06) |
 | `hv_warm.cir` | Draft power sheet, steady state with HV feedback; stack precharged so regulation arrives in ~1 ms | **Passes**; results in [hardware.md](../../../docs/hardware.md#simulation-results) |
 | `hv_discharge.cir` | Passive discharge from 450 V (no controller; seconds to run) | **Passes**: all nodes < 50 V in 1.47 s |
-| `hv_startup.cir` | Cold start from 0 V, 40 ms (about an hour) | **Passes**: strike at 9.5 ms, HV 449.9 V at 40 ms |
+| `hv_startup.cir` | Cold start from 0 V, 40 ms (long run: start it in the background) | **Passes**: strike at 9.5 ms, HV 449.9 V at 40 ms |
 
 `lm5156_smoke.cir` results (100 µH, 100 kHz, 0.15 Ω sense, 1 µF output, 34 kΩ load = 4.4 mA, 10 nF
 soft-start; generic MOSFET and diode models):
