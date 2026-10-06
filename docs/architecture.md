@@ -9,7 +9,7 @@ Power distribution, board boundaries and ownership. Derived from
 |---|---|---|---|---|
 | 1 | ESP32-2432S028R display board ("CYD", 2.8" ILI9341, landscape) | Purchased, existing (same as nanovolt-divider) | ESP32 | UI and protocol against simulated controller status |
 | 2 | Dekatron controller/PSU | Custom PCB (first deliverable) | RP2040-Zero daughterboard | USB console and built-in diagnostics, no ESP32 or Nixies |
-| 3 | Nixie controller/mount | Custom PCB | RP2040-Zero daughterboard | Local diagnostic sequence or USB console with purchased HV module |
+| 3 | Nixie controller/mount, with the front-panel rotary encoder | Custom PCB | RP2040-Zero daughterboard | Local diagnostic sequence or USB console with purchased HV module |
 | 4 | Nixie HV module | Purchased | — | Dummy-load characterization |
 
 Exact board revisions are recorded in [hardware.md](hardware.md#board-revisions) once confirmed.
@@ -30,7 +30,8 @@ USB VBUS must never back-feed the 12 V-derived 5 V rail or vice versa (open item
 ## Ownership
 
 * **ESP32** decides what is displayed: modes, presets, touch/encoder meaning, host commands, frame
-  composition, time source. It is the only I2C master.
+  composition, time source. It is the only I2C master. It reads the encoder as a count and button
+  events from the Nixie controller over I2C.
 * **RP2040 controllers** are peripherals: they own time-sensitive sequences (dekatron stepping,
   homing, frame application) and hardware state, and report status. They never decide content.
 * Every input path (preset, touch, encoder, host) produces the same display frame through one

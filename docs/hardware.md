@@ -350,7 +350,7 @@ display harness. The tube itself still plugs into its socket, so a tube can be s
 |---|---|---|
 | `PWR_IN` | `+12V_IN`, `GND` | Panel switch, then the chassis barrel jack |
 | `NIX_12V` | `+12V_NIX`, `GND` (after its resettable fuse) | Purchased Nixie HV module input |
-| `DISP` | `5V_DISP`, `GND`, `3V3_CYD`, `IO35`, `GND`, `IO23`, `IO19`, `SCL`, `SDA` | The display module's three 1.25 mm plugs ([Display harness](#display-harness)) |
+| `DISP` | `5V_DISP`, `GND` (power), `GND` (I2C), `SCL`, `SDA` | The display module's UART/power plug (5V, GND) and SPI plug (IO18 = SCL, IO27 = SDA), plus the 3V3 plug's GND ([Display harness](#display-harness)) |
 | `NIX_LV` | `5V_NIX`, `GND`, `SDA`, `SCL`, `GND`, spare (e.g. global blank) | Nixie controller board (Phase 2) |
 | `TUBE` | Anode, G1, G2, K1 (index), K0, K2-K9: 13 wires | A101 socket, soldered |
 | `JP_HVINH` | 2.54 mm header + shunt (a bench jumper, not a harness) | — |
@@ -398,11 +398,8 @@ keeps dim or off (D5).
 | GP6 | `HV_EN` | out | GPIO | LM5156 EN/UVLO through its series resistor; external pull-down (D7) |
 | GP7 | `PGOOD` | in | GPIO | LM5156 PGOOD, open drain, 10 kΩ pull-up to 3V3 |
 | GP8 | `OVP_TRIP` | in | GPIO | Independent OVP comparator output, so firmware can report why HV dropped (D2) |
-| GP9 | `ENC_A` | in | GPIO/PIO | Encoder fallback (plan §8): unpopulated 0 Ω links from the `DISP` encoder lines |
-| GP10 | `ENC_B` | in | GPIO/PIO | Same |
-| GP11 | `ENC_SW` | in | GPIO | Same |
 | GP12 | `NIX_SPARE` | — | GPIO | To the `NIX_LV` spare wire through a 0 Ω link (e.g. global blank) |
-| GP13-GP15 | — | — | spare | Broken out to test pads |
+| GP9-GP11, GP13-GP15 | — | — | spare | Broken out to test pads. (GP9-GP11 were the encoder fallback; the encoder moved to the Nixie board) |
 | GP16 | `LED` | out | WS2812 | On the module |
 | GP26 | `NDX` | in | ADC0 / Schmitt input | Index (D9); digital read normally, analog level for diagnostics |
 | GP27 | `VIN_SENSE` | in | ADC1 | Protected 12 V: 100k / 12k → 1.29 V at 12 V, 2.57 V at the 24 V TVS clamp |
@@ -412,8 +409,8 @@ keeps dim or off (D5).
 Facts this relies on, from the RP2040 datasheet:
 
 * **Reset state** (Table 341, PADS_BANK0): every GPIO resets as an input with the pull-down
-  enabled (PDE = 1, PUE = 0, IE = 1, Schmitt on). The board does not rely on this: `HV_EN`, the
-  guide bases and the encoder lines have external resistors that hold the safe state while the
+  enabled (PDE = 1, PUE = 0, IE = 1, Schmitt on). The board does not rely on this: `HV_EN` and the
+  guide bases have external resistors that hold the safe state while the
   module is unpowered.
 * **Input thresholds at IOVDD = 3.3 V** (Table 625): V_IH 2.0 V min, V_IL 0.8 V max, 0.2 V
   hysteresis with Schmitt enabled. The index output's worst case, 2.67 V (D9), clears V_IH by
@@ -601,14 +598,15 @@ Carried over from nanovolt-divider (its `docs/hardware.md`, "Display harness"):
 * **IO18 is shared with microSD SCK.** Rev A omits microSD (plan §8), so no bus arbitration is
   needed as long as the card's CS (IO5) stays deasserted.
 
-### Encoder pins (proposal)
+### Encoder
 
-With microSD unused, three GPIOs remain on the harness connectors: **IO19**, **IO23** (SPI
-connector) and **IO35** (3V3 connector, input-only, no internal pull-up). That is exactly encoder
-A/B plus push button, e.g. A = IO19, B = IO23, button = IO35 with an external pull-up. Interrupt-
-or PCNT-driven decoding on IO19/IO23 avoids losing detents. The fallback in plan §8 (a controller
-counts the encoder and reports it over I2C) remains available if these pins are needed elsewhere.
-Status: _open_ — decide with the enclosure harness.
+**Decision (user, 2026-10-06):** the rotary encoder mounts on the **Nixie controller board**, not
+on the dekatron board. The Nixie board's RP2040 decodes it and reports a cumulative detent count
+and button events over I2C ([i2c_protocol.md](i2c_protocol.md#nixie-controller)); the ESP32 owns
+their meaning (plan §8). A cumulative count lets the ESP32 poll without losing detents.
+
+The display module's IO19, IO23 and IO35 stay unused (free for later), and microSD stays omitted
+(plan §8).
 
 ## Nixie controller/mount
 

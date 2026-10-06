@@ -36,7 +36,7 @@ Frames are staged then applied together. A frame holds six digit/blank values an
 state; brightness only once the hardware supports it. Status reports pending/active frame and
 faults.
 
-## Encoder (optional)
-
-If ESP32 GPIOs are insufficient, a controller may count encoder detents and button events and
-expose a cumulative count over I2C; the ESP32 still owns their meaning.
+The front-panel rotary encoder is on this board (decision 2026-10-06). Its RP2040 decodes the
+quadrature and debounces the button, and status exposes a cumulative signed detent count (wrapping
+counter; the ESP32 takes differences) and button press/release events with a pending-event count.
+The ESP32 polls it and owns what the encoder means.
