@@ -28,7 +28,7 @@ pinout and sectional test provisions defined.
 
 | ID | Decision | Status | Notes / inputs needed |
 |---|---|---|---|
-| D1 | A101 operating point: anode supply, anode resistor, tube current, guide bias and pulse amplitude | Open | From A101 data and the reference AD01A circuit; 420 V reference ≠ 450 V without review |
+| D1 | A101 operating point: anode supply, anode resistor, tube current, guide bias and pulse amplitude | **Proposed** | See [A101 operating point](#a101-operating-point-d1); one choice (HV reference point) awaits the user |
 | D2 | HV converter topology (direct boost / boost + multiplier / flyback / 12→5 V + AD01A-style) | Open | Compare against D1 load incl. bias network and bleeder; controller IC availability |
 | D3 | HV output current budget (tube + bias + bleeder) and margin | Open | Depends on D1 |
 | D4 | 12 V input protection: reverse polarity, fuse/PTC, TVS, inrush | Open | Barrel adapters of either polarity exist, so reverse-polarity protection is mandatory. Input arrives by wire from the chassis jack, not a board-mounted jack |
@@ -37,11 +37,94 @@ pinout and sectional test provisions defined.
 | D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | Open | Hardware pull-downs so reset = HV off / guides idle |
 | D8 | Guide driver circuit and its input current at 3.3 V | Open | Reference drive is ~5 V logic |
 | D9 | Index sense: threshold, level translation to 3.3 V, protection | Open | One sensed reference cathode in Rev A |
-| D10 | A101 socket pinout, verified against the tube drawing | Open | Reference page has inconsistent index-cathode pin text |
+| D10 | A101 socket pinout, verified against the tube drawing | Partly resolved | Two independent sources agree (see [Pinout](#a101-pinout)); the reference page's "pin 12" text is the outlier. Still check continuity on the physical socket and a tube |
 | D11 | Sectional test provisions: removable links, test points, dummy-load landing | Open | HV converter must be isolatable from the tube section |
 | D12 | Discharge path and target discharge time | Open | Measure in 1D |
 | D13 | Clearance/creepage rules for ~450 V, component voltage ratings | Open | Becomes the board's DRC rules |
 | D14 | Connectors: 12 V in, 5 V out, I2C, programming access | Open | Keyed, pinout by signal name. 12 V in is a wire-to-board connector from the chassis jack; 12 V also onward to the Nixie HV module |
+
+### A101 operating point (D1)
+
+**Tube data** (tube-tester.com A101 page; see [references.md](references.md)):
+
+| Parameter | Value |
+|---|---|
+| Operating (supply) voltage | 425 V min, 450 V typ |
+| Maintaining voltage | 130-170 V |
+| Anode/cathode current | 300-450 µA, 400 µA typ |
+| Guide bias (guides vs. main cathodes) | +36 to +44 V |
+| Guide pulse | −150 Vp |
+| Output (index) voltage | 20 V, with 33 kΩ cathode resistor typ |
+| Max counting speed | 1 kHz |
+| Base / socket | RSH30 (РШ30) / PL30-2p (ПЛ30-2п), 13 pins |
+
+**Reference circuit** (AD01 Dekatron Shield, M. Moorrees 2017, schematic and BOM images):
+MC34063 driving paralleled 2N5551 from 5 V to 140 V, a BAV21 tripler to ~420 V (unloaded
+maximum), anode resistor 470 kΩ. A divider from 140 V (33k / 47k / 47k) makes **G+ ≈ 104 V**
+and **RTN ≈ 52 V**: the main cathodes return to RTN, not ground. Each guide is pulled up to G+
+through 470 kΩ and pulled to ~0 V by an MPSA42 (10 kΩ base resistor). Index K1 drives the emitter
+of an MPSA92 PNP whose base sits at RTN; its collector feeds 220k / 22k to the logic input.
+
+Consequences, computed from those values:
+
+* **Elevated cathodes are what let ground-referenced NPN switches drive the guides.** Guide rest =
+  G+ − RTN ≈ +52 V (datasheet +36-44 V); guide pulled to 0 V = −RTN ≈ −52 V. That is a third
+  of the datasheet's −150 Vp pulse; the reference demonstrates it transfers the glow. We keep
+  the scheme and treat the reduced pulse as a known deviation to confirm at bring-up.
+* **The divider is not stiff.** The tube's ~0.4 mA flows *into* RTN, whose Thevenin resistance is
+  29.6 kΩ, so lighting the tube moves RTN from 51.8 to 63.7 V and G+ from 103.6 to 108.5 V.
+  Bias and pulse depend on whether the tube is lit. **Proposed:** derive RTN with a shunt element
+  (zener or TL431 + HV transistor) that sinks the tube current, and G+ as RTN + 40 V from a
+  supply that can source the guide pull-up current.
+* **Reference anode current runs high.** (420 − 52 − V_m)/470k = 422-507 µA for V_m = 130-170 V
+  with RTN unloaded; the 420 V figure is the unloaded maximum, which loading pulls down.
+* **Index output at 3.3 V.** The PNP collector saturates near RTN, so the input sees
+  RTN × R16/(R15 + R16): 4.6 V with 22k. With R15 = 220k, R16 = 13k gives 2.8 V at RTN = 50 V
+  (RP2040 V_IH = 2.0 V) and 3.1 V at 55 V. Add a clamp to 3V3; the 220k limits fault current.
+* **Guide drive at 3.3 V works.** 10 kΩ base resistors give (3.3 − 0.7)/10k = 0.26 mA base
+  current. The collector carries the 470k pull-up current (~0.2 mA) plus the glow current while the
+  glow sits on that guide (~0.4 mA), so forced beta ≈ 2.3: saturated with wide margin.
+
+**Proposal:**
+
+| Parameter | Proposed | Basis |
+|---|---|---|
+| RTN (main-cathode return) | +50 V, regulated | Reference ≈ 52 V, made load-independent |
+| G+ (guide rest) | RTN + 40 V = +90 V | Centre of datasheet bias range |
+| Guide pulse | Guide switched to ~0 V: −50 V vs. cathodes | Reference practice; datasheet says −150 Vp |
+| Anode supply HV | **Option A:** 450 V to ground (400 V above RTN); **Option B:** 500 V to ground (450 V above RTN) | See below |
+| Anode resistor | A: 680 kΩ; B: 820 kΩ, split into two series parts for voltage rating | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
+| Tube current | A: 305-430 µA (368 typ); B: 311-421 µA (366 typ) | Within datasheet 300-450 µA |
+| Step rate | ≤ 200 steps/s for homing (plan §5) | Datasheet limit 1 kHz |
+
+The **choice between A and B is the open part of D1.** The datasheet supply figure (425 min / 450
+typ) is referred to the cathodes. With cathodes at +50 V, Option A gives the tube 400 V, below
+the datasheet minimum but more than the reference's ≤ 368 V, which works. Option B meets the
+datasheet typical but raises every HV rating and clearance by about 50 V. Anode resistor
+dissipation is ~0.1 W in either case.
+
+### A101 pinout
+
+| Pin | Electrode | Role here |
+|---|---|---|
+| 1 | K0 | Main cathode → RTN |
+| 2 | K9 | Main cathode → RTN |
+| 3 | K8 | Main cathode → RTN |
+| 4 | K7 | Main cathode → RTN |
+| 5 | G1 | Guide 1 |
+| 6 | K6 | Main cathode → RTN |
+| 7 | K5 | Main cathode → RTN |
+| 8 | Anode | Via anode resistor to HV |
+| 9 | K4 | Main cathode → RTN |
+| 10 | G2 | Guide 2 |
+| 11 | K3 | Main cathode → RTN |
+| 12 | K2 | Main cathode → RTN |
+| 13 | K1 | **Index** (sensed) |
+
+Sources: tube-tester.com pin list, and the AD01 "Dekatron Hook-up" table (A101: anode 8, index 13,
+RTN 1-4, 6, 7, 9, 11, 12, G1 5, G2 10). They agree. The AD01 page text once calls the index
+"pin 12", contradicting both. Plan §5 asks for accessible cathode links: break out each RTN pin
+through a link or test pad rather than tying them together under the socket.
 
 ### Power budget
 

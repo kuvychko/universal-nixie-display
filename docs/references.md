@@ -8,7 +8,7 @@ before copying circuit artwork or code, and record the outcome in the table.
 | Source | Used for | Reuse terms |
 |---|---|---|
 | [nanovolt-divider](https://github.com/kuvychko/nanovolt-divider) | Repo structure, CYD pin map, SCPI parser and UI patterns, host handling | Own project: CERN-OHL-P v2 / MIT |
-| [Dekatron shield kit (threeneurons)](https://threeneurons.wordpress.com/arduino/dekatron-shield-kit/) | Reference A101 power/drive/index design (AD01A: 5 V in, ~140 V boost + tripler) | _Unverified — check before copying_ |
+| [Dekatron shield kit (threeneurons)](https://threeneurons.wordpress.com/arduino/dekatron-shield-kit/) | Reference A101 power/drive/index design (AD01/AD01A: 5 V in, ~140 V boost + tripler). Schematic `ad01_sch.gif`, BOM `ad01_bom.gif`, hook-up table `dek_hk.gif` (local copies in `docs/datasheets/ad01/`) | "M. Moorrees © April 2017"; no licence stated. Used for operating values and topology only; artwork and code are not copied |
 
 ## Tube and module data
 
