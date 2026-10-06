@@ -694,7 +694,7 @@ is verified at bring-up. The part is internally compensated, which makes that lo
 | Output capacitors | 2 × 22 µF 25 V X7R (1210) | Reference design; Eq. 11-13 |
 | Input capacitors | 10 µF 35 V X7R + 0.1 µF | Reference design; 35 V > TVS clamp |
 | Bootstrap | 0.1 µF ceramic | Datasheet 7.2.3.2 |
-| Feedback | 100k / 13.7k → **4.95 V** (V_ref 0.596 V); 49.9 Ω loop-injection resistor; 75 pF feed-forward | D6 target 4.9 V; 13.7k is the nearest E96. V_ref tolerance (0.581-0.611 V) gives 4.82-5.08 V, inside the K155ID1 4.75-5.25 V range |
+| Feedback | 100k / 13.7k → **4.95 V** (V_ref 0.596 V); 49.9 Ω loop-injection resistor; 75 pF feed-forward | D6 target 4.9 V; 13.7k is the nearest E96. V_ref tolerance (0.581-0.611 V) gives 4.82-5.07 V, inside the K155ID1 4.75-5.25 V range |
 | EN / UVLO | 511k / 105k | Reference design values |
 
 ### Input protection results
