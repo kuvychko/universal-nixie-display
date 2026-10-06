@@ -11,7 +11,7 @@ Record the exact revision of every purchased module before footprints or pin map
 |---|---|---|
 | ESP32 display board | ESP32-2432S028R family (as in nanovolt-divider) | **Confirmed** (user, 2026-10-05): same module as nanovolt-divider — ESP32, CH340 USB serial, 320×240 ILI9341, XPT2046-type resistive touch, microSD. See [Display harness](#display-harness) |
 | Controller MCU | RP2040-Zero (Waveshare) | **Confirmed** (user, 2026-10-05): RP2040-Zero, headerless. Mount by its castellated edge pads soldered directly to the carrier (no header stack height); footprint must also leave the USB-C connector and BOOT/RESET buttons reachable |
-| A101 socket | Existing socket on hand | _open_ — dimensions, pin numbering |
+| A101 socket | Existing socket on hand | **Confirmed** (user, 2026-10-06): stock socket for the A-101; pin numbering per the tube. Mounting dimensions: enclosure phase |
 | Nixie HV module | Amazon B09D94N3MX | _open_ — qualify delivered version |
 | 12 V adapter | Isolated 12 VDC | Connector **confirmed** (user, 2026-10-05): 2.1 mm barrel plug into a chassis-mounted jack the user already has; jack wired to the board. Adapter not yet bought: rating to be specified generously from the power budget (D5). Assume centre-positive, but D4 must survive reversed polarity |
 
@@ -37,7 +37,7 @@ pinout and sectional test provisions defined.
 | D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | **Proposed** (HV part) | LM5156H EN/UVLO pulled down; the RP2040 `HV_EN` drives it directly; see [Controller IC](#controller-ic). Guide drivers: base pull-downs so reset = guides at rest. Confirm RP2040 GPIO reset state in its datasheet |
 | D8 | Guide driver circuit and its input current at 3.3 V | **Proposed** | MMBTA42 low-side switch per guide; 0.24 mA from the RP2040; see [Guide drivers](#guide-drivers-d8) |
 | D9 | Index sense: threshold, level translation to 3.3 V, protection | **Proposed** | MMBTA92 level shifter, 220k/13k divider, Schottky clamp; 2.67-2.95 V out; see [Index sense](#index-sense-d9) |
-| D10 | A101 socket pinout, verified against the tube drawing | Partly resolved | Two independent sources agree (see [Pinout](#a101-pinout)); the reference page's "pin 12" text is the outlier. Still check continuity on the physical socket and a tube |
+| D10 | A101 socket pinout, verified against the tube drawing | **Decided** 2026-10-06 | User's tube is an A-101 in a stock socket for this tube (RSH30 base / PL30-2p socket), so the socket follows the tube pinout in [A101 pinout](#a101-pinout). Wiring check before first HV: [bringup.md](bringup.md) |
 | D11 | Sectional test provisions: removable links, test points, dummy-load landing | Open | HV converter must be isolatable from the tube section |
 | D12 | Discharge path and target discharge time | Open | Measure in 1D |
 | D13 | Clearance/creepage rules for ~450 V, component voltage ratings | Open | Becomes the board's DRC rules. Passives are 1206; HV resistors are series strings, ≤ 150 V per part ([Component conventions](#component-conventions)) |
@@ -289,7 +289,7 @@ RTN (50 V) ──┬───────────────[R_E 220k]─�
 | 12 | K2 | Main cathode → RTN |
 | 13 | K1 | **Index** (sensed) |
 
-Sources: tube-tester.com pin list, and the AD01 "Dekatron Hook-up" table (A101: anode 8, index 13,
+Applies to the user's stock A-101 socket (D10). Sources: tube-tester.com pin list, and the AD01 "Dekatron Hook-up" table (A101: anode 8, index 13,
 RTN 1-4, 6, 7, 9, 11, 12, G1 5, G2 10). They agree. The AD01 page text once calls the index
 "pin 12", contradicting both. Plan §5 asks for accessible cathode links: break out each RTN pin
 through a link or test pad rather than tying them together under the socket.
