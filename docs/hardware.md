@@ -674,7 +674,7 @@ pump current is ~1.2 mA. 100 Ω also works but charges the stack about half as f
 | `hv_warm.cir`, tube held dark | Steady state with no tube current | **HV 453.3 V, 1.7 V p-p**, V_b 157.9 V, PGOOD high. Load regulation dark → lit 0.9 % |
 | `hv_warm.cir`, V_b feedback (superseded) | Same, regulating V_b = 150 V | HV only 442 V with the tube dark: the reason feedback moved to HV |
 | `hv_warm.cir` stresses | Peaks over the run | Switch node 161 V; capacitors ≤ 159 V (400 V parts); diode reverse ≤ 149 V (600 V); CS pin ≤ 0.10 V (0.3 V abs max); switch current spike 1.86 A with the 47 Ω pump resistor |
-| `hv_startup.cir` | Cold start from 0 V, 40 ms, HV feedback | **Completes** (250 V logic-level MOSFET, 6.85 V drive): tube strikes at 9.7 ms; at 38-40 ms HV 449.9 V, 0.11 V p-p ripple, tube 379 µA, PGOOD high; switch node 163 V, CS ≤ 0.10 V, switch spike 1.87 A. Rerun with the 400 V MOSFET and 10 V drive in progress |
+| `hv_startup.cir` | Cold start from 0 V, 40 ms, HV feedback, 400 V MOSFET with 10 V drive | **Completes:** tube strikes at 9.5 ms; at 38-40 ms HV 449.9 V, 0.11 V p-p ripple, tube 379 µA, PGOOD high; switch node 163 V, CS ≤ 0.10 V, switch spike 1.84 A, inductor 0.76 A at the current limit during start-up. (The earlier logic-level configuration gave the same figures within 1 %.) |
 
 Model limitations: generic MOSFET and diode models (AOD5N40- and ES1J-like), film capacitors as
 C + 0.1 Ω ESR (ESL omitted: nH parasitics ring faster than the 5 ns step resolves), and a
