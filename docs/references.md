@@ -26,9 +26,10 @@ revision as it is used.
 | File | Part | Source | Revision |
 |---|---|---|---|
 | `lm3478.pdf` | LM3478 boost controller | https://www.ti.com/lit/gpn/lm3478 | SNVS085Y, Jan 2026 |
+| `lm5156h.pdf` | LM5156H / LM51561H boost controller | https://www.ti.com/lit/gpn/lm5156h | SNVSBV2, Sep 2020 |
 | `uc3843.pdf` | UCx84x PWM controllers | https://www.ti.com/lit/ds/symlink/uc3843.pdf | SLUS223H, Oct 2024 |
 | `ad01/*.gif` | AD01 dekatron shield schematic, BOM, hook-up | threeneurons (see above) | April 2017 |
 
-Simulation models to fetch for Phase 1B (TI product pages; may need a TI login): **LM3478
-Unencrypted PSpice Transient Model (rev. B)**; for the alternate, the UCCx8C43 Unencrypted PSpice
-Transient Model.
+Simulation models to fetch for Phase 1B (TI product pages; may need a TI login): **Unencrypted
+LM5156-Q1 PSpice Transient Model (rev. H)** from https://www.ti.com/product/LM5156H; for the
+alternate, the LM3478 Unencrypted PSpice Transient Model (rev. B).
