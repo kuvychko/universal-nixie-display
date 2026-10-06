@@ -632,7 +632,17 @@ original 0.71-0.82 A current limit. The limit drops to 0.42-0.49 A (0.22 Ω) and
 rises to ~150 kHz: at the low end of the limit and −10 % inductance, DCM delivers
 ½ × 90 µH × 0.423² × 150 kHz ≈ 1.2 W against ≈ 0.92 W needed. Simulated (`hv_warm.cir`, 90 µH,
 0.35 Ω): HV 450.9 V, 4.1 V p-p ripple, tube 381 µA, inductor peak 0.464 A, switch node 158 V,
-CS ≤ 0.10 V, PGOOD high. Alternative offered by the user: two kit 47 µH parts in series (94 µH,
+CS ≤ 0.10 V, PGOOD high. Cold start (`hv_startup.cir`, same values): tube strikes at 18.5 ms
+(9.5 ms with the old 0.82 A limit); at 38-40 ms HV 449.9 V, 0.12 V p-p, tube 379 µA, PGOOD high,
+switch node 159 V.
+
+**Power-up inrush through the inductor.** The run's largest inductor current, 0.775 A, occurs at
+10 µs, *before* the converter is enabled: when 12 V appears, current flows through the inductor and
+boost diode to charge the empty output capacitors (an LC charge every boost has). It exceeds the
+kit part's 0.71 A rating once, for microseconds, which does not damage a drum inductor; the ES1J
+surge rating is 30 A. The bench steps 12 V instantly; on the board VIN_PROT rises over tens of µs,
+which lowers the peak. Switching current stays at the 0.42-0.49 A limit. Measure the power-up
+inductor current in bring-up step 2. Alternative offered by the user: two kit 47 µH parts in series (94 µH,
 rated 0.80 A); kept as a fallback since one part meets the requirement.
 | CS filter | 100 Ω + 470 pF (47 ns) | **Required:** see pump surge below |
 | MOSFET | **AOS AOD5N40: 400 V**, 1.6 Ω max at V_GS = 10 V, V_th 3.4-4.5 V, Q_g 6.9 nC, DPAK | 2.05× margin at the worst case (below). Chosen over logic-level parts (user, 2026-10-06) |
