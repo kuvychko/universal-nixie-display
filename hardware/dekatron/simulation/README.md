@@ -22,6 +22,7 @@ writes ngspice-compatible copies (`*.ngspice.lib`) without editing the originals
 |---|---|---|
 | `models/vendor/ti/snvmbv9h.zip` → `LM5156-Q1_PSPICE_TRANS/` | Unencrypted LM5156-Q1 PSpice Transient Model, rev. H (model "Final 1.00", 09 Dec 2019) | https://www.ti.com/product/LM5156H |
 | `models/vendor/ti/snvmc69a.zip` → `LM5156-Q1_PSPICE_AVG/` | Unencrypted LM5156x-Q1 PSpice Average Model, rev. A | https://www.ti.com/product/LM5156H |
+| `models/vendor/ti/slvmbj5c.zip` → `TPS54202_PSPICE_TRANS/` | TPS54202 transient model (listed by TI as unencrypted, but the library body is Cadence-encrypted: **not usable in ngspice**) | https://www.ti.com/product/TPS54202 |
 
 Model notes (from TI's header, plus what we found):
 
@@ -61,6 +62,7 @@ Model notes (from TI's header, plus what we found):
 | `hv_warm.cir` | Draft power sheet, steady state with HV feedback; stack precharged so regulation arrives in ~1 ms | **Passes**; results in [hardware.md](../../../docs/hardware.md#simulation-results) |
 | `hv_discharge.cir` | Passive discharge from 450 V (no controller; seconds to run) | **Passes**: all nodes < 50 V in 1.47 s |
 | `hv_startup.cir` | Cold start from 0 V, 40 ms (long run: start it in the background) | **Passes**: strike at 9.5 ms, HV 449.9 V at 40 ms |
+| `input_protect.cir` | 12 V hot-plug and reverse polarity; `.param` selects cable, bulk capacitor and polarity | **Passes** with the AOD4185: rail ≤ 12.5 V, inrush 52.5 A, fuse I²t 0.088 A²s; reversal blocked |
 
 `lm5156_smoke.cir` results (100 µH, 100 kHz, 0.15 Ω sense, 1 µF output, 34 kΩ load = 4.4 mA, 10 nF
 soft-start; generic MOSFET and diode models):

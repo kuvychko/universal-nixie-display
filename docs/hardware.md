@@ -681,15 +681,64 @@ C + 0.1 Ω ESR (ESL omitted: nH parasitics ring faster than the 5 ns step resolv
 behavioural tube whose 380 V strike voltage is an assumption, not tube data. Efficiency is not
 measured yet: the 1 ms averaging window falls inside the converter's burst pauses.
 
-### 5 V and input (selected, simulation pending)
+### 5 V buck
 
-| Item | Part | Basis |
+**TPS54202 (TPS54202DDCR), from TI's reference design** (datasheet SLVSD26C, Figure 7-1: 8-28 V in,
+5 V / 2 A out, 500 kHz). TI's transient model for it is encrypted despite being listed as
+"Unencrypted", so ngspice cannot run it; the design follows the datasheet procedure instead and
+is verified at bring-up. The part is internally compensated, which makes that low-risk.
+
+| Item | Value | Basis |
 |---|---|---|
-| Gate-drive LDO | TI LP2951, adjustable, set to 10 V | See HV boost stage |
-| 5 V buck | TI TPS54202: 4.5-28 V in, 2 A, 500 kHz, SOT-23-6, Eco-mode; unencrypted PSpice model available | D5; 28 V > TVS clamp |
-| Ideal diodes (D6) | TI LM66100: 1.5-5.5 V, 1.5 A, 79 mΩ at 5 V, reverse blocking, SC-70-6 | One block per external 5 V feed |
-| OVP comparator | TI TLV3011 (open-drain; 1.242 V reference ±1 %, 1.8-5.5 V supply) from 5 V, sensing HV through its own 4-part string; output pulls EN/UVLO low and drives `OVP_TRIP` | TLV3012 is push-pull and cannot share the EN node |
-| Reverse-polarity MOSFET, fuse, PTC, TVS | Part numbers chosen at schematic entry | D4 |
+| Inductor | 15 µH, Bourns SRR1260-150M (I_sat 4.6 A, DCR 27 mΩ) | Datasheet Eq. 8: L_min 13.7 µH at K_IND 0.3 (28 V in) |
+| Output capacitors | 2 × 22 µF 25 V X7R (1210) | Reference design; Eq. 11-13 |
+| Input capacitors | 10 µF 35 V X7R + 0.1 µF | Reference design; 35 V > TVS clamp |
+| Bootstrap | 0.1 µF ceramic | Datasheet 7.2.3.2 |
+| Feedback | 100k / 13.7k → **4.95 V** (V_ref 0.596 V); 49.9 Ω loop-injection resistor; 75 pF feed-forward | D6 target 4.9 V; 13.7k is the nearest E96. V_ref tolerance (0.581-0.611 V) gives 4.82-5.08 V, inside the K155ID1 4.75-5.25 V range |
+| EN / UVLO | 511k / 105k | Reference design values |
+
+### Input protection results
+
+`input_protect.cir`: hot-plug of a live 12 V adapter through its lead, with the loads as
+constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W behind its PTC).
+
+| Case | Rail peak | Inrush peak | Fuse I²t | Notes |
+|---|---|---|---|---|
+| Lead 1 µH / 0.1 Ω, with bulk capacitor | 11.9 V | 44 A | 0.059 A²s | |
+| Lead 2 µH / 0.02 Ω (worst), with bulk | **12.5 V** | **52.5 A** | **0.088 A²s** | TVS never conducts (breakdown 16.7 V) |
+| Same, without the bulk electrolytic | 13.7 V | 41 A | 0.034 A²s | Shows why the 160 mΩ-ESR electrolytic is there |
+| Adapter reversed | 0 V | 12 mA blip | — | Blocked |
+
+* **Fuse:** 0.088 A²s is 17 % of the 0468002's 0.506 A²s nominal melting I²t: survives repeated
+  plug-ins.
+* **Reverse-polarity MOSFET changed:** the SOT-23 DMP3098L is rated only 11-14 A pulsed, far below
+  the 52.5 A inrush. The **AOD4185** (DPAK, −40 V, 15 mΩ at 10 V, 115 A pulsed, V_GS ±20 V)
+  has 2.2× margin. Gate: 10k to ground and a 10 V zener (BZT52C10) gate-source; simulated V_GS
+  stays at −10 V.
+* Model limitations: generic MOSFET, TVS and zener models; adapter lead values are assumptions;
+  the adapter's own output impedance (which would lower the inrush) is ignored.
+
+### Power sheet parts
+
+All selected parts, with manufacturer part numbers for ordering:
+[`hardware/dekatron/bom_power_draft.csv`](../hardware/dekatron/bom_power_draft.csv). Passives marked
+"(choose)" are specified by value, rating, dielectric and size. Resistors come from the 1206 kit.
+The final BOM, with reference designators, comes from the KiCad schematic.
+
+| Function | Part |
+|---|---|
+| HV controller | TI **LM5156HPWPR** |
+| HV MOSFET / gate-drive LDO | AOS **AOD5N40** / onsemi **LP2951ACDR2G** (143k / 20.0k → 10.07 V) |
+| HV inductor / diodes | Bourns **SRR1260-101M** / onsemi **ES1J** × 5 |
+| HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4 class) |
+| OVP comparator | TI **TLV3011AIDBVR** (open-drain) |
+| 5 V buck / inductor | TI **TPS54202DDCR** / Bourns **SRR1260-150M** |
+| Ideal diodes | TI **LM66100DCKR** × 3 |
+| Fuse / PTC | Littelfuse **0468002.NRHF** / **1812L075/33DR** |
+| Reverse polarity / TVS | AOS **AOD4185** + BZT52C10 / Littelfuse **SMBJ15A** |
+| Bulk capacitor | Panasonic **EEE-FK1V101P** |
+
+TI's own store showed the TI parts out of stock on 2026-10-06; check Mouser stock when ordering.
 
 ## Nixie controller/mount
 

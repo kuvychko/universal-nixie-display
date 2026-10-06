@@ -32,6 +32,7 @@ revision as it is used.
 | `mmbta92.pdf` | MMBTA92 PNP 300 V (index sense) | https://assets.nexperia.com/documents/data-sheet/MMBTA92.pdf | 30 Jun 2023 |
 | `bsp130.pdf` | Nexperia BSP130, 300 V logic-level MOSFET (considered, rejected for current rating) | https://assets.nexperia.com/documents/data-sheet/BSP130.pdf | — |
 | `aod5n40.pdf` | AOS AOD5N40, 400 V MOSFET (HV boost switch) | https://www.aosmd.com/res/datasheets/AOD5N40.pdf | — |
+| `tps54202.pdf` | TPS54202 2 A buck (reference design Figure 7-1) | https://www.ti.com/lit/gpn/tps54202 | SLVSD26C, Feb 2026 |
 | `rp2040.pdf` | RP2040 datasheet (pad reset state Table 341; IO characteristics Table 625) | https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf | — |
 | `rp2040_zero_sch.pdf` | Waveshare RP2040-Zero schematic | https://www.waveshare.com/w/upload/4/4c/RP2040_Zero.pdf | — |
 | `cyd/ESP32-2432S028-MCU.jpg`, `-LCM.jpg` | ESP32-2432S028 schematic (vendor original V0.1, 2022-07-15) | https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display (OriginalDocumentation/5-Schematic) | V0.1 |

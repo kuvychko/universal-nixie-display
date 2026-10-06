@@ -1,0 +1,68 @@
+* 12 V input protection: hot-plug of a live adapter, and reverse polarity
+*
+* Purpose (Phase 1B power sheet, D4): peak voltage on the protected rail when a live 12 V adapter
+* is plugged in through its cable (LC ringing against the input capacitors), inrush current, and
+* blocking of a reversed adapter.
+* Chain: adapter -> cable (1 uH, 0.1 ohm: ~1 m of adapter lead, assumed) -> fuse 0468002 (~0.05 ohm)
+*   -> P-MOSFET AOD4185 (reverse-polarity, gate to ground via 10k, 10 V gate-source zener).
+*      DMP3098L (SOT-23) was rejected: its 11-14 A pulsed rating is below the 50 A inrush.
+*   -> VIN_PROT: SMBJ15A TVS, 100 uF EEE-FK1V101P (160 mohm ESR, if BULK=1), ceramics
+*   -> loads as constant-power sinks (5 V buck input 3.7 W, HV boost ~1 W)
+*   -> PTC 1812L075/33 (0.11-0.4 ohm) -> Nixie HV module (assumed 47 uF input, 4.5 W)
+* Models are generic approximations written for this bench (AOD4185-, SMBJ15A-, BZT52C10-like).
+* .param VADP=12 for normal polarity, -12 for a reversed adapter.
+* Run from this directory:  ngspice_con -b input_protect.cir > input_protect.log
+
+.param VADP=12 BULK=1 LCABLE=1u RCABLE=0.1
+
+* Adapter switched in at 10 us with a 1 us edge (hot plug)
+VADP  adp 0 PULSE(0 {VADP} 10u 1u 1u 1 2)
+LCAB  adp c1 {LCABLE}
+RCAB  c1 jack {RCABLE}
+RFUSE jack fz 0.05
+
+* Reverse-polarity P-MOSFET: drain at the input side, source at VIN_PROT (body diode conducts
+* forward from the input until the gate enhances); gate to ground through 10k, 10 V zener G-S
+MP1   fz gp vprot MPFET
+RGP   gp 0 10k
+DZG   gp vprot DZ10
+
+* VIN_PROT
+DTVS  0 vprot DTVS15
+CBLK  vprot cb {BULK ? 100u : 1p}
+RBLK  cb 0 0.16
+CCER1 vprot 0 10u
+CCER2 vprot 0 22u
+CCER3 vprot 0 1u
+
+* Loads: constant power, current limited below 4 V so start-up is defined
+BBUCK vprot 0 I = 3.7 / max(V(vprot), 4) * (V(vprot) > 4.5 ? 1 : V(vprot)/4.5)
+BHV   vprot 0 I = 1.0 / max(V(vprot), 4) * (V(vprot) > 4.5 ? 1 : V(vprot)/4.5)
+
+* Nixie HV module branch through its PTC
+RPTC  vprot nix 0.25
+CNIX  nix 0 47u
+BNIX  nix 0 I = 4.5 / max(V(nix), 4) * (V(nix) > 6 ? 1 : V(nix)/6)
+
+.model MPFET VDMOS(pchan Vto=-2.0 Kp=40 Rd=0.008 Rs=0.003 Cgdmax=800p Cgdmin=190p Cgs=2.3n Cjo=600p Is=1e-10 Rb=0.005)
+.model DTVS15 D(Is=1e-12 N=1 Rs=0.31 BV=16.7 Ibv=1m Cjo=2n)
+.model DZ10 D(Is=1e-12 N=1 Rs=5 BV=10 Ibv=1m)
+
+.tran 10n 2m 0 20n
+.control
+run
+meas tran vprot_pk  MAX v(vprot)        from=0 to=2m
+meas tran vprot_end AVG v(vprot)        from=1.8m to=2m
+let iin = -i(VADP)
+meas tran iin_pk    MAX iin             from=0 to=2m
+meas tran iin_min   MIN iin             from=0 to=2m
+meas tran iin_end   AVG iin             from=1.8m to=2m
+let vgs = v(gp)-v(vprot)
+meas tran vgs_min   MIN vgs             from=0 to=2m
+meas tran vnix_end  AVG v(nix)          from=1.8m to=2m
+meas tran itvs_pk   MAX @dtvs[id]       from=0 to=2m
+let i2 = iin*iin
+let i2t = integ(i2)
+meas tran fuse_i2t  FIND i2t            AT=2m
+.endc
+.end
