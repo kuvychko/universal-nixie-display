@@ -33,7 +33,7 @@ pinout and sectional test provisions defined.
 | D3 | HV output current budget (tube + bias + bleeder) and margin | **Proposed** | 1 mA at HV, about 4.4 mA at the boost node; see [HV load budget](#hv-load-budget-d3) |
 | D4 | 12 V input protection: reverse polarity, fuse/PTC, TVS, inrush | **Proposed** | Barrel adapters of either polarity exist, so reverse-polarity protection is mandatory. Input arrives by wire from the chassis jack, not a board-mounted jack |
 | D5 | 5 V buck capacity | **Proposed** | ≈ 0.63 A peak estimate, buck rated 2 A; 12 V adapter 2 A; see [Power budget](#power-budget) |
-| D6 | USB power paths: VBUS isolation/selection for ESP32 USB and standalone RP2040 debug | **Proposed** | Both 5 V feeds leave the board through reverse-blocking ideal diodes; see [USB power paths](#usb-power-paths-d6) |
+| D6 | USB power paths: VBUS isolation/selection for ESP32 USB and standalone RP2040 debug | **Decided** 2026-10-06 | Ideal diode on every external 5 V feed (one design block); no reliance on a USB isolator; see [USB power paths](#usb-power-paths-d6) |
 | D7 | HV enable default and defined tube state while the RP2040 is in reset/BOOTSEL | **Proposed** (HV part) | LM5156H EN/UVLO pulled down; the RP2040 `HV_EN` drives it directly; see [Controller IC](#controller-ic). Guide drivers: base pull-downs so reset = guides at rest. Confirm RP2040 GPIO reset state in its datasheet |
 | D8 | Guide driver circuit and its input current at 3.3 V | Open | Reference drive is ~5 V logic |
 | D9 | Index sense: threshold, level translation to 3.3 V, protection | Open | One sensed reference cathode in Rev A |
@@ -256,7 +256,7 @@ Estimates for sizing; each has its basis, and measurement replaces it in 1D.
 | Purchased Nixie HV module | 12 V | 0.36 A | 20 mA × 170 V / 80 % assumed module efficiency; qualify in Phase 2 |
 | **12 V total** | | **≈ 0.75 A** | Adapter: **12 V, 2 A regulated**, 2.1 mm centre-positive (still protected against reversal) |
 
-5 V buck: a 12 V → 5 V synchronous buck IC rated 2 A with ≥ 28 V input rating, chosen in 1B
+5 V buck (nominal setpoint **4.9 V**, see D6): a 12 V → 5 V synchronous buck IC rated 2 A with ≥ 28 V input rating, chosen in 1B
 (e.g. TPS54202-class in SOT-23-6, which is easy to hand-solder). Its output feeds this board's
 logic and the two external 5 V feeds below.
 
@@ -282,13 +282,28 @@ point (ESP32 host interface; RP2040 flashing and debug). What their schematics s
 * Consequence: feeding the Zero's 5V pin from our rail while its USB is plugged in ties our 5 V
   supply to the computer's VBUS.
 
-**Proposal:** every 5 V feed to a module with its own USB goes through a **reverse-blocking ideal
-diode** (LM66100-class: 1.5-5.5 V, 1.5 A, reverse-current blocking; verify the datasheet in 1B):
+**Decision (user, 2026-10-06):** every 5 V feed to a module with its own USB goes through a
+**reverse-blocking ideal diode**, one reused design block (LM66100-class: 1.5-5.5 V, 1.5 A, reverse-current blocking; verify the datasheet in 1B):
 
 | Feed | Normal (12 V on) | Module USB plugged, 12 V on | Module USB plugged, 12 V off |
 |---|---|---|---|
 | `5V_DISP` → CYD P1 `VIN` | Board powers CYD | The higher source supplies the CYD 5V net; CYD's D1 protects the host, our ideal diode protects our rail | CYD runs from USB; ideal diode blocks back-feed into our board |
-| `5V_MCU` → RP2040-Zero `VSYS` | Board powers Zero | The higher source wins: if VBUS is higher, our diode blocks; if ours is higher, current flows into the host's VBUS. **Keep our 5 V nominal ≤ 5.0 V and accept, or add a VBUS-sense that disables our feed** (decide in 1B) | Zero runs from USB (standalone debug); our side stays dark |
+| `5V_MCU` → RP2040-Zero `VSYS` | Board powers Zero | The higher source wins: if VBUS is higher, our diode blocks. If ours is higher, current flows toward the host's VBUS (see residual case below) | Zero runs from USB (standalone debug); our side stays dark |
+
+**Residual case (accepted, mitigated):** the Zero's VBUS and VSYS are one net, so no diode on our
+side can stop *our* rail from feeding a host whose VBUS is lower than ours while both are
+connected. Mitigation: set the 5 V rail to **4.9 V nominal**, inside the K155ID1 supply range
+(4.75-5.25 V) and below a typical host VBUS (5.0-5.1 V), so the host normally wins and our ideal
+diode blocks. Verify in 1D by measuring current in the `5V_MCU` feed with the Zero's USB attached.
+
+**No isolator required.** The instrument must be safe and correct with a plain USB cable to the
+host. The 12 V adapter is isolated, so connecting a host adds one ground reference and no ground
+loop. A USB isolator is a test-bench accessory only (user, 2026-10-06).
+
+Alternatives considered (standard practice for VBUS back-feed): Schottky diode-OR (Raspberry Pi
+Pico style; its drop would give the host priority on the Zero feed), power-multiplexer ICs
+(TPS2116/TPS2121 class), VBUS-blocking cables, and USB isolators. Ideal diodes everywhere were
+chosen for one uniform design block.
 
 A Schottky diode instead of an ideal diode would drop ~0.3-0.4 V. That leaves the CYD's
 AMS1117-3.3 (≈ 1.1 V dropout) with little margin, so an ideal diode is preferred for both feeds.
