@@ -22,5 +22,5 @@
   (constraint edge_clearance (min 3.0mm)))
 (rule "OSH Park minimum"
   (constraint track_width (min 0.1524mm))
-  (constraint hole_size (min 0.33mm))
-  (constraint annular_width (min 0.1778mm)))
+  (constraint hole_size (min 0.254mm))
+  (constraint annular_width (min 0.127mm)))

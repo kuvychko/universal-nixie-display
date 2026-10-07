@@ -57,6 +57,51 @@ module: pads at Waveshare's castellation positions (from their STEP model), exte
 the module edge for hand soldering. Check it with `kicad-cli fp export svg` after changes, and
 print it 1:1 against a real module before ordering boards (bring-up step 0).
 
+### PCB (Phase 1C): placement and scripted routing
+
+100 × 85 mm, 2 layers, OSH Park rules (6 mil trace/space, 10 mil drill, 5 mil annular ring; the
+D13 class rules in `dekatron.kicad_dru`). The board is generated, so re-run the whole chain after
+a schematic change (the board script reads the exported netlist):
+
+```
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/gen_pcb.py             # place, write .kicad_pcb + .kicad_dru
+cp hardware/dekatron/dekatron.kicad_pcb build/placed.kicad_pcb
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/pcb_io.py dump hardware/dekatron/dekatron.kicad_pcb build/geom.json
+sh tools/route_loop.sh 10                                                 # route; failed nets go first next pass
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/pcb_io.py apply hardware/dekatron/dekatron.kicad_pcb build/routes.json
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/pcb_io.py dump hardware/dekatron/dekatron.kicad_pcb build/geom_filled.json
+uv run tools/route_pcb.py build/geom_filled.json build/routes_gnd.json --repair build/routes.json
+cp build/placed.kicad_pcb hardware/dekatron/dekatron.kicad_pcb
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/pcb_io.py apply hardware/dekatron/dekatron.kicad_pcb build/routes_gnd.json
+```
+
+About 35 minutes on this machine (the routing loop is ~4 min per pass; this board converged on
+pass 8). What the pieces do:
+
+* `gen_pcb.py` places by hand where it matters (`ANCHOR`: edges, connectors, the tripler ladder,
+  the HV dividers and anode resistors, the LM5156 and its neighbours, the RP2040-Zero and its
+  power parts) and constructively for the rest, inside per-group regions. `KEEPOUT` reserves
+  fan-out room around the LM5156; the LM5156 is rotated 90° so its signal row faces the
+  comparators and the HV divider and its drive row faces Q102. Its exposed pad gets six 0.3 mm
+  vias as extra pads (the library's thermal-via variant uses 0.2 mm, below OSH Park's minimum),
+  which is why DRC reports U106 as differing from the library.
+* `route_pcb.py` is a two-layer A* router on a 0.1 mm grid with the D13 class clearances. It has
+  no rip-up, so order is the lever: the LM5156's fine-pitch nets first, in an order that keeps
+  each pin's escape open; each LM5156 signal pin gets a reserved 1 mm escape stub; failed nets
+  are promoted in the next pass (`route_loop.sh`). Raster margins: 0.075 mm (tracks), 0.12 mm
+  (vias), 0.08 mm within 0.4 mm of the LM5156 pins. The GND pour counts as connected copper on
+  the bottom layer only, so a top-side GND pad gets a stitching via.
+* `pcb_io.py apply` writes the tracks, fills the pours and adds GND stitching vias on a 2.5 mm
+  grid wherever both pours have solid copper; the `--repair` pass then re-routes GND against
+  the real main fill, so pour islands that only touch a pad get connected.
+
+### DRC baseline (2026-10-07)
+
+`kicad-cli pcb drc --severity-all --schematic-parity hardware/dekatron/dekatron.kicad_pcb`:
+**0 unconnected, 0 clearance, 0 schematic parity.** Remaining: 184 silkscreen warnings
+(reference text over pads or overlapping, clipped by the fab; tidy before ordering), the
+expected U106 library mismatch (thermal vias above), and an occasional starved-thermal warning.
+
 ## Simulation
 
 Benches are plain ngspice netlists (`.cir`) in `hardware/dekatron/simulation/`, so they run in

@@ -99,7 +99,6 @@ R135,14.0k,"HV monitor / OVP divider, middle (HV_SENSE 2.36 V at 450 V)",,,1 %,R
 R140,10.5k,"HV monitor / OVP divider, lower (OVP trip 551.8 V)",,,1 %,Resistor_SMD:R_1206_3216Metric,
 R141,2.0M,"V_b OVP divider, upper",Vishay,HVR2500002004FR500,"HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K",Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal,
 R143,12.4k,"V_b OVP divider, lower (trip ~202 V)",,,1 %,Resistor_SMD:R_1206_3216Metric,
-R145,910k,"HV dummy load (bring-up only, LK4 open)",Vishay,HVR3700009103FR500,"HVR37: 0.5 W, 3500 V DC, 1 %, 200 ppm/K",Resistor_THT:R_Axial_DIN0411_L9.9mm_D3.6mm_P15.24mm_Horizontal,DNP
 R201,40.2k,"G+ / RTN feed: 1.5-2.1 mA; 0.18 W at V_b 175 V, 0.31 W at the V_b OVP trip",Vishay,MRS25000C4022FCT00,"MRS25: 0.6 W, 350 V, 1 %, 50 ppm/K",Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal,
 R202,200k,"RTN_SENSE divider, upper (175 V if RTN fails to V_b)",Vishay,HVR2500002003FR500,"HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K",Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal,
 R204,10k,"RTN_SENSE divider, lower (2.43 V at 51 V)",,,1 %,Resistor_SMD:R_1206_3216Metric,
@@ -150,7 +149,7 @@ U102,LM66100,"Ideal diode, 5V_DISP feed",Texas Instruments,LM66100DCKR,"1.5 A, r
 U103,LM66100,"Ideal diode, 5V_MCU feed",Texas Instruments,LM66100DCKR,"1.5 A, reverse blocking",Package_TO_SOT_SMD:SOT-363_SC-70-6,
 U104,LM66100,"Ideal diode, 5V_NIX feed",Texas Instruments,LM66100DCKR,"1.5 A, reverse blocking",Package_TO_SOT_SMD:SOT-363_SC-70-6,
 U105,LP2951 (adj. 10 V),"Gate-drive LDO, adjustable, 10.07 V",onsemi,LP2951ACDR2G,"30 V in, 100 mA",Package_SO:SOIC-8_3.9x4.9mm_P1.27mm,
-U106,LM5156H,HV boost controller,Texas Instruments,LM5156HPWPR,HTSSOP-14 exposed pad,Package_SO:Texas_HTSSOP-14-1EP_4.4x5mm_P0.65mm_EP3.4x5mm_Mask3.155x3.255mm_ThermalVias,
+U106,LM5156H,HV boost controller,Texas Instruments,LM5156HPWPR,HTSSOP-14 exposed pad,Package_SO:Texas_HTSSOP-14-1EP_4.4x5mm_P0.65mm_EP3.4x5mm_Mask3.155x3.255mm,
 U107,TLV3011,Independent OVP comparator (open drain),Texas Instruments,TLV3011AIDBVR,1.242 V ref,Package_TO_SOT_SMD:SOT-23-6,
 U108,TLV3011,"V_b OVP comparator (open drain, wired-OR on EN/UVLO)",Texas Instruments,TLV3011AIDBVR,1.242 V ref,Package_TO_SOT_SMD:SOT-23-6,
 U301,RP2040-Zero,Dekatron controller MCU,Waveshare,RP2040-Zero,"headerless, castellated",dekatron:RP2040-Zero_Castellated,

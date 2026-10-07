@@ -28,7 +28,7 @@ def xy(p):
 
 def dump(board_path, out):
     b = pcbnew.LoadBoard(board_path)
-    d = {"pads": [], "edges": [], "zones": []}
+    d = {"pads": [], "edges": [], "zones": [], "novia": [], "gndfill": []}
     for fp in b.GetFootprints():
         for pad in fp.Pads():
             for layer in (pcbnew.F_Cu, pcbnew.B_Cu):
@@ -49,12 +49,73 @@ def dump(board_path, out):
             d["edges"].append({"start": xy(dr.GetStart()), "end": xy(dr.GetEnd())})
     for z in b.Zones():
         if z.GetIsRuleArea():
+            if z.GetDoNotAllowVias():
+                ol = z.Outline().Outline(0)
+                d["novia"].append([xy(ol.CPoint(i)) for i in range(ol.PointCount())])
             continue
         ol = z.Outline().Outline(0)
         d["zones"].append({"net": z.GetNetname(), "layer": "F" if z.GetLayer() == pcbnew.F_Cu else "B",
                            "poly": [xy(ol.CPoint(i)) for i in range(ol.PointCount())]})
+        if z.GetNetname() == "GND" and z.IsFilled():
+            fp = z.GetFilledPolysList(z.GetLayer())
+            if fp.OutlineCount():
+                k = max(range(fp.OutlineCount()), key=lambda i: fp.Outline(i).Area())
+                d["gndfill"].append({"layer": "F" if z.GetLayer() == pcbnew.F_Cu else "B",
+                                     "outline": [xy(fp.Outline(k).CPoint(i)) for i in range(fp.Outline(k).PointCount())],
+                                     "holes": [[xy(fp.Hole(k, h).CPoint(i)) for i in range(fp.Hole(k, h).PointCount())]
+                                               for h in range(fp.HoleCount(k))]})
     json.dump(d, open(out, "w"))
     print(f"{len(d['pads'])} pad outlines, {len(d['edges'])} edges, {len(d['zones'])} zones -> {out}")
+
+
+STITCH_PITCH = 2.5     # mm grid for GND stitching vias
+STITCH_RING = 0.4      # a via goes only where a circle this size lies inside both GND fills (via r 0.35)
+STITCH_HOLE = 1.0      # minimum distance to any existing hole (vias, PTH pads, NPTH)
+
+
+def stitch(b, P):
+    """Join the top and bottom GND pours with vias wherever both have solid copper: traces cut the
+    pours into fragments, and a fragment touching only a pad is otherwise joined by that pad alone."""
+    import math
+    fills = {}
+    for z in b.Zones():
+        if not z.GetIsRuleArea() and z.GetNetname() == "GND":
+            fills[z.GetLayer()] = z.GetFilledPolysList(z.GetLayer())
+    if pcbnew.F_Cu not in fills or pcbnew.B_Cu not in fills:
+        return 0
+    keep_out = [z.Outline() for z in b.Zones() if z.GetIsRuleArea() and z.GetDoNotAllowVias()]
+    holes = [(mm(v.GetPosition().x) - OX, mm(v.GetPosition().y) - OY) for v in b.GetTracks()
+             if isinstance(v, pcbnew.PCB_VIA)]
+    for fp in b.GetFootprints():
+        for pad in fp.Pads():
+            if pad.GetDrillSize().x > 0:
+                holes.append((mm(pad.GetPosition().x) - OX, mm(pad.GetPosition().y) - OY))
+    gnd = b.FindNet("GND")
+    bb = b.GetBoardEdgesBoundingBox()
+    x0, y0 = mm(bb.GetLeft()) - OX, mm(bb.GetTop()) - OY
+    x1, y1 = mm(bb.GetRight()) - OX, mm(bb.GetBottom()) - OY
+    ring = [(STITCH_RING * math.cos(k * math.pi / 4), STITCH_RING * math.sin(k * math.pi / 4)) for k in range(8)]
+    n = 0
+    y = y0 + STITCH_PITCH
+    while y < y1:
+        x = x0 + STITCH_PITCH
+        while x < x1:
+            ok = all(fills[L].Contains(P(x + dx, y + dy)) for L in fills for dx, dy in ring + [(0, 0)])
+            ok = ok and not any(k.Contains(P(x, y)) for k in keep_out)
+            ok = ok and all(math.hypot(x - hx, y - hy) >= STITCH_HOLE for hx, hy in holes)
+            if ok:
+                v = pcbnew.PCB_VIA(b)
+                v.SetPosition(P(x, y))
+                v.SetWidth(pcbnew.FromMM(VIA_D))
+                v.SetDrill(pcbnew.FromMM(VIA_DRILL))
+                v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu)
+                v.SetNet(gnd)
+                b.Add(v)
+                holes.append((x, y))
+                n += 1
+            x += STITCH_PITCH
+        y += STITCH_PITCH
+    return n
 
 
 def apply(board_path, routes):
@@ -94,10 +155,13 @@ def apply(board_path, routes):
         v.SetNet(net_of(net))
         b.Add(v)
     pcbnew.ZONE_FILLER(b).Fill(b.Zones())
+    ns = stitch(b, P)
+    if ns:
+        pcbnew.ZONE_FILLER(b).Fill(b.Zones())
     pcbnew.SaveBoard(board_path, b)
     raw = open(board_path, "rb").read()
     open(board_path, "wb").write(raw.replace(b"\r\n", b"\n"))
-    print(f"{n} track segments, {len(r['vias'])} vias -> {board_path}"
+    print(f"{n} track segments, {len(r['vias'])} vias, {ns} GND stitching vias -> {board_path}"
           + (f"   FAILED NETS: {r['failed']}" if r.get("failed") else ""))
 
 

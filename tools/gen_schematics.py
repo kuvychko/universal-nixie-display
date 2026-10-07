@@ -924,7 +924,10 @@ def build_power(lib: SymbolLib) -> Sheet:
     # ==== HV BOOST (D2) =============================================================================
     note("HV BOOST (D2, Phase 1B)", "LM5156H, ~150 kHz DCM, 10 V gate drive, feedback from HV (tripler sheet area), "
          "CS filter against the pump surge; kit 100 uH inductor", 15.24, 152.4)
+    # footprint without the library's 0.2 mm thermal vias (below OSH Park's 0.254 mm minimum drill);
+    # gen_pcb.py adds 0.3 mm vias in the exposed pad instead
     M = sh.place("Regulator_Switching:LM5156HPWP", "U106", "LM5156H", 165.1, 200.66, textpos=(-12.7, -17.0),
+                 footprint="Package_SO:Texas_HTSSOP-14-1EP_4.4x5mm_P0.65mm_EP3.4x5mm_Mask3.155x3.255mm",
                  fields=F("HV boost controller", "LM5156HPWPR", "Texas Instruments", "HTSSOP-14 exposed pad"))
     # BIAS = VCC = VDRV, DITHOFF tied high (dither off)
     sh.w(M["BIAS"], (147.32, M["BIAS"][1]))
@@ -1097,7 +1100,7 @@ def build_power(lib: SymbolLib) -> Sheet:
         top, bot = (d["K"], d["A"]) if k_top else (d["A"], d["K"])
         sh.w((x, YT), top)
         sh.w(bot, (x, YB))
-    BUS = [152.4, 177.8, 205.74, 256.54, 266.7]
+    BUS = [152.4, 177.8, 256.54, 266.7]
     sh.w(lk["2"], (33.02, YT), (63.5, YT), caps["C125"]["1"])
     sh.nl("V_BT", (33.02, YT))
     sh.w(caps["C125"]["2"], (83.82, YT), (88.9, YT), (104.14, YT), caps["C126"]["1"])
@@ -1127,7 +1130,7 @@ def build_power(lib: SymbolLib) -> Sheet:
     H37 = dict(HVR37, model="HVR3700")
     note("HV DIVIDERS (D2, D12)", "One leaded HVR25 per leg. Feedback and OVP stay on separate dividers;\n"
          "monitor and OVP share one. No dedicated bleeder: both dividers discharge HV", 139.7, 233.68)
-    XF, XM, XD = 152.4, 177.8, 205.74
+    XF, XM = 152.4, 177.8
     # feedback: 1.00 V x (1 + 4.75M / 10.5k) = 453.4 V (9.53k for the 500 V setting: 499.4 V)
     n = node_below(top("R126", H25, "4.75M", "4754", XF, "HV feedback divider, upper"))
     r = vR("R130", "10.5k", XF, n[1], "HV feedback, lower (453.4 V; 9.53k for 500 V)", "1 %")
@@ -1149,8 +1152,8 @@ def build_power(lib: SymbolLib) -> Sheet:
     sh.w(c["1"], (266.7, ovp[1] - 12.7))
     sh.pwr("+5V", (266.7, ovp[1] - 12.7))
     down_gnd(c["2"])
-    # HV dummy load for bring-up step 2 (DNP): 910k, 0.5 mA and 0.23 W at 455 V, fitted with LK4 open
-    down_gnd(top("R145", H37, "910k", "9103", XD, "HV dummy load (bring-up only, LK4 open)", dnp=True))
+    # HV dummy load for bring-up step 2: off-board (an HVR37 910k soldered across TP108 and a GND
+    # point with LK4 open); no footprint, which kept HV_STACK compact on the PCB
     tp("TP108", "HV_STACK", (256.54, YT), textpos=(1.27, -6.4))
     lk = link("LK4", 266.7, YT, "D11 link L4: tripler output to the anode string", hv=True)
     sh.w(lk["2"], (281.94, YT))

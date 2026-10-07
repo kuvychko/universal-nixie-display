@@ -304,8 +304,10 @@ nets (desolder to open; the open gap then meets the HV clearance rule).
 | L5 | V_b → G+ / RTN regulators | 3: bias rails brought up separately |
 | JP_HVINH | 2-pin header: shunt fitted = EN/UVLO held low | Any time: HV cannot start, whatever the firmware does |
 
-* **Dummy-load footprint**, unpopulated in normal use: one Vishay HVR37 910k (0411, 0.5 W,
-  3500 V) at HV: 0.5 mA and 0.23 W at 455 V. Fitted for step 2 with L4 open, removed afterwards. (The V_b dummy load
+* **HV dummy load, off-board** (no footprint since Phase 1C: it could not sit next to HV_STACK
+  without crowding a mounting hole or the board edge): one Vishay HVR37 910k (0411, 0.5 W,
+  3500 V) soldered across TP108 (`HV_STACK`) and a GND point with L4 open; 0.5 mA and 0.23 W at
+  455 V. Removed after step 2. (The V_b dummy load
   was removed in the Phase 1B review: the boost cannot be run without the tripler.)
 * **Test points**: `VIN_PROT`, `5V`, `3V3`, `VCC` (LM5156), `SW` (switch node, with an adjacent
   ground for a short scope-ground spring), `V_B`, `HV` (`HV`-class clearance, silkscreen warning),
@@ -600,7 +602,7 @@ P1 `VIN` reading ~4.6 V confirms the back-feed path.
 |---|---|---|
 | Feedback divider top (D2) | Up to 552 V; 64 mW at 552 V | HVR25 4.75M `HVR2500004754FR500`; bottom 10.5k sets 453.4 V (9.53k for 500 V: 499.4 V) |
 | Monitor / OVP divider top (D2) | Up to 552 V; 65 mW | HVR25 4.64M `HVR2500004644FR500`; 14.0k + 10.5k below |
-| HV dummy load (D11, DNP) | 455 V; 0.23 W | HVR37 910k `HVR3700009103FR500` |
+| HV dummy load (D11, off-board, bring-up only) | 455 V; 0.23 W | HVR37 910k `HVR3700009103FR500` |
 | Anode resistor (D1) | 250-300 V while conducting; 550 V if the anode shorts (0.46 W) | 2 × HVR37 332k `HVR3700003323FR500` (2 × 402k `HVR3700004023FR500` for 500 V) |
 | V_b bleeder | ≤ 202 V | HVR25 2.4M `HVR2500002404FR500` |
 | V_b OVP divider top | ≤ 202 V | HVR25 2.0M `HVR2500002004FR500`; 12.4k below |
@@ -785,8 +787,8 @@ constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W be
 ### Power sheet parts
 
 The schematic generator writes the board BOM with references, functions, MPNs and ratings:
-[`hardware/dekatron/bom.csv`](../hardware/dekatron/bom.csv) (power and tube sheets, including the DNP
-HV dummy load). Passives without an MPN are specified by value, rating, dielectric and size; 1206
+[`hardware/dekatron/bom.csv`](../hardware/dekatron/bom.csv) (power, tube and mcu sheets; the
+bring-up HV dummy load is off-board and not in it). Passives without an MPN are specified by value, rating, dielectric and size; 1206
 resistors come from the user's kit, the leaded high-voltage resistors are Vishay HVR25 / HVR37 /
 MRS25 with full ordering codes ([Component conventions](#component-conventions)), and inductors come
 from the user's radial kit where noted.
@@ -798,7 +800,7 @@ from the user's radial kit where noted.
 | HV inductor / diodes | **Kit 100 µH radial** (0.71 A, 0.35 Ω) / onsemi **ES1J** × 5 |
 | HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4 class) |
 | OVP comparators | 2 × TI **TLV3011AIDBVR** (open-drain): HV 551.8 V, V_b ≈ 202 V |
-| High-voltage resistors | Vishay **HVR25** × 7, **HVR37** × 2 (+ 1 DNP), **MRS25** × 1 (see [Component conventions](#component-conventions)) |
+| High-voltage resistors | Vishay **HVR25** × 7, **HVR37** × 2 (+ 1 off-board bring-up load), **MRS25** × 1 (see [Component conventions](#component-conventions)) |
 | 5 V buck / inductor | TI **TPS54202DDCR** / **kit 15 µH radial** (1.31 A) |
 | Ideal diodes | TI **LM66100DCKR** × 3 |
 | Fuse / PTC | Littelfuse **0468002.NRHF** / **1812L075/33DR** |
