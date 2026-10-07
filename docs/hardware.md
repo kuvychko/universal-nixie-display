@@ -566,7 +566,7 @@ P1 `VIN` reading ~4.6 V confirms the back-feed path.
 | Anode resistor (D1) | ≈ 250-300 V while the tube conducts | 3 × 220k (450 V) or 3 × 270k (500 V); ≤ 100 V per part |
 | Bleeder (D3) | Full HV, up to 500 V | 4 × 1.2M = 4.8 MΩ; 125 V per part, 94 µA at 450 V |
 | HV monitor divider top (D2) | Full HV, up to 500 V | 4 parts, ≤ 125 V each; values in 1B |
-| Feedback divider top (V_b, D2) | Up to 167 V | 2 × 750k = 1.5 MΩ; 84 V per part; bottom ≈ 10.1 kΩ sets 150 V |
+| Feedback divider top (HV, D2, Phase 1B) | Up to 550 V | 4 × 1.1M = 4.4 MΩ; 137 V per part at 550 V; bottom 9.76k sets 451.8 V |
 | Index R15 (D9) | 50 V; 167 V if the RTN regulator fails | 2 × 110k = 220 kΩ; 84 V per part in the fault case |
 | Guide pull-ups 470k (D8) | ≤ 90 V | Single part |
 
@@ -625,6 +625,14 @@ and RTN regulators belong to the `tube` sheet. Simulation benches live in
 | Inductor | **100 µH ±10 % from the user's 6 × 8 mm radial kit: rated 0.71 A, DCR 0.35 Ω** (was SRR1260-101M) | User's kit (2026-10-06); see Kit inductor below |
 | Sense resistor | **0.22 Ω → cycle limit 0.42-0.49 A** (100 mV ±7 %) | Inside the kit inductor's 0.71 A rating |
 | DCM margin | t_on + t_off = L·I_pk·(1/V_IN + 1/(V_b − V_IN)) ≈ 5.3 µs < 6.7 µs at 0.49 A, 110 µH, 10.8 V in | Stays DCM at the current limit, +10 % inductance and −10 % input |
+| CS filter | 100 Ω + 470 pF (47 ns) | **Required:** see pump surge below |
+| MOSFET | **AOS AOD5N40: 400 V**, 1.6 Ω max at V_GS = 10 V, V_th 3.4-4.5 V, Q_g 6.9 nC, DPAK | 2.05× margin at the worst case (below). Chosen over logic-level parts (user, 2026-10-06) |
+| Gate drive | **10 V**: LM5156 in BIAS = VCC mode (datasheet: 2.97-16 V), fed by an **LP2951** (30 V max input, 100 mA, 380 mV dropout, adjustable, SOIC-8) from the protected 12 V | Internal VCC (6.85 V) is too low for a 4.5 V-threshold MOSFET. Load ≈ 1 mA (Q_g × f + bias). The LP2951 input rating covers the ≈ 24 V TVS clamp |
+| Boost diode | ES1J: 600 V, 1 A, t_rr 35 ns, SMA | |
+| Soft-start | C_SS = 47 nF (10 µA → 4.7 ms ramp) | LM5156H (no hiccup); start-up is energy-limited anyway |
+| Compensation | 10 kΩ + 10 nF, 100 pF to ground | Smoke-test values; load-step check pending |
+| Feedback | **From HV:** 4 × 1.1M / 9.8k → HV = 450 V (1.00 V ref); 500 V option: bottom ≈ 8.82k | Moved from V_b in simulation (see results). ≤ 150 V per part: 137 V each at 550 V |
+| V_b bleeder | 2 × 1.2M (2.4 MΩ, 63 µA) | V_b's own discharge path when link L3 separates the boost from the tripler (D11) |
 
 **Kit inductor (2026-10-06).** The user's kit 100 µH part is rated 0.71 A (DCR 0.35 Ω), below the
 original 0.71-0.82 A current limit. The limit drops to 0.42-0.49 A (0.22 Ω) and the frequency
@@ -643,14 +651,6 @@ surge rating is 30 A. The bench steps 12 V instantly; on the board VIN_PROT rise
 which lowers the peak. Switching current stays at the 0.42-0.49 A limit. Measure the power-up
 inductor current in bring-up step 2. Alternative offered by the user: two kit 47 µH parts in series (94 µH,
 rated 0.80 A); kept as a fallback since one part meets the requirement.
-| CS filter | 100 Ω + 470 pF (47 ns) | **Required:** see pump surge below |
-| MOSFET | **AOS AOD5N40: 400 V**, 1.6 Ω max at V_GS = 10 V, V_th 3.4-4.5 V, Q_g 6.9 nC, DPAK | 2.05× margin at the worst case (below). Chosen over logic-level parts (user, 2026-10-06) |
-| Gate drive | **10 V**: LM5156 in BIAS = VCC mode (datasheet: 2.97-16 V), fed by an **LP2951** (30 V max input, 100 mA, 380 mV dropout, adjustable, SOIC-8) from the protected 12 V | Internal VCC (6.85 V) is too low for a 4.5 V-threshold MOSFET. Load ≈ 1 mA (Q_g × f + bias). The LP2951 input rating covers the ≈ 24 V TVS clamp |
-| Boost diode | ES1J: 600 V, 1 A, t_rr 35 ns, SMA | |
-| Soft-start | C_SS = 47 nF (10 µA → 4.7 ms ramp) | LM5156H (no hiccup); start-up is energy-limited anyway |
-| Compensation | 10 kΩ + 10 nF, 100 pF to ground | Smoke-test values; load-step check pending |
-| Feedback | **From HV:** 4 × 1.1M / 9.8k → HV = 450 V (1.00 V ref); 500 V option: bottom ≈ 8.82k | Moved from V_b in simulation (see results). ≤ 150 V per part: 137 V each at 550 V |
-| V_b bleeder | 2 × 1.2M (2.4 MΩ, 63 µA) | V_b's own discharge path when link L3 separates the boost from the tripler (D11) |
 
 **With the tube-sheet bias load** (G+/RTN feed, 1.7 mA from V_b, added after the 2 × 20k change):
 `hv_warm.cir` gives HV 451.5 V, 5.8 V p-p ripple, tube 382 µA, inductor ≤ 0.464 A, PGOOD high.
