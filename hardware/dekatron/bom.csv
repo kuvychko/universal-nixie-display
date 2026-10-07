@@ -27,6 +27,8 @@ C125,0.47uF 400V,Tripler stack C2,,,400 V PET film,Capacitor_THT:C_Rect_L18.0mm_
 C126,0.47uF 400V,Tripler stack C3,,,400 V PET film,Capacitor_THT:C_Rect_L18.0mm_W7.0mm_P15.00mm_FKS3_FKP3,
 C127,1nF,OVP sense filter,,,50 V C0G,Capacitor_SMD:C_1206_3216Metric,
 C128,0.1uF,U107 bypass,,,50 V X7R,Capacitor_SMD:C_1206_3216Metric,
+C129,1nF,V_b OVP sense filter,,,50 V C0G,Capacitor_SMD:C_1206_3216Metric,
+C130,0.1uF,U108 bypass,,,50 V X7R,Capacitor_SMD:C_1206_3216Metric,
 C201,0.1uF 100V,G+ to RTN bypass,,,100 V X7R,Capacitor_SMD:C_1206_3216Metric,
 C202,1uF 100V,RTN bypass: absorbs tube and guide current steps,,,100 V X7R,Capacitor_SMD:C_1206_3216Metric,
 C204,1nF,Index filter (tau 12 us),,,50 V C0G,Capacitor_SMD:C_1206_3216Metric,
@@ -62,7 +64,7 @@ L101,15uH,Buck inductor,,"(kit, 6 x 8 mm radial)",Rated 1.31 A; limits the 5 V r
 L102,100uH,HV boost inductor,,"(kit, 6 x 8 mm radial)","Rated 0.71 A, DCR 0.35 ohm, 4 mm pitch",Inductor_THT:L_Radial_D6.0mm_P4.00mm,
 LK1,0,"D11 link L1: 12 V to the HV section (0 ohm, remove to open)",,,,Resistor_SMD:R_1206_3216Metric,
 LK2,0,"D11 link L2: buck output to board 5 V (0 ohm, remove to open)",,,,Resistor_SMD:R_1206_3216Metric,
-LK3,LINK,"D11 link L3: V_b to the tripler DC column (wire link, desolder to open)",,,,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
+LK3,LINK,"D11 link L3: V_b to the tripler DC column (fault isolation; never powered open) (wire link, desolder to open)",,,,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
 LK4,LINK,"D11 link L4: tripler output to the anode string (wire link, desolder to open)",,,,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
 LK5,LINK,"D11 link L5: V_b to the G+/RTN regulators (wire link, desolder to open)",,,,Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
 LK6,0,"D11 cathode link: K0 to RTN (0 ohm, remove to isolate)",,,,Resistor_SMD:R_1206_3216Metric,
@@ -120,16 +122,15 @@ R137,2.2M,OVP string 2/4,,,,Resistor_SMD:R_1206_3216Metric,
 R138,2.2M,OVP string 3/4,,,,Resistor_SMD:R_1206_3216Metric,
 R139,2.2M,OVP string 4/4,,,,Resistor_SMD:R_1206_3216Metric,
 R140,20.0k,"OVP divider, lower (trip ~548 V)",,,1 %,Resistor_SMD:R_1206_3216Metric,
-R141,8.2k,V_b dummy load 1/4 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
-R142,8.2k,V_b dummy load 2/4 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
-R143,8.2k,V_b dummy load 3/4 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
-R144,8.2k,V_b dummy load 4/4 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
-R145,150k,HV dummy load 1/6 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
-R146,150k,HV dummy load 2/6 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
-R147,150k,HV dummy load 3/6 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
-R148,150k,HV dummy load 4/6 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
-R149,150k,HV dummy load 5/6 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
-R150,150k,HV dummy load 6/6 (bring-up only),,,,Resistor_SMD:R_1206_3216Metric,DNP
+R141,1.0M,V_b OVP string 1/2 (<= 100 V per part),,,,Resistor_SMD:R_1206_3216Metric,
+R142,1.0M,V_b OVP string 2/2,,,,Resistor_SMD:R_1206_3216Metric,
+R143,12.4k,"V_b OVP divider, lower (trip ~202 V)",,,1 %,Resistor_SMD:R_1206_3216Metric,
+R145,150k,"HV dummy load 1/6 (bring-up only, LK4 open)",,,,Resistor_SMD:R_1206_3216Metric,DNP
+R146,150k,"HV dummy load 2/6 (bring-up only, LK4 open)",,,,Resistor_SMD:R_1206_3216Metric,DNP
+R147,150k,"HV dummy load 3/6 (bring-up only, LK4 open)",,,,Resistor_SMD:R_1206_3216Metric,DNP
+R148,150k,"HV dummy load 4/6 (bring-up only, LK4 open)",,,,Resistor_SMD:R_1206_3216Metric,DNP
+R149,150k,"HV dummy load 5/6 (bring-up only, LK4 open)",,,,Resistor_SMD:R_1206_3216Metric,DNP
+R150,150k,"HV dummy load 6/6 (bring-up only, LK4 open)",,,,Resistor_SMD:R_1206_3216Metric,DNP
 R201,20k,G+ / RTN feed 1/2 (2 x 20k: 1.5-2.1 mA),,,,Resistor_SMD:R_1206_3216Metric,
 R202,100k,RTN_SENSE divider 1/2,,,,Resistor_SMD:R_1206_3216Metric,
 R203,100k,RTN_SENSE divider 2/2,,,,Resistor_SMD:R_1206_3216Metric,
@@ -186,4 +187,5 @@ U104,LM66100,"Ideal diode, 5V_NIX feed",Texas Instruments,LM66100DCKR,"1.5 A, re
 U105,LP2951 (adj. 10 V),"Gate-drive LDO, adjustable, 10.07 V",onsemi,LP2951ACDR2G,"30 V in, 100 mA",Package_SO:SOIC-8_3.9x4.9mm_P1.27mm,
 U106,LM5156H,HV boost controller,Texas Instruments,LM5156HPWPR,HTSSOP-14 exposed pad,Package_SO:Texas_HTSSOP-14-1EP_4.4x5mm_P0.65mm_EP3.4x5mm_Mask3.155x3.255mm_ThermalVias,
 U107,TLV3011,Independent OVP comparator (open drain),Texas Instruments,TLV3011AIDBVR,1.242 V ref,Package_TO_SOT_SMD:SOT-23-6,
+U108,TLV3011,"V_b OVP comparator (open drain, wired-OR on EN/UVLO)",Texas Instruments,TLV3011AIDBVR,1.242 V ref,Package_TO_SOT_SMD:SOT-23-6,
 U301,RP2040-Zero,Dekatron controller MCU,Waveshare,RP2040-Zero,"headerless, castellated",dekatron:RP2040-Zero_Castellated,

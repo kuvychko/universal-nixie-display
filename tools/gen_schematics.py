@@ -777,7 +777,7 @@ def build_power(lib: SymbolLib) -> Sheet:
     # ---- Row 4: tripler, bleeder, feedback ------------------------------------------------------
     y = 290
     note("TRIPLER (series-stack CW): every capacitor and diode sees <= V_b; 47 ohm pump surge resistor", 20, y - 40)
-    link("LK3", 30, y - 20, "V_B", "V_BT", "D11 link L3: V_b to the tripler DC column", hv=True)
+    link("LK3", 30, y - 20, "V_B", "V_BT", "D11 link L3: V_b to the tripler DC column (fault isolation; never powered open)", hv=True)
     r("R121", "47", 30, y + 5, "SW", "TRP_PUMP", "Pump surge resistor", angle=H)
     sh.part(C, "C123", "0.47uF 400V", 60, y + 5, {"1": "TRP_PUMP", "2": "TRP_P1"}, angle=H, footprint=FP_FILM,
             fields=F("Tripler pump CP1", rating="400 V PET film"))
@@ -804,7 +804,7 @@ def build_power(lib: SymbolLib) -> Sheet:
 
     # ---- Row 5: HV monitor, independent OVP, dummy loads ----------------------------------------
     y = 370
-    note("HV MONITOR (HV_SENSE, GP28) and INDEPENDENT OVP (TLV3011, trips at ~548 V, pulls EN/UVLO low)", 20, y - 40)
+    note("HV MONITOR (HV_SENSE, GP28), INDEPENDENT OVP on HV (~548 V) and on V_b (~202 V): both pull EN/UVLO low", 20, y - 40)
     chain = [("R131", "HV_STACK", "STR_MN1"), ("R132", "STR_MN1", "STR_MN2"), ("R133", "STR_MN2", "STR_MN3"), ("R134", "STR_MN3", "HV_SENSE")]
     for i, (ref, a, b) in enumerate(chain):
         r(ref, "2.2M", 25 + i * 14, y - 10, a, b, f"HV monitor string {i + 1}/4")
@@ -818,15 +818,21 @@ def build_power(lib: SymbolLib) -> Sheet:
             {"1": "HV_EN_PIN", "2": "GND", "3": "OVP_REF", "4": "OVP_SENSE", "5": "OVP_REF", "6": "+5V"},
             fields=F("Independent OVP comparator (open drain)", "TLV3011AIDBVR", "Texas Instruments", "1.242 V ref"))
     c("C128", "0.1uF", 240, y - 10, "+5V", "GND", "U107 bypass", rating="50 V X7R")
-    # Dummy loads for bring-up step 2 (DNP): V_b 4 x 8.2k (32.8k, 4.6 mA at 150 V); HV 6 x 150k (0.5 mA at 450 V)
-    for i in range(4):
-        a = "V_B" if i == 0 else f"STR_DV{i}"
-        b = "GND" if i == 3 else f"STR_DV{i + 1}"
-        r(f"R{141 + i}", "8.2k", 270 + i * 14, y - 10, a, b, f"V_b dummy load {i + 1}/4 (bring-up only)", dnp=True)
+    # V_b overvoltage (review fix): with feedback from HV, an open tripler part lets V_b run away
+    # unseen by the HV OVP. A second TLV3011 trips at ~202 V (2 x 1.0M / 12.4k) on the same EN node.
+    r("R141", "1.0M", 255, y - 10, "V_B", "STR_VO1", "V_b OVP string 1/2 (<= 100 V per part)")
+    r("R142", "1.0M", 269, y - 10, "STR_VO1", "VB_OVP_SENSE", "V_b OVP string 2/2")
+    r("R143", "12.4k", 283, y - 10, "VB_OVP_SENSE", "GND", "V_b OVP divider, lower (trip ~202 V)", rating="1 %")
+    c("C129", "1nF", 295, y - 10, "VB_OVP_SENSE", "GND", "V_b OVP sense filter", rating="50 V C0G")
+    sh.part("dekatron:TLV3011", "U108", "TLV3011", 325, y - 10,
+            {"1": "HV_EN_PIN", "2": "GND", "3": "VB_OVP_REF", "4": "VB_OVP_SENSE", "5": "VB_OVP_REF", "6": "+5V"},
+            fields=F("V_b OVP comparator (open drain, wired-OR on EN/UVLO)", "TLV3011AIDBVR", "Texas Instruments", "1.242 V ref"))
+    c("C130", "0.1uF", 350, y - 10, "+5V", "GND", "U108 bypass", rating="50 V X7R")
+    # HV dummy load for bring-up step 2 (DNP): 6 x 150k (0.5 mA at 450 V), fitted with LK4 open
     for i in range(6):
         a = "HV_STACK" if i == 0 else f"STR_DH{i}"
         b = "GND" if i == 5 else f"STR_DH{i + 1}"
-        r(f"R{145 + i}", "150k", 330 + i * 14, y - 10, a, b, f"HV dummy load {i + 1}/6 (bring-up only)", dnp=True)
+        r(f"R{145 + i}", "150k", 375 + i * 14, y - 10, a, b, f"HV dummy load {i + 1}/6 (bring-up only, LK4 open)", dnp=True)
     return sh
 
 
@@ -1038,7 +1044,7 @@ def project_json() -> str:
                 {"netclass": "VB", "pattern": "*V_B"},
                 {"netclass": "VB", "pattern": "*V_BT"},
                 {"netclass": "VB", "pattern": "V_B_BIAS"},
-                {"netclass": "VB", "pattern": "*SW"},
+                {"netclass": "VB", "pattern": "*/SW"},
                 {"netclass": "VB", "pattern": "*TRP_PUMP"},
                 {"netclass": "HV", "pattern": "*ANODE"},
                 {"netclass": "HVSTR", "pattern": "*STR_*"},

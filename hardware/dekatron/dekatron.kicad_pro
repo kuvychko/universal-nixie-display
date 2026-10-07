@@ -117,7 +117,7 @@
       },
       {
         "netclass": "VB",
-        "pattern": "*SW"
+        "pattern": "*/SW"
       },
       {
         "netclass": "VB",

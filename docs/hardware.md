@@ -174,10 +174,13 @@ drives it through a series resistor. Unpowered, in reset or in BOOTSEL, the pin 
 converter is off. No line UVLO divider: a divider from 12 V would turn the converter on without
 the RP2040. The RP2040 measures the 12 V input itself and withholds `HV_EN` when it is low.
 
-**Independent overvoltage shutdown, proposed:** if the top resistor of the feedback divider fails
-open, FB falls to 0 and the converter runs to its current limit with no voltage limit. A second,
-independent divider from **HV** (the regulated quantity since Phase 1B) drives the TLV3011
-comparator, which pulls EN/UVLO low above roughly 110 % of the 500 V setting (550 V). The RP2040 also measures HV and can drop `HV_EN`,
+**Independent overvoltage shutdown:** if the top resistor of the feedback divider fails open, FB
+falls to 0 and the converter runs to its current limit with no voltage limit. A second, independent
+divider from **HV** (the regulated quantity since Phase 1B) drives a TLV3011 comparator, which pulls
+EN/UVLO low above ≈ 548 V. **A third divider watches V_b** (added in the Phase 1B review): with
+feedback from HV, an open tripler diode or capacitor makes HV fall while the controller drives V_b
+upward, unseen by the HV OVP. A second TLV3011 trips at ≈ 202 V (2 × 1.0M / 12.4k; V_b is ≈ 157 V at
+450 V and ≈ 175 V at 500 V), wired-OR on the same EN/UVLO node. The RP2040 also measures HV and can drop `HV_EN`,
 but that does not replace a hardware limit.
 
 **Variant choice (LM5156H vs LM51561H):** hiccup mode limits stress during a sustained HV short
@@ -194,6 +197,7 @@ that. Both fit the same footprint.
 | HV monitor divider 8.85 MΩ | 51 µA | `HV_SENSE`, see [RP2040-Zero pin assignment](#rp2040-zero-pin-assignment) |
 | Feedback divider 4.41 MΩ | 102 µA | Feedback moved to HV in Phase 1B |
 | OVP divider (4 parts, ~9 MΩ) | ~50 µA | Independent OVP on HV |
+| V_b OVP divider (2 × 1.0M) | 80 µA at V_b | Review fix; loads V_b, not HV |
 | **Total / design value** | ≈ 0.73 mA / **1 mA** | ~1.4× margin |
 
 | Load at boost node V_b | Current | Basis |
@@ -284,15 +288,15 @@ nets (desolder to open; the open gap then meets the HV clearance rule).
 |---|---|---|
 | L1 | Protected 12 V → HV boost (BIAS and inductor) | 1: low-voltage rails without the converter |
 | L2 | 5 V buck output → board 5 V loads and external feeds | 1: check the buck unloaded |
-| L3 | V_b → tripler input | 2: boost stage alone on a dummy load at V_b |
+| L3 | V_b → tripler DC column | Fault isolation only, **never powered open**: with feedback and OVP on HV, an open L3 leaves the boost unregulated (review, Phase 1B) |
 | L4 | Tripler output (after the bleeder) → anode resistor string | 2: HV on a dummy load, tube section isolated |
 | L5 | V_b → G+ / RTN regulators | 3: bias rails brought up separately |
 | L6-L14 | Each RTN cathode (K0, K2-K9) → RTN | Plan §5 cathode access; also isolates single cathodes |
 | JP_HVINH | 2-pin header: shunt fitted = EN/UVLO held low | Any time: HV cannot start, whatever the firmware does |
 
-* **Dummy-load footprints**, unpopulated in normal use: a 1206 string at V_b (about 34 kΩ for
-  4.4 mA) and one at HV (4-6 parts for 0.5-1 mA at 450-500 V, ≤ 150 V per part). Populated for
-  step 2, removed afterwards.
+* **Dummy-load footprint**, unpopulated in normal use: a 1206 string at HV (6 × 150k, 0.5 mA at
+  450 V, ≤ 150 V per part), fitted for step 2 with L4 open, removed afterwards. (The V_b dummy load
+  was removed in the Phase 1B review: the boost cannot be run without the tripler.)
 * **Test points**: `VIN_PROT`, `5V`, `3V3`, `VCC` (LM5156), `SW` (switch node, with an adjacent
   ground for a short scope-ground spring), `V_B`, `HV` (`HV`-class clearance, silkscreen warning),
   `G+`, `RTN`, `G1`, `G2`, `NDX`, `HV_EN`, `PGOOD`, and a `GND` point at each section. HV test
@@ -756,7 +760,7 @@ come from the 1206 kit and inductors from the user's radial kit where noted.
 | HV MOSFET / gate-drive LDO | AOS **AOD5N40** / onsemi **LP2951ACDR2G** (143k / 20.0k → 10.07 V) |
 | HV inductor / diodes | **Kit 100 µH radial** (0.71 A, 0.35 Ω) / onsemi **ES1J** × 5 |
 | HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4 class) |
-| OVP comparator | TI **TLV3011AIDBVR** (open-drain) |
+| OVP comparators | 2 × TI **TLV3011AIDBVR** (open-drain): HV ≈ 548 V, V_b ≈ 202 V |
 | 5 V buck / inductor | TI **TPS54202DDCR** / **kit 15 µH radial** (1.31 A) |
 | Ideal diodes | TI **LM66100DCKR** × 3 |
 | Fuse / PTC | Littelfuse **0468002.NRHF** / **1812L075/33DR** |
@@ -832,6 +836,30 @@ carries signal names and tube pin numbers.
 * **I2C:** the instrument's single pull-up pair, 4.7 kΩ to this board's 3V3.
 * **Harness landings:** `DISP` (J301, 5 wires) and `NIX_LV` (J302, 6 wires), soldered wire pads with
   strain relief (D14).
+
+## Schematic review (Phase 1B, 2026-10-06)
+
+Checked against D1-D14 with KiCad's exported netlist (`kicad-cli sch export netlist`) and a design
+review of failure modes and the bring-up procedure.
+
+**Mechanical checks**
+
+* 117 nets; the only single-pin nets are intentional no-connects (LM66100 NC/ST, LP2951
+  SENSE/VTAP/ERROR, LM5156 NC).
+* 91 pin-to-net checks across D2, D4, D7, D8, D9, D11 and the mcu sheet: all correct. All 20
+  RP2040-Zero GPIO pads match the Phase 1A pin map.
+* Net classes from the D13 patterns: every net above 25 V is in HV, VB, HVSTR or BIAS.
+
+**Findings and fixes**
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | **No limit on V_b.** With feedback and OVP both on HV, an open tripler diode or capacitor (or link L3 open) lets the controller drive V_b up at full current limit, unseen, toward the 400 V parts' ratings | Second TLV3011 on V_b, trip ≈ 202 V, wired-OR on EN/UVLO. Simulated (`fault_d5open.cir`: top tripler diode open, fault fully developed): V_b held at ≤ 199.3 V and the switch node at ≤ 200.1 V (400 V parts), HV 385 V, PGOOD low. Without it V_b rose ≈ 4.5 V/ms with no limit |
+| 2 | Bring-up step 2 ran the boost alone with L3 open: unregulated for the same reason | Step 2 now keeps the tripler connected, opens L4 and fits the HV dummy load; V_b dummy-load footprints removed; L3 is fault isolation only |
+| 3 | Net-class pattern `*SW` also matched the buck's `BUCK_SW`, which would give the TPS54202's 0.95 mm-pitch pins a 1.5 mm rule | Pattern changed to `*/SW` |
+| 4 | `OVP_TRIP` (GP8) reads the EN/UVLO node; the RP2040's default pull-down loads it | Firmware disables GP8's pull-down (EN still reaches 2.55 V with it enabled) |
+| 5 | Without firmware, an OVP trip makes the converter cycle at the trip point instead of latching | Firmware latches: drops `HV_EN` when `OVP_TRIP` reads low with `HV_EN` high |
+| 6 | 500 V setting power margin is thin with the kit inductor | Open: simulate before using 500 V (see HV boost stage) |
 
 ## Nixie controller/mount
 
