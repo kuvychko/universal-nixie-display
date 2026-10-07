@@ -56,6 +56,8 @@ XC1   vb 0 CFILM
 RFT   hv fb 4.4Meg
 RFB   fb 0 9.8k
 RBLB  vb 0 2.4Meg
+* G+/RTN regulator feed on the tube sheet (2 x 20k into 90 V): 1.7 mA at V_b 157 V, as 92k to ground
+RBIASF vb 0 92k
 
 * Series-stack tripler: every capacitor and diode sees at most V_b
 * Film capacitors with ESR: without it the switch / pump-capacitor / diode loop has no impedance and
