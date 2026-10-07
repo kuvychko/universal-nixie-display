@@ -609,7 +609,7 @@ FP_F1206 = "Fuse:Fuse_1206_3216Metric"
 FP_F1812 = "Fuse:Fuse_1812_4532Metric"
 FP_TP = "TestPoint:TestPoint_THTPad_D1.5mm_Drill0.7mm"
 FP_HVLINK = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"   # wire link, 7.62 mm pitch
-FP_WIRE2 = "Connector_Wire:SolderWire-0.5sqmm_1x02_P4.8mm_D0.9mm_OD2.3mm_Relief"
+FP_WIRE2 = "Connector_Wire:SolderWire-0.5sqmm_1x02_P4.8mm_D0.9mm_OD2.3mm"   # strain relief: cable-tie anchor on the PCB (D14)
 FP_HDR2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 
 
@@ -842,8 +842,9 @@ def build_power(lib: SymbolLib) -> Sheet:
 
 TUBE_GLOBALS = {"HV", "V_B_BIAS", "GUIDE1", "GUIDE2", "NDX", "RTN_SENSE"}
 FP_SOT23 = "Package_TO_SOT_SMD:SOT-23"            # MMBTA42 / MMBTA92: 1 B, 2 E, 3 C (Nexperia)
-FP_WIRE1 = "Connector_Wire:SolderWire-0.5sqmm_1x01_D0.9mm_OD2.3mm_Relief"
-FP_WIRE6 = "Connector_Wire:SolderWire-0.5sqmm_1x06_P4.8mm_D0.9mm_OD2.3mm_Relief"
+FP_WIRE1 = "Connector_Wire:SolderWire-0.5sqmm_1x01_D0.9mm_OD2.3mm"
+FP_WIRE6 = "Connector_Wire:SolderWire-0.5sqmm_1x06_P4.8mm_D0.9mm_OD2.3mm"
+FP_WIRE4 = "Connector_Wire:SolderWire-0.5sqmm_1x04_P4.8mm_D0.9mm_OD2.3mm"
 
 
 def build_tube(lib: SymbolLib) -> Sheet:
@@ -909,21 +910,16 @@ def build_tube(lib: SymbolLib) -> Sheet:
 
     # ---- Row 4: anode string, cathode links, harness (D1, D11, D14) -----------------------------
     y = 255
-    note("ANODE STRING 3 x 220k (D1; 3 x 270k for 500 V), CATHODE LINKS LK6-LK14 (D11), TUBE HARNESS (D14, soldered)", 20, y - 35)
+    note("ANODE STRING 3 x 220k (D1; 3 x 270k for 500 V); TUBE HARNESS (D14, soldered): cathodes tied at the socket", 20, y - 35)
     for i, (ref, a, b) in enumerate((("R215", "HV", "STR_A1"), ("R216", "STR_A1", "STR_A2"), ("R217", "STR_A2", "ANODE"))):
         r(ref, "220k", 30 + i * 18, y - 10, a, b, f"Anode resistor {i + 1}/3 (<= 100 V per part)")
     sh.part("Connector_Generic:Conn_01x01", "J201", "TUBE_ANODE", 95, y - 10, {"1": "ANODE"}, footprint=FP_WIRE1,
             fields=F("Tube harness: anode (pin 8), 600 V wire, kept >= 3 mm from other pads"))
-    cathodes = ["TUBE_K0"] + [f"TUBE_K{k}" for k in range(2, 10)]
-    for i, k in enumerate(cathodes):
-        sh.part(R, f"LK{6 + i}", "0", 130 + i * 15, y - 10, {"1": k, "2": "RTN"}, footprint=FP_R,
-                fields=F(f"D11 cathode link: {k[5:]} to RTN (0 ohm, remove to isolate)"))
-    sh.part("Connector_Generic:Conn_01x06", "J202", "TUBE_A", 290, y - 30,
-            {"1": "TUBE_G1", "2": "TUBE_G2", "3": "TUBE_K1", "4": "TUBE_K0", "5": "TUBE_K2", "6": "TUBE_K3"},
-            footprint=FP_WIRE6, fields=F("Tube harness: G1 (5), G2 (10), K1 index (13), K0 (1), K2 (12), K3 (11)"))
-    sh.part("Connector_Generic:Conn_01x06", "J203", "TUBE_B", 290, y + 5,
-            {"1": "TUBE_K4", "2": "TUBE_K5", "3": "TUBE_K6", "4": "TUBE_K7", "5": "TUBE_K8", "6": "TUBE_K9"},
-            footprint=FP_WIRE6, fields=F("Tube harness: K4 (9), K5 (7), K6 (6), K7 (4), K8 (3), K9 (2)"))
+    # Cathodes K0, K2-K9 are tied together at the socket and return on one RTN wire (as in the AD01
+    # reference): the harness is anode (J201, kept apart for HV clearance) + G1, G2, K1 (index), RTN.
+    sh.part("Connector_Generic:Conn_01x04", "J202", "TUBE", 150, y - 10,
+            {"1": "TUBE_G1", "2": "TUBE_G2", "3": "TUBE_K1", "4": "RTN"},
+            footprint=FP_WIRE4, fields=F("Tube harness: G1 (pin 5), G2 (10), K1 index (13), RTN = K0, K2-K9 tied at the socket"))
     return sh
 
 
@@ -933,7 +929,7 @@ def build_tube(lib: SymbolLib) -> Sheet:
 
 MCU_GLOBALS = {"5V_DISP", "5V_MCU", "5V_NIX", "HV_EN", "PGOOD", "OVP_TRIP", "HV_SENSE", "GUIDE1",
                "GUIDE2", "NDX", "RTN_SENSE", "VIN_PROT"}
-FP_WIRE5 = "Connector_Wire:SolderWire-0.5sqmm_1x05_P4.8mm_D0.9mm_OD2.3mm_Relief"
+FP_WIRE5 = "Connector_Wire:SolderWire-0.5sqmm_1x05_P4.8mm_D0.9mm_OD2.3mm"
 
 
 def build_mcu(lib: SymbolLib) -> Sheet:
@@ -1027,13 +1023,14 @@ def project_json() -> str:
         "cvpcb": {"equivalence_files": []},
         "libraries": {"pinned_footprint_libs": [], "pinned_symbol_libs": []},
         "meta": {"filename": f"{PROJECT}.kicad_pro", "version": 3},
-        # Net classes from docs/hardware.md D13 (clearance to any other class); pair rules go in
-        # a .kicad_dru with the PCB.
+        # Net classes from docs/hardware.md D13; the clearances between classes are pair rules in
+        # dekatron.kicad_dru (written by tools/gen_pcb.py).
         "net_settings": {
             "classes": [
                 {"name": "Default", "clearance": 0.2, "track_width": 0.25, "via_diameter": 0.6, "via_drill": 0.3,
                  "priority": 2147483647, "bus_width": 12, "line_style": 0, "wire_width": 6},
-                nc("HV", 3.0), nc("VB", 1.5), nc("HVSTR", 1.5), nc("BIAS", 0.8)],
+                # base clearance only: the pairwise class rules live in dekatron.kicad_dru (D13)
+                nc("HV", 0.2), nc("VB", 0.2), nc("HVSTR", 0.2), nc("BIAS", 0.2)],
             "meta": {"version": 4}, "net_colors": None, "netclass_assignments": None,
             "netclass_patterns": [
                 {"netclass": "HV", "pattern": "HV"},

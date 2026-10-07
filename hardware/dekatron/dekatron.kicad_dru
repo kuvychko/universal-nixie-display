@@ -1,0 +1,26 @@
+(version 1)
+# Clearances between the D13 net classes (docs/hardware.md). The board is uncoated: no credit for
+# solder mask. The project's net classes carry only the 0.2 mm base clearance; these pair rules set
+# the rest (later rules take precedence when several match).
+(rule "BIAS to logic"
+  (condition "(A.NetClass == 'BIAS' && B.NetClass == 'Default') || (B.NetClass == 'BIAS' && A.NetClass == 'Default')")
+  (constraint clearance (min 0.8mm)))
+(rule "BIAS to BIAS"
+  (condition "A.NetClass == 'BIAS' && B.NetClass == 'BIAS'")
+  (constraint clearance (min 0.8mm)))
+(rule "VB / HVSTR to anything below HV"
+  (condition "(A.NetClass == 'VB' || A.NetClass == 'HVSTR') && B.NetClass != 'HV'")
+  (constraint clearance (min 1.5mm)))
+(rule "HV to bias and logic"
+  (condition "A.NetClass == 'HV' && (B.NetClass == 'Default' || B.NetClass == 'BIAS')")
+  (constraint clearance (min 3.0mm)))
+(rule "HV to HV, VB, HVSTR (adjacent tripler / string nodes, <= ~300 V apart)"
+  (condition "A.NetClass == 'HV' && (B.NetClass == 'HV' || B.NetClass == 'VB' || B.NetClass == 'HVSTR')")
+  (constraint clearance (min 1.5mm)))
+(rule "HV edge clearance"
+  (condition "A.NetClass == 'HV'")
+  (constraint edge_clearance (min 3.0mm)))
+(rule "OSH Park minimum"
+  (constraint track_width (min 0.1524mm))
+  (constraint hole_size (min 0.33mm))
+  (constraint annular_width (min 0.1778mm)))

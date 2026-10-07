@@ -291,7 +291,6 @@ nets (desolder to open; the open gap then meets the HV clearance rule).
 | L3 | V_b → tripler DC column | Fault isolation only, **never powered open**: with feedback and OVP on HV, an open L3 leaves the boost unregulated (review, Phase 1B) |
 | L4 | Tripler output (after the bleeder) → anode resistor string | 2: HV on a dummy load, tube section isolated |
 | L5 | V_b → G+ / RTN regulators | 3: bias rails brought up separately |
-| L6-L14 | Each RTN cathode (K0, K2-K9) → RTN | Plan §5 cathode access; also isolates single cathodes |
 | JP_HVINH | 2-pin header: shunt fitted = EN/UVLO held low | Any time: HV cannot start, whatever the firmware does |
 
 * **Dummy-load footprint**, unpopulated in normal use: a 1206 string at HV (6 × 150k, 0.5 mA at
@@ -335,6 +334,11 @@ the IPC-2221B **B2** column (external conductors, uncoated, sea level to 3050 m)
 
 * *Verify*: these rows were not legible in the sources consulted. Check them against the IPC-2221B
   table before freezing the KiCad rules; the rules above already carry margin.
+* **HV to HV, VB or HVSTR: 1.5 mm** (Phase 1C correction). Adjacent tripler and string nodes differ by
+  ≤ ~300 V (IPC-2221B B2 151-300 V row: 1.25 mm), and a 3.0 mm rule cannot be met inside the parts that
+  join them: an HV-string 1206 has ≈ 1.8 mm between its pads, a tripler SMA diode ≈ 2 mm. The 3.0 mm
+  rule applies between HV and bias or logic nets (up to ~450 V). Implemented as pair rules in
+  `hardware/dekatron/dekatron.kicad_dru`; the project's net classes carry only the 0.2 mm base.
 * **Inside series strings** adjacent nodes differ by ≤ 150 V, so string-internal nets get their
   own net class at the 1.5 mm rule. A 1206 footprint's pad gap (≈ 1.8-1.9 mm; check the chosen
   footprint) satisfies it. The 3.0 mm `HV` rule applies between a string and anything else.
@@ -358,7 +362,7 @@ display harness. The tube itself still plugs into its socket, so a tube can be s
 | `NIX_12V` | `+12V_NIX`, `GND` (after its resettable fuse) | Purchased Nixie HV module input |
 | `DISP` | `5V_DISP`, `GND` (power), `GND` (I2C), `SCL`, `SDA` | The display module's UART/power plug (5V, GND) and SPI plug (IO18 = SCL, IO27 = SDA), plus the 3V3 plug's GND ([Display harness](#display-harness)) |
 | `NIX_LV` | `5V_NIX`, `GND`, `SDA`, `SCL`, `GND`, spare (e.g. global blank) | Nixie controller board (Phase 2) |
-| `TUBE` | Anode, G1, G2, K1 (index), K0, K2-K9: 13 wires | A101 socket, soldered |
+| `TUBE` | Anode (J201, alone), G1, G2, K1 (index), RTN (J202): 5 wires | A101 socket, soldered; K0, K2-K9 tied together at the socket onto the RTN wire |
 | `JP_HVINH` | 2.54 mm header + shunt (a bench jumper, not a harness) | — |
 | — | RP2040-Zero programming: its own USB-C, BOOT and RESET at the board edge; no SWD on its edge pads | — |
 
@@ -377,8 +381,10 @@ Rules for every landing:
   rule, with its own silkscreen HV mark. Anode wire is 600 V-insulated (e.g. UL1015); the other
   tube wires carry ≤ 100 V but use the same wire for simplicity. The anode resistor string stays
   on the board, so the harness only carries current-limited HV (≤ 0.7 mA into a short).
-* **Cathode links:** all nine RTN cathodes are wired separately, so links L6-L14 stay on the board
-  (plan §5).
+* **Cathodes tied at the socket** (user decision, 2026-10-06, as in the AD01 reference): K0 and
+  K2-K9 are joined at the socket and return on one RTN wire, so the tube harness is 5 wires. This
+  drops plan §5's optional per-cathode links: they cost nine parts, eight harness wires and board
+  area, and Rev A senses only K1. Sensing more cathodes later means re-wiring at the socket.
 * **Verification:** a wrong pad replaces a wrong socket as the risk, so every harness gets an
   unpowered continuity check against this table before first power ([bringup.md](bringup.md),
   step 0).
@@ -458,8 +464,8 @@ Rules for the analog inputs:
 
 Applies to the user's stock A-101 socket (D10). Sources: tube-tester.com pin list, and the AD01 "Dekatron Hook-up" table (A101: anode 8, index 13,
 RTN 1-4, 6, 7, 9, 11, 12, G1 5, G2 10). They agree. The AD01 page text once calls the index
-"pin 12", contradicting both. Plan §5 asks for accessible cathode links: break out each RTN pin
-through a link or test pad rather than tying them together under the socket.
+"pin 12", contradicting both. The nine non-index cathodes are tied together at the socket (D14) and return on
+one RTN wire.
 
 ### 12 V input protection (D4)
 
@@ -813,9 +819,9 @@ G2 → K2 at 200 steps/s, generic MMBTA42/92, zener and BAT54S models from datas
 With the 51 V zener's tolerance (48.5-53.6 V) the index output spans **2.73-3.01 V** (D9 table used
 47.5-52.5 V): still ≥ 0.73 V above the RP2040's 2.0 V V_IH.
 
-**Harness landings** (D14): the anode on its own pad (J201) kept ≥ 3 mm from the others, and the
-twelve ≤ 100 V wires on two 6-pad groups (J202, J203), each with strain-relief holes. Silkscreen
-carries signal names and tube pin numbers.
+**Harness landings** (D14): the anode on its own pad (J201) kept ≥ 3 mm from the others, and G1,
+G2, K1 and RTN on one 4-pad group (J202); the cathodes K0, K2-K9 are tied together at the socket.
+Silkscreen carries signal names and tube pin numbers.
 
 ## MCU sheet (Phase 1B)
 
