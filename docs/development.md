@@ -27,9 +27,16 @@ Record the ERC/DRC baseline here and check that each change does not add to it.
 ### Generator
 
 `tools/gen_schematics.py` writes the dekatron schematics, the project symbol library and a BOM
-(`hardware/dekatron/bom.csv`) from the values in `docs/hardware.md`. Every pin ends in a short
-stub with a net label, power symbol or no-connect flag, so connectivity is exactly the generator's
-net lists. Inter-sheet nets are global labels. It writes `dekatron.kicad_pro` only if it does not
+(`hardware/dekatron/bom.csv`) from the values in `docs/hardware.md`. The sheets are drawn as
+ordinary schematics: each circuit block is wired, with power and GND symbols. `Sheet.place()`
+returns pin coordinates, `Sheet.w()` draws orthogonal wires, and `Sheet.finish()` adds a junction
+wherever three or more wire ends or pins meet. Wires only meet at their ends; the one deliberate
+crossing (TLV3011 REF tied to IN+, across IN-) has no junction. Local labels name the nets that
+the PCB scripts and net classes rely on (`STR_*`, `TRP_*`, `LM5156_*` and so on), and they join
+blocks within a sheet, such as the LM5156 FB/CS pins to their dividers. Inter-sheet nets are
+global labels, and IC pins that leave their block (the RP2040-Zero, the harness landings) end in
+short labelled stubs. When you change a drawing, compare the exported netlist's pin partition
+with the previous one: a redraw must not change connectivity. It writes `dekatron.kicad_pro` only if it does not
 exist (KiCad owns it afterwards; it carries the D13 net classes). To change the net classes before
 anyone edits the project in KiCad, delete it and re-run; afterwards edit it in KiCad. Re-run after editing the script:
 
