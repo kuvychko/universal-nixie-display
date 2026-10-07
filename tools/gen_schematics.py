@@ -680,6 +680,19 @@ FP_TP = "TestPoint:TestPoint_THTPad_D1.5mm_Drill0.7mm"
 FP_HVLINK = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"   # wire link, 7.62 mm pitch
 FP_WIRE2 = "Connector_Wire:SolderWire-0.5sqmm_1x02_P4.8mm_D0.9mm_OD2.3mm"   # strain relief: cable-tie anchor on the PCB (D14)
 FP_HDR2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+# High-voltage legs (0207 rework): one leaded resistor per leg instead of a 1206 string
+FP_AX0207 = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"   # HVR25 (L2 7.5, D 2.5 max), MRS25
+FP_AX0411 = "Resistor_THT:R_Axial_DIN0411_L9.9mm_D3.6mm_P15.24mm_Horizontal"   # HVR37 (L2 12, D 4 max)
+
+
+def hvr(model, value_code, tol="F"):
+    """Vishay HVR25 / HVR37 ordering code (datasheet 30260): HVR2500 + 00 + 3-digit value + multiplier."""
+    return f"{model}00{value_code}{tol}R500"
+
+
+HVR25 = dict(mfr="Vishay", rating="HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K", fp=FP_AX0207)
+HVR37 = dict(mfr="Vishay", rating="HVR37: 0.5 W, 3500 V DC, 1 %, 200 ppm/K", fp=FP_AX0411)
+MRS25 = dict(mfr="Vishay", rating="MRS25: 0.6 W, 350 V, 1 %, 50 ppm/K", fp=FP_AX0207)
 
 
 def F(function, mpn="", mfr="", rating=""):
@@ -1023,22 +1036,18 @@ def build_power(lib: SymbolLib) -> Sheet:
     c = v2(C, "C122", "0.47uF 400V", 256.54, Y + 3.81, F("Tripler stack C1 (V_b)", rating="400 V PET film"), FP_FILM)
     sh.w((256.54, Y), c["1"])
     down_gnd(c["2"])
-    ra = vR("R119", "1.2M", XV1, Y, "V_b bleeder 1/2")
-    rb = vR("R120", "1.2M", XV1, ra["2"][1] + 5.08, "V_b bleeder 2/2")
-    sh.w(ra["2"], (XV1, ra["2"][1] + 2.54), rb["1"])
-    sh.nl("STR_VBB", (XV1, ra["2"][1] + 2.54))
-    down_gnd(rb["2"])
+    ra = v2(R, "R119", "2.4M", XV1, Y, F("V_b bleeder (V_b's own discharge path with L3 open)",
+                                          hvr("HVR2500", "2404"), **{k: HVR25[k] for k in ("mfr", "rating")}), HVR25["fp"])
+    down_gnd(ra["2"])
     tp("TP106", "V_B", (XTV, Y))
     lk = link("LK5", XL5, Y, "D11 link L5: V_b to the G+/RTN regulators", hv=True)
     sh.w(lk["2"], (XL5 + 15.24, Y))
     sh.gl("V_B_BIAS", (XL5 + 15.24, Y), 0)
     # V_b overvoltage: 2 x 1.0M / 12.4k -> TLV3011 (~202 V), wired-OR on EN/UVLO
-    ra = vR("R141", "1.0M", XVO, Y, "V_b OVP string 1/2 (<= 100 V per part)")
-    rb = vR("R142", "1.0M", XVO, ra["2"][1] + 5.08, "V_b OVP string 2/2")
-    sh.w(ra["2"], (XVO, ra["2"][1] + 2.54), rb["1"])
-    sh.nl("STR_VO1", (XVO, ra["2"][1] + 2.54))
-    VS = (XVO, rb["2"][1] + 2.54)
-    sh.w(rb["2"], VS)
+    ra = v2(R, "R141", "2.0M", XVO, Y, F("V_b OVP divider, upper", hvr("HVR2500", "2004"),
+                                          **{k: HVR25[k] for k in ("mfr", "rating")}), HVR25["fp"])
+    VS = (XVO, ra["2"][1] + 2.54)
+    sh.w(ra["2"], VS)
     r = vR("R143", "12.4k", XVO, VS[1], "V_b OVP divider, lower (trip ~202 V)", "1 %")
     down_gnd(r["2"])
 
@@ -1051,7 +1060,7 @@ def build_power(lib: SymbolLib) -> Sheet:
         down_gnd(c["2"])
         xt = u["IN+"][0] - 2.54                      # REF tied to IN+ (crosses IN- without connecting)
         sh.w(u["IN+"], (xt, u["IN+"][1]), (xt, u["REF"][1]), u["REF"])
-        sh.nl(refnet, (xt, u["IN+"][1]), 90)
+        sh.nl(refnet, (xt, u["REF"][1]), 270)
         sh.w(u["V+"], (x, u["V+"][1] - 2.54))
         sh.pwr("+5V", (x, u["V+"][1] - 2.54))
         down_gnd(u["V-"])
@@ -1088,7 +1097,7 @@ def build_power(lib: SymbolLib) -> Sheet:
         top, bot = (d["K"], d["A"]) if k_top else (d["A"], d["K"])
         sh.w((x, YT), top)
         sh.w(bot, (x, YB))
-    BUS = [144.78, 170.18, 195.58, 220.98, 246.38, 256.54, 266.7]
+    BUS = [152.4, 177.8, 205.74, 256.54, 266.7]
     sh.w(lk["2"], (33.02, YT), (63.5, YT), caps["C125"]["1"])
     sh.nl("V_BT", (33.02, YT))
     sh.w(caps["C125"]["2"], (83.82, YT), (88.9, YT), (104.14, YT), caps["C126"]["1"])
@@ -1102,118 +1111,51 @@ def build_power(lib: SymbolLib) -> Sheet:
     sh.w(caps["C124"]["2"], (104.14, YB), (106.68, YB), (124.46, YB))
     sh.nl("TRP_P2", (106.68, YB))
 
-    def string(x, refs, val, mids, fn, dnp=False, suffix=""):
-        """Vertical resistor string hanging from the HV_STACK bus; returns the bottom pin."""
-        y1 = YT + 5.08
-        sh.w((x, YT), (x, y1))
-        last = None
-        for k, ref in enumerate(refs):
-            rr = vR(ref, val, x, y1, f"{fn} {k + 1}/{len(refs)}{suffix}", dnp=dnp)
-            if last is not None:
-                sh.w(last, (x, last[1] + 2.54), rr["1"])
-                sh.nl(mids[k - 1], (x, last[1] + 2.54))
-            last = rr["2"]
-            y1 = rr["2"][1] + 5.08
-        return last
+    def top(ref, part, value, code, x, fn, dnp=False):
+        """Single leaded high-voltage resistor hanging from the HV_STACK bus; returns its lower pin."""
+        sh.w((x, YT), (x, YT + 5.08))
+        r = v2(R, ref, value, x, YT + 5.08, F(fn, hvr(part["model"], code), part["mfr"], part["rating"]),
+               part["fp"], dnp=dnp)
+        return r["2"]
 
-    def tap(bottom, x, lower_ref, lower_val, fn, rating="1 %"):
-        node = (x, bottom[1] + 2.54)
-        sh.w(bottom, node)
-        r = vR(lower_ref, lower_val, x, node[1], fn, rating)
-        down_gnd(r["2"])
+    def node_below(pin):
+        node = (pin[0], pin[1] + 2.54)
+        sh.w(pin, node)
         return node
 
-    note("HV STRINGS (D2, D3, D12)", "Bleeder, feedback, monitor and OVP strings, each part <= 150 V; always connected",
-         139.7, 233.68)
-    b = string(144.78, ["R122", "R123", "R124", "R125"], "1.2M", ["STR_BL1", "STR_BL2", "STR_BL3"], "HV bleeder",
-               suffix=" (<= 150 V per part)")
-    down_gnd(b)
-    b = string(170.18, ["R126", "R127", "R128", "R129"], "1.1M", ["STR_FB1", "STR_FB2", "STR_FB3"], "HV feedback string")
-    n = tap(b, 170.18, "R130", "9.76k", "HV feedback, lower (451.8 V; 8.87k for 500 V)")
-    sh.w(n, (175.26, n[1]))
-    sh.nl("LM5156_FB", (175.26, n[1]))
-    b = string(195.58, ["R131", "R132", "R133", "R134"], "2.2M", ["STR_MN1", "STR_MN2", "STR_MN3"], "HV monitor string")
-    n = tap(b, 195.58, "R135", "47k", "HV monitor, lower (2.39 V at 450 V)")
-    sh.w(n, (200.66, n[1]))
-    sh.gl("HV_SENSE", (200.66, n[1]), 0)
-    b = string(220.98, [f"R{145 + k}" for k in range(6)], "150k", [f"STR_DH{k}" for k in range(1, 6)],
-               "HV dummy load", dnp=True, suffix=" (bring-up only, LK4 open)")
-    down_gnd(b)
-    b = string(246.38, ["R136", "R137", "R138", "R139"], "2.2M", ["STR_OV1", "STR_OV2", "STR_OV3"], "OVP string")
-    n = tap(b, 246.38, "R140", "20.0k", "OVP divider, lower (trip ~548 V)")
-    comparator("U107", 292.1, n[1] - 2.54, n, 259.08, "OVP_SENSE", "OVP_REF", "C127", "OVP",
+    H25 = dict(HVR25, model="HVR2500")
+    H37 = dict(HVR37, model="HVR3700")
+    note("HV DIVIDERS (D2, D12)", "One leaded HVR25 per leg. Feedback and OVP stay on separate dividers;\n"
+         "monitor and OVP share one. No dedicated bleeder: both dividers discharge HV", 139.7, 233.68)
+    XF, XM, XD = 152.4, 177.8, 205.74
+    # feedback: 1.00 V x (1 + 4.75M / 10.5k) = 453.4 V (9.53k for the 500 V setting: 499.4 V)
+    n = node_below(top("R126", H25, "4.75M", "4754", XF, "HV feedback divider, upper"))
+    r = vR("R130", "10.5k", XF, n[1], "HV feedback, lower (453.4 V; 9.53k for 500 V)", "1 %")
+    down_gnd(r["2"])
+    sh.w(n, (XF + 5.08, n[1]))
+    sh.nl("LM5156_FB", (XF + 5.08, n[1]))
+    # shared monitor / OVP: HV - 4.64M - MON (HV_SENSE) - 14.0k - OVP tap - 10.5k - GND
+    # MON = HV / 190.4 (2.36 V at 450 V); OVP trips at 1.242 V x 4.6645M / 10.5k = 551.8 V
+    mon = node_below(top("R131", H25, "4.64M", "4644", XM, "HV monitor / OVP divider, upper"))
+    sh.w(mon, (XM + 5.08, mon[1]))
+    sh.gl("HV_SENSE", (XM + 5.08, mon[1]), 0)
+    r = vR("R135", "14.0k", XM, mon[1], "HV monitor / OVP divider, middle (HV_SENSE 2.36 V at 450 V)", "1 %")
+    ovp = node_below(r["2"])
+    r = vR("R140", "10.5k", XM, ovp[1], "HV monitor / OVP divider, lower (OVP trip 551.8 V)", "1 %")
+    down_gnd(r["2"])
+    comparator("U107", 233.68, ovp[1] - 2.54, ovp, 190.5, "OVP_SENSE", "OVP_REF", "C127", "OVP",
                "Independent OVP comparator (open drain)")
-    c = vC("C128", "0.1uF", 325.12, 295.91, "U107 bypass", "50 V X7R")
-    sh.w(c["1"], (325.12, 292.1))
-    sh.pwr("+5V", (325.12, 292.1))
+    c = vC("C128", "0.1uF", 266.7, ovp[1] - 8.89, "U107 bypass", "50 V X7R")
+    sh.w(c["1"], (266.7, ovp[1] - 12.7))
+    sh.pwr("+5V", (266.7, ovp[1] - 12.7))
     down_gnd(c["2"])
+    # HV dummy load for bring-up step 2 (DNP): 910k, 0.5 mA and 0.23 W at 455 V, fitted with LK4 open
+    down_gnd(top("R145", H37, "910k", "9103", XD, "HV dummy load (bring-up only, LK4 open)", dnp=True))
     tp("TP108", "HV_STACK", (256.54, YT), textpos=(1.27, -6.4))
     lk = link("LK4", 266.7, YT, "D11 link L4: tripler output to the anode string", hv=True)
     sh.w(lk["2"], (281.94, YT))
     sh.gl("HV", (281.94, YT), 0)
     sh.finish()
-    return sh
-
-
-    # ---- Row 4: tripler, bleeder, feedback ------------------------------------------------------
-    y = 290
-    note("TRIPLER (series-stack CW): every capacitor and diode sees <= V_b; 47 ohm pump surge resistor", 20, y - 40)
-    link("LK3", 30, y - 20, "V_B", "V_BT", "D11 link L3: V_b to the tripler DC column (fault isolation; never powered open)", hv=True)
-    r("R121", "47", 30, y + 5, "SW", "TRP_PUMP", "Pump surge resistor", angle=H)
-    sh.part(C, "C123", "0.47uF 400V", 60, y + 5, {"1": "TRP_PUMP", "2": "TRP_P1"}, angle=H, footprint=FP_FILM,
-            fields=F("Tripler pump CP1", rating="400 V PET film"))
-    sh.part(C, "C124", "0.47uF 400V", 95, y + 5, {"1": "TRP_P1", "2": "TRP_P2"}, angle=H, footprint=FP_FILM,
-            fields=F("Tripler pump CP2", rating="400 V PET film"))
-    sh.part(C, "C125", "0.47uF 400V", 60, y - 25, {"1": "V_BT", "2": "TRP_N2"}, angle=H, footprint=FP_FILM,
-            fields=F("Tripler stack C2", rating="400 V PET film"))
-    sh.part(C, "C126", "0.47uF 400V", 95, y - 25, {"1": "TRP_N2", "2": "HV_STACK"}, angle=H, footprint=FP_FILM,
-            fields=F("Tripler stack C3", rating="400 V PET film"))
-    for i, (ref, a, k) in enumerate((("D104", "V_BT", "TRP_P1"), ("D105", "TRP_P1", "TRP_N2"),
-                                     ("D106", "TRP_N2", "TRP_P2"), ("D107", "TRP_P2", "HV_STACK"))):
-        sh.part(D, ref, "ES1J", 125 + i * 18, y - 10, {"K": k, "A": a}, angle=90, footprint=FP_SMA,
-                fields=F("Tripler diode", "ES1J", "onsemi", "600 V, 1 A, 35 ns"))
-    # Bleeder 4 x 1.2M and feedback divider 4 x 1.1M + 9.76k, both always connected (D12, D2)
-    chain = [("R122", "HV_STACK", "STR_BL1"), ("R123", "STR_BL1", "STR_BL2"), ("R124", "STR_BL2", "STR_BL3"), ("R125", "STR_BL3", "GND")]
-    for i, (ref, a, b) in enumerate(chain):
-        r(ref, "1.2M", 210 + i * 14, y - 10, a, b, f"HV bleeder {i + 1}/4 (<= 150 V per part)")
-    chain = [("R126", "HV_STACK", "STR_FB1"), ("R127", "STR_FB1", "STR_FB2"), ("R128", "STR_FB2", "STR_FB3"), ("R129", "STR_FB3", "LM5156_FB")]
-    for i, (ref, a, b) in enumerate(chain):
-        r(ref, "1.1M", 275 + i * 14, y - 10, a, b, f"HV feedback string {i + 1}/4")
-    r("R130", "9.76k", 335, y - 10, "LM5156_FB", "GND", "HV feedback, lower (451.8 V; 8.87k for 500 V)", rating="1 %")
-    link("LK4", 360, y - 20, "HV_STACK", "HV", "D11 link L4: tripler output to the anode string", hv=True)
-    tp("TP108", "HV_STACK", 385, y - 10)
-
-    # ---- Row 5: HV monitor, independent OVP, dummy loads ----------------------------------------
-    y = 370
-    note("HV MONITOR (HV_SENSE, GP28), INDEPENDENT OVP on HV (~548 V) and on V_b (~202 V): both pull EN/UVLO low", 20, y - 40)
-    chain = [("R131", "HV_STACK", "STR_MN1"), ("R132", "STR_MN1", "STR_MN2"), ("R133", "STR_MN2", "STR_MN3"), ("R134", "STR_MN3", "HV_SENSE")]
-    for i, (ref, a, b) in enumerate(chain):
-        r(ref, "2.2M", 25 + i * 14, y - 10, a, b, f"HV monitor string {i + 1}/4")
-    r("R135", "47k", 85, y - 10, "HV_SENSE", "GND", "HV monitor, lower (2.39 V at 450 V)", rating="1 %")
-    chain = [("R136", "HV_STACK", "STR_OV1"), ("R137", "STR_OV1", "STR_OV2"), ("R138", "STR_OV2", "STR_OV3"), ("R139", "STR_OV3", "OVP_SENSE")]
-    for i, (ref, a, b) in enumerate(chain):
-        r(ref, "2.2M", 110 + i * 14, y - 10, a, b, f"OVP string {i + 1}/4")
-    r("R140", "20.0k", 170, y - 10, "OVP_SENSE", "GND", "OVP divider, lower (trip ~548 V)", rating="1 %")
-    c("C127", "1nF", 182, y - 10, "OVP_SENSE", "GND", "OVP sense filter", rating="50 V C0G")
-    sh.part("dekatron:TLV3011", "U107", "TLV3011", 215, y - 10,
-            {"1": "HV_EN_PIN", "2": "GND", "3": "OVP_REF", "4": "OVP_SENSE", "5": "OVP_REF", "6": "+5V"},
-            fields=F("Independent OVP comparator (open drain)", "TLV3011AIDBVR", "Texas Instruments", "1.242 V ref"))
-    c("C128", "0.1uF", 240, y - 10, "+5V", "GND", "U107 bypass", rating="50 V X7R")
-    # V_b overvoltage (review fix): with feedback from HV, an open tripler part lets V_b run away
-    # unseen by the HV OVP. A second TLV3011 trips at ~202 V (2 x 1.0M / 12.4k) on the same EN node.
-    r("R141", "1.0M", 255, y - 10, "V_B", "STR_VO1", "V_b OVP string 1/2 (<= 100 V per part)")
-    r("R142", "1.0M", 269, y - 10, "STR_VO1", "VB_OVP_SENSE", "V_b OVP string 2/2")
-    r("R143", "12.4k", 283, y - 10, "VB_OVP_SENSE", "GND", "V_b OVP divider, lower (trip ~202 V)", rating="1 %")
-    c("C129", "1nF", 295, y - 10, "VB_OVP_SENSE", "GND", "V_b OVP sense filter", rating="50 V C0G")
-    sh.part("dekatron:TLV3011", "U108", "TLV3011", 325, y - 10,
-            {"1": "HV_EN_PIN", "2": "GND", "3": "VB_OVP_REF", "4": "VB_OVP_SENSE", "5": "VB_OVP_REF", "6": "+5V"},
-            fields=F("V_b OVP comparator (open drain, wired-OR on EN/UVLO)", "TLV3011AIDBVR", "Texas Instruments", "1.242 V ref"))
-    c("C130", "0.1uF", 350, y - 10, "+5V", "GND", "U108 bypass", rating="50 V X7R")
-    # HV dummy load for bring-up step 2 (DNP): 6 x 150k (0.5 mA at 450 V), fitted with LK4 open
-    for i in range(6):
-        a = "HV_STACK" if i == 0 else f"STR_DH{i}"
-        b = "GND" if i == 5 else f"STR_DH{i + 1}"
-        r(f"R{145 + i}", "150k", 375 + i * 14, y - 10, a, b, f"HV dummy load {i + 1}/6 (bring-up only, LK4 open)", dnp=True)
     return sh
 
 
@@ -1241,13 +1183,11 @@ def build_tube(lib: SymbolLib) -> Sheet:
     # ---- bias regulator: V_B_BIAS -> 2 x 20k -> G+ -> 39 V zener -> RTN -> 51 V zener -> GND ---------
     note("BIAS REGULATOR (D1, D8)", "RTN = 51 V zener (sinks the tube current); G+ = RTN + 39 V = 90 V", 15.24, 25.4)
     X = 40.64
-    r1 = sh.place(R, "R201", "20k", X, 45.72, footprint=FP_R, fields=F("G+ / RTN feed 1/2 (2 x 20k: 1.5-2.1 mA)"))
-    r2 = sh.place(R, "R218", "20k", X, 58.42, footprint=FP_R, fields=F("G+ / RTN feed 2/2 (<= 93 mW per part at V_b 175 V)"))
-    sh.w(r1["1"], (X, 38.1))
+    r2 = sh.place(R, "R201", "40.2k", X, 52.07, footprint=MRS25["fp"],
+                  fields=F("G+ / RTN feed: 1.5-2.1 mA; 0.18 W at V_b 175 V, 0.31 W at the V_b OVP trip",
+                           "MRS25000C4022FCT00", MRS25["mfr"], MRS25["rating"]))
+    sh.w(r2["1"], (X, 38.1))
     sh.gl("V_B_BIAS", (X, 38.1), 90)
-    sh.w(r1["2"], r2["1"])
-    sh.nl("STR_GF1", (X, 52.07))
-    sh.w((X, 49.53), (X, 52.07), (X, 54.61))
     GP = (X, 66.04)
     sh.w(r2["2"], GP)
     d1 = sh.place(DZ, "D201", "39V", X, 76.2, angle=270, footprint=FP_SOD123,
@@ -1276,13 +1216,11 @@ def build_tube(lib: SymbolLib) -> Sheet:
     sh.nl("RTN", (63.5, 86.36))
     # RTN_SENSE divider (2 x 100k / 10k) to the ADC
     sh.w(RT, (25.4, 86.36))
-    a = sh.place(R, "R202", "100k", 25.4, 96.52, footprint=FP_R, fields=F("RTN_SENSE divider 1/2"))
-    b = sh.place(R, "R203", "100k", 25.4, 109.22, footprint=FP_R, fields=F("RTN_SENSE divider 2/2"))
+    b = sh.place(R, "R202", "200k", 25.4, 102.87, footprint=HVR25["fp"],
+                 fields=F("RTN_SENSE divider, upper (175 V if RTN fails to V_b)", hvr("HVR2500", "2003"),
+                          HVR25["mfr"], HVR25["rating"]))
     c = sh.place(R, "R204", "10k", 25.4, 127.0, footprint=FP_R, fields=F("RTN_SENSE divider, lower (2.43 V at 51 V)", rating="1 %"))
-    sh.w((25.4, 86.36), a["1"])
-    sh.w(a["2"], b["1"])
-    sh.nl("STR_RS1", (25.4, 102.87))
-    sh.w((25.4, 100.33), (25.4, 102.87), (25.4, 105.41))
+    sh.w((25.4, 86.36), b["1"])
     NS = (25.4, 116.84)
     sh.w(b["2"], NS, c["1"])
     sh.w(NS, (15.24, 116.84))
@@ -1336,12 +1274,10 @@ def build_tube(lib: SymbolLib) -> Sheet:
     sh.w(K1, (q["E"][0], 149.86), (96.52, 149.86))
     sh.nl("TUBE_K1", (96.52, 149.86))
     c1x = q["C"][0]
-    r12 = sh.place(R, "R212", "110k", c1x, 180.34, footprint=FP_R, fields=F("Index divider top 1/2 (167 V fault: 84 V per part)"))
-    r13 = sh.place(R, "R213", "110k", c1x, 193.04, footprint=FP_R, fields=F("Index divider top 2/2"))
-    sh.w(q["C"], (c1x, 173.99), r12["1"])
+    r13 = sh.place(R, "R212", "220k", c1x, 186.69, footprint=HVR25["fp"],
+                   fields=F("Index divider, upper (167 V fault)", hvr("HVR2500", "2203"), HVR25["mfr"], HVR25["rating"]))
+    sh.w(q["C"], (c1x, 173.99), r13["1"])
     sh.nl("NDX_C", (c1x, 173.99))
-    sh.w(r12["2"], (c1x, 186.69), r13["1"])
-    sh.nl("STR_NX1", (c1x, 186.69))
     ND = (c1x, 200.66)
     sh.w(r13["2"], ND)
     r14 = sh.place(R, "R214", "13k", c1x, 210.82, footprint=FP_R, fields=F("Index divider, lower", rating="1 %"))
@@ -1357,20 +1293,20 @@ def build_tube(lib: SymbolLib) -> Sheet:
     sh.gl("NDX", (c1x + 27.94, 200.66), 0)
 
     # ---- anode string and tube harness -------------------------------------------------------------
-    note("ANODE STRING (D1)", "3 x 220k (3 x 270k for the 500 V setting), <= 100 V per part", 152.4, 142.24)
+    note("ANODE STRING (D1)", "2 x HVR37 332k = 664k (2 x 402k for the 500 V setting); each part takes half of\n"
+         "a shorted anode (0.23 W of 0.5 W at 550 V); 67 mW per part at 0.45 mA", 152.4, 142.24)
     note("TUBE HARNESS (D14)", "Wires soldered to board and socket; cathodes tied at the socket", 205.74, 76.2)
-    xs = [167.64, 182.88, 198.12]
-    rs = [sh.place(R, ref, "220k", x, 160.02, angle=90, footprint=FP_R,
-                   fields=F(f"Anode resistor {k + 1}/3 (<= 100 V per part)")) for k, (ref, x) in enumerate(zip(("R215", "R216", "R217"), xs))]
-    sh.w((157.48, 160.02), rs[0]["1"])
-    sh.gl("HV", (157.48, 160.02), 180)
-    sh.w(rs[0]["2"], rs[1]["1"])
-    sh.w(rs[1]["2"], rs[2]["1"])
-    sh.nl("STR_A1", (rs[0]["2"][0] + 1.27, 160.02))
-    sh.nl("STR_A2", (rs[1]["2"][0] + 1.27, 160.02))
+    xs = [175.26, 195.58]
+    rs = [sh.place(R, ref, "332k", x, 160.02, angle=90, footprint=HVR37["fp"],
+                   fields=F(f"Anode resistor {k + 1}/2", hvr("HVR3700", "3323"), HVR37["mfr"], HVR37["rating"]))
+          for k, (ref, x) in enumerate(zip(("R215", "R216"), xs))]
+    sh.w((162.56, 160.02), rs[0]["1"])
+    sh.gl("HV", (162.56, 160.02), 180)
+    sh.w(rs[0]["2"], (185.42, 160.02), rs[1]["1"])
+    sh.nl("STR_A1", (185.42, 160.02))
     j1 = sh.place("Connector_Generic:Conn_01x01", "J201", "TUBE_ANODE", 223.52, 160.02, footprint=FP_WIRE1,
                   fields=F("Tube harness: anode (pin 8), 600 V wire, kept >= 3 mm from other pads"))
-    sh.w(rs[2]["2"], (208.28, 160.02), j1["1"])
+    sh.w(rs[1]["2"], (208.28, 160.02), j1["1"])
     sh.nl("ANODE", (208.28, 160.02))
     jh = sh.place("Connector_Generic:Conn_01x04", "J202", "TUBE", 248.92, 96.52, footprint=FP_WIRE4,
                   fields=F("Tube harness: G1 (pin 5), G2 (10), K1 index (13), RTN = K0, K2-K9 tied at the socket"))
@@ -1435,7 +1371,9 @@ def build_mcu(lib: SymbolLib) -> Sheet:
     note("ADC INPUTS", "BAT54S clamp to 3V3 / GND and a local reservoir capacitor at every input "
          "(NDX keeps its 1 nF on the tube sheet)", 15.24, 137.16)
     yb, yn = 160.02, 175.26
-    for i, (net, cap) in enumerate((("VIN_SENSE", "100nF"), ("HV_SENSE", "100nF"), ("RTN_SENSE", "100nF"), ("NDX", None))):
+    # HV_SENSE: 10 nF, not 100 nF: its divider also feeds the OVP tap, and 100 nF lags the OVP by
+    # ~16 V of HV on a runaway ramp (fault_fbopen.cir)
+    for i, (net, cap) in enumerate((("VIN_SENSE", "100nF"), ("HV_SENSE", "10nF"), ("RTN_SENSE", "100nF"), ("NDX", None))):
         xc = 55.88 + i * 50.8
         d = sh.place("Diode:BAT54S", f"D{301 + i}", "BAT54S", xc, yb, textpos=(-4, -6),
                      fields=F(f"{net} clamp to 3V3 / GND", "BAT54S", rating="30 V Schottky pair"))

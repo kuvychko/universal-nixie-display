@@ -2482,7 +2482,7 @@
 	(wire (pts (xy 106.68 165.1) (xy 106.68 175.26)) (stroke (width 0) (type default)) (uuid "bc230278-f588-57ac-831f-10cb1a617a84"))
 	(symbol (lib_id "Device:C") (at 106.68 182.88 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "7db37857-607c-56b6-9b4d-3b9651fc50da")
 	  (property "Reference" "C304" (at 109.88 181.88 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Value" "100nF" (at 109.88 184.48 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Value" "10nF" (at 109.88 184.48 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (at 106.68 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Datasheet" "" (at 106.68 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Description" "Unpolarized capacitor" (at 106.68 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))

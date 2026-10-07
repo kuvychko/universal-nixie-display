@@ -1,8 +1,11 @@
 * HV discharge after HV_EN falls: passive paths only (D12 target: every node < 50 V within 10 s)
 *
 * Starts from the 450 V operating state with the converter stopped (switch off), so the
-* switch node rests at V_IN through the inductor. Paths: bleeder 4.8M, HV monitor 8.847M and
-* feedback divider 4.41M at HV, V_b bleeder 2.4M, the tube until it extinguishes. Same tripler as
+* switch node rests at V_IN through the inductor. Paths (no dedicated HV bleeder since the 0207
+* rework): feedback divider HVR25 4.75M + 10.5k and the shared monitor / OVP divider HVR25 4.64M +
+* 14.0k + 10.5k at HV; at V_b the V_b bleeder 2.4M and the V_b OVP divider 2.0M + 12.4k; the tube
+* until it extinguishes. Three cases: both HV dividers intact, feedback top open, monitor top open
+* (single-fault discharge). Same tripler as
 * hv_startup.cir. Diodes are a generic ES1J-like model; capacitor values are the draft 0.47 uF.
 * Run from this directory:  ngspice_con -b hv_discharge.cir > hv_discharge.log
 
@@ -15,11 +18,14 @@ RL1   lx sw 0.18
 CDS   sw 0 90p
 D1    sw vb DES1J
 C1    vb 0 0.47u
-* Feedback divider from HV (4 x 1.1M / 9.8k) and a V_b bleeder (2 x 1.2M): V_b needs its own
-* path when link L3 separates the boost from the tripler during bring-up
-RFT   hv fb 4.4Meg
-RFB   fb 0 9.8k
+.param RFTV=4.75Meg RMTV=4.64Meg
+* Feedback divider from HV (HVR25 4.75M / 10.5k) and a V_b bleeder (HVR25 2.4M): V_b needs its own
+* path when link L3 separates the boost from the tripler during bring-up; V_b OVP divider 2.0M / 12.4k
+RFT   hv fb {RFTV}
+RFB   fb 0 10.5k
 RBLB  vb 0 2.4Meg
+RVO1  vb vbs 2.0Meg
+RVO2  vbs 0 12.4k
 
 RPUMP sw swp 47
 CP1   swp p1 0.47u
@@ -31,8 +37,10 @@ D3    p1 n2 DES1J
 D4    n2 p2 DES1J
 D5    p2 hv DES1J
 
-RBL   hv 0 4.8Meg
-RMON  hv 0 8.847Meg
+* Shared monitor / OVP divider: HV - 4.64M - MON (ADC) - 14.0k - OVP tap - 10.5k - GND
+RMT   hv mon {RMTV}
+RMM   mon hvs 14.0k
+RMO   hvs 0 10.5k
 RA    hv anode 660k
 * Tube: behavioural, with no hard edges (a hysteretic SW element and a conditional latch both
 * stalled the solver). A strike latch sets when anode-cathode exceeds VSTRIKE and clears when it falls to VMAINT + 5 V; it is
@@ -58,13 +66,25 @@ VRTNS  rtn 0 {VRTN}
 .ic v(latf)=1 v(lat)=1 v(sw)=12 v(swp)=12 v(vb)={VB0} v(p1)={VB0+12} v(n2)={2*VB0} v(p2)={2*VB0+12} v(hv)={3*VB0}
 .tran 1m 15 0 5m
 .control
-run
-foreach n hv n2 vb p1 p2
-  meas tran t50_$n WHEN v($n)=50 FALL=LAST
-  meas tran v10_$n FIND v($n) AT=10
+let k = 0
+foreach case intact fb_open mon_open
+  if k = 1
+    alterparam RFTV=1T
+    reset
+  end
+  if k = 2
+    alterparam RFTV=4.75Meg
+    alterparam RMTV=1T
+    reset
+  end
+  echo "=== case $case"
+  run
+  foreach n hv n2 vb p1 p2
+    meas tran t50_$n WHEN v($n)=50 FALL=LAST
+  end
+  meas tran v10_hv FIND v(hv) AT=10
+  meas tran hv_t0  FIND v(hv) AT=1m
+  let k = k + 1
 end
-meas tran hv_at1 FIND v(hv) AT=1
-meas tran hv_t0  FIND v(hv) AT=1m
-meas tran vb_t0  FIND v(vb) AT=1m
 .endc
 .end
