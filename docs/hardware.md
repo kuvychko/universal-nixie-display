@@ -652,6 +652,13 @@ rated 0.80 A); kept as a fallback since one part meets the requirement.
 | Feedback | **From HV:** 4 × 1.1M / 9.8k → HV = 450 V (1.00 V ref); 500 V option: bottom ≈ 8.82k | Moved from V_b in simulation (see results). ≤ 150 V per part: 137 V each at 550 V |
 | V_b bleeder | 2 × 1.2M (2.4 MΩ, 63 µA) | V_b's own discharge path when link L3 separates the boost from the tripler (D11) |
 
+**With the tube-sheet bias load** (G+/RTN feed, 1.7 mA from V_b, added after the 2 × 20k change):
+`hv_warm.cir` gives HV 451.5 V, 5.8 V p-p ripple, tube 382 µA, inductor ≤ 0.464 A, PGOOD high.
+**Open check, 500 V setting:** the converter then needs ≈ 0.89 W of output, ≈ 1.1 W at the input at
+80 % efficiency, against 1.2 W available at the low end of the current limit and −10 %
+inductance: thin. Simulate the 500 V setting before using it, or use the two kit 47 µH parts
+(rated 0.80 A, allowing a higher current limit) if it is needed.
+
 **MOSFET margin: resolved with a 400 V part.** With HV feedback the stack's per-stage shortfall
 pushes V_b up: the simulated switch-node peak is 161-163 V at the 450 V setting, and scaling to the
 500 V setting during an OVP trip (550 V) gives about 195 V. A 250 V logic-level part would have
