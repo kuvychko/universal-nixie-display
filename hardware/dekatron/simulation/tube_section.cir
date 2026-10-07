@@ -11,7 +11,8 @@
 * guide edge; it cannot show that the A101 transfers at -50 V guide pulses (plan section 9).
 * Sources: V_B_BIAS and HV are ideal (the power-sheet benches cover them). Device models are
 * generic, from datasheet values: MMBTA42 / MMBTA92 (h_FE >= 25 at 1 mA; 60 used),
-* MMSZ5259B (39 V at 3.2 mA, Zzt 80 ohm), MMSZ5262B (51 V at 2.5 mA, Zzt 125 ohm), BAT54S.
+* MMSZ5259B / MMSZ5262B (39 / 51 V at I_ZT 2 mA, Z_ZT 130 / 180 ohm, knee I_ZK 0.5 mA:
+* Yangjie datasheet S-S188), BAT54S.
 * .param VB = V_b (157 V nominal; 150 / 175 for the 450 V / 500 V corners), FAULT=1 opens D202.
 * Run from this directory:  ngspice_con -b tube_section.cir > tube_section.log
 
@@ -22,7 +23,9 @@ VHV   hv 0 {HVV}
 V33   p3v3 0 3.3
 
 * ---- G+ / RTN zener regulator --------------------------------------------------------------
-R201  v_b_bias gplus 56k
+* Feed 2 x 20k (was 56k: left the 51 V zener at 0.45 mA, below its 0.5 mA knee, at V_b 150 V)
+R201  v_b_bias str_gf1 20k
+R218  str_gf1 gplus 20k
 D201  rtn gplus DZ39
 D202  0 rtn_z DZ51
 RFLT  rtn_z rtn {FAULT ? 1e9 : 1m}
@@ -81,8 +84,8 @@ BGK1  tc tube_k1 I = V(s_k1)  * 1m * max(V(tc,tube_k1), 0)
 
 .model QA42 NPN(Is=2e-14 Bf=60 Br=3 Vaf=120 Rb=20 Rc=2 Re=0.5 Cje=25p Cjc=3p Tf=2n Tr=80n)
 .model QA92 PNP(Is=2e-14 Bf=60 Br=3 Vaf=120 Rb=20 Rc=2 Re=0.5 Cje=30p Cjc=6p Tf=2n Tr=80n)
-.model DZ39 D(Is=1e-12 N=1 Rs=80 BV=39 Ibv=3.2m)
-.model DZ51 D(Is=1e-12 N=1 Rs=125 BV=51 Ibv=2.5m)
+.model DZ39 D(Is=1e-12 N=1 Rs=130 BV=39 Ibv=2m)
+.model DZ51 D(Is=1e-12 N=1 Rs=180 BV=51 Ibv=2m)
 .model DBAT54 D(Is=2e-7 N=1.05 Rs=1 Cjo=10p BV=30)
 .model DGLOW D(Is=1e-12 N=1)
 

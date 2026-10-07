@@ -199,9 +199,8 @@ that. Both fit the same footprint.
 | Load at boost node V_b | Current | Basis |
 |---|---|---|
 | Tripler, reflected | 3 mA | 3 × 1 mA design value |
-| Guide pull-ups, both conducting | 0.38 mA | 2 × 90 V / 470 kΩ |
-| G+ / RTN regulator feeds | 1 mA | Allowance, refine in 1B |
-| **Total** | **≈ 4.4 mA, 0.66 W at 150 V (0.73 W at 167 V)** | |
+| G+ / RTN regulator feed | 1.7 mA (2.1 mA at 500 V) | 2 × 20k from V_b (tube sheet); includes the guide pull-up current |
+| **Total** | **≈ 4.7 mA, 0.74 W at 157 V (0.89 W at 175 V)** | |
 
 At an assumed 75 % efficiency that is ~75-80 mA from 12 V. The HV section is a small part of the
 12 V budget; the 5 V rail and the Nixie module dominate (D5).
@@ -764,15 +763,15 @@ TI's own store showed the TI parts out of stock on 2026-10-06; check Mouser stoc
 `tube.kicad_sch`: G+ / RTN bias, guide drivers (D8), index sense (D9), anode string (D1), cathode
 links (D11) and the soldered tube harness (D14).
 
-**G+ / RTN regulator.** A zener stack fed from `V_B_BIAS` (link LK5): V_b → 56k → **G+** → 39 V
+**G+ / RTN regulator.** A zener stack fed from `V_B_BIAS` (link LK5): V_b → 2 × 20k → **G+** → 39 V
 zener → **RTN** → 51 V zener → GND.
 
 | Item | Value | Basis |
 |---|---|---|
 | RTN | 51 V (MMSZ5262B, ±5 %) | Shunt: sinks the tube current (≤ 0.43 mA) into the zener |
 | G+ | RTN + 39 V = 90 V (MMSZ5259B) | Guide bias 39 V, inside the 36-44 V datasheet range |
-| Feed | 56k: 1.2 mA at V_b 157 V; 1.5 mA at the 500 V setting (≈ 175 V) | Both guide pull-ups take 0.38 mA, leaving ≥ 0.82 mA in the zeners: RTN holds with zero tube current while the glow sits on a guide (D8) |
-| Dissipation | Feed resistor ≤ 128 mW (1206); 51 V zener ≤ 98 mW (500 mW part) | 500 V setting, tube lit |
+| Feed | **2 × 20k** (was 56k): 1.5 mA at V_b 150 V, 1.7 mA at 157 V, 2.1 mA at 175 V (500 V setting) | Worst case for the 51 V zener: both guide pull-ups (0.38 mA) and the RTN_SENSE divider (0.24 mA) loading it with no tube current: 0.87 mA, above the 0.5 mA knee (I_ZK, Yangjie MMSZ52xx datasheet). 56k left 0.45 mA, below the knee |
+| Dissipation | Feed ≤ 93 mW per 20k part; 51 V zener ≤ 118 mW, 39 V ≤ 83 mW (500 mW parts) | 500 V setting, tube lit |
 | Bypass | 0.1 µF 100 V across G+-RTN; 1 µF 100 V RTN-GND | Absorbs guide and tube current steps |
 | RTN_SENSE | 2 × 100k / 10k → 2.43 V at 51 V | ADC (GP29); clamp at the RP2040 (mcu sheet) |
 
@@ -781,21 +780,22 @@ G2 → K2 at 200 steps/s, generic MMBTA42/92, zener and BAT54S models from datas
 
 | Case | RTN | G+ − RTN (min) | NDX, glow on K1 | 51 V zener current | 39 V zener (min) |
 |---|---|---|---|---|---|
-| V_b 157 V (450 V setting) | 51.03-51.15 V | 39.03 V | 2.886 V | 0.57-1.32 mA | 0.81 mA |
-| V_b 150 V | 51.01-51.13 V | 39.02 V | 2.885 V | 0.45-1.20 mA | 0.69 mA |
-| V_b 175 V (500 V setting) | 51.08-51.21 V | 39.06 V | 2.890 V | 0.89-1.72 mA | 1.13 mA |
-| 51 V zener open (fault) | 102-106 V | 34.95 V | 3.43 V, clamped | — | — |
+| V_b 157 V (450 V setting) | 51.17-51.32 V | 39.16 V | 2.895 V | 1.04-1.79 mA | 1.28 mA |
+| V_b 150 V | 51.13-51.29 V | 39.13 V | 2.893 V | 0.87-1.62 mA | 1.11 mA |
+| V_b 175 V (500 V setting) | 51.26-51.42 V | 39.22 V | 2.902 V | 1.49-2.31 mA | 1.73 mA |
+| 51 V zener open (fault) | 105-109 V | 35.36 V | 3.43 V, clamped | — | — |
 
-* RTN moves ≤ 0.12 V whether the tube current returns through the cathodes, K1 or a guide (zero
+* Zener models use the datasheet values: I_ZT 2 mA, Z_ZT 180 Ω (51 V) / 130 Ω (39 V).
+* RTN moves ≤ 0.16 V whether the tube current returns through the cathodes, K1 or a guide (zero
   RTN current): D8's requirement holds.
 * Guides: 23 mV when pulled low, 90.2 V at rest, back above 78 V 7-11 µs after release. GPIO base
   current 0.265 mA. Tube current 375 µA.
 * NDX: 2.886 V on K1, ≤ 2.4 mV otherwise; crosses 2.0 V 3 µs after the glow arrives and 0.8 V
   18 µs after it leaves, inside the 60 µs read budget (D9). RTN_SENSE 2.436 V.
-* **Correction:** the 51 V zener's minimum current is 0.45 mA (V_b 150 V, glow on a guide), not the
-  ≥ 0.82 mA estimated above: the RTN_SENSE divider also draws 0.24 mA from RTN. That is above the
-  1N52xx-family knee current (0.25 mA) and RTN holds within 0.12 V, so the 56k feed stays.
-* **Fault, 51 V zener open:** RTN rises to ~104 V; the BAT54S clamps hold NDX at 3.43 V and
+* **Found and fixed in simulation:** with the original 56k feed the 51 V zener fell to 0.45 mA at
+  V_b 150 V with the glow on a guide. The earlier estimate (≥ 0.82 mA) missed the RTN_SENSE
+  divider's 0.24 mA, and the knee current is 0.5 mA (datasheet), so the feed became 2 × 20k.
+* **Fault, 51 V zener open:** RTN rises to ~107 V; the BAT54S clamps hold NDX at 3.43 V and
   RTN_SENSE at 3.48 V. Firmware reads RTN_SENSE over range and drops `HV_EN`.
 * Not modelled: whether the A101 transfers its glow at −50 V guide pulses (bring-up, plan §9).
 

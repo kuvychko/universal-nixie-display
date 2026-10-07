@@ -36,6 +36,7 @@ revision as it is used.
 | `rp2040.pdf` | RP2040 datasheet (pad reset state Table 341; IO characteristics Table 625) | https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf | — |
 | (not stored) | RP2040-Zero pinout figure (top view) | https://www.waveshare.com/w/upload/1/1f/900px-RP2040-Zero-details-7.jpg | — |
 | (not stored) | RP2040-Zero STEP model (castellation geometry) | https://files.waveshare.com/upload/f/f7/RP2040_Zero_stp.zip | 2022-01-08 |
+| `mmsz52xx_yangjie.pdf` | MMSZ5221B-5267B zeners (Yangjie): I_ZT 2 mA, Z_ZT, knee I_ZK 0.5 mA | https://static.chipdip.ru/lib/152/DOC001152772.pdf | S-S188 rev 1.0 |
 | `rp2040_zero_sch.pdf` | Waveshare RP2040-Zero schematic | https://www.waveshare.com/w/upload/4/4c/RP2040_Zero.pdf | — |
 | `cyd/ESP32-2432S028-MCU.jpg`, `-LCM.jpg` | ESP32-2432S028 schematic (vendor original V0.1, 2022-07-15) | https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display (OriginalDocumentation/5-Schematic) | V0.1 |
 | `ad01/*.gif` | AD01 dekatron shield schematic, BOM, hook-up | threeneurons (see above) | April 2017 |

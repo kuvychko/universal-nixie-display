@@ -860,8 +860,9 @@ def build_tube(lib: SymbolLib) -> Sheet:
 
     # ---- Row 1: G+ / RTN zener regulator (D1, D8) ------------------------------------------
     y = 45
-    note("BIAS (D1, D8): RTN = 51 V zener (sinks tube current), G+ = RTN + 39 V = 90 V; feed 56k from V_b", 20, 22)
-    r("R201", "56k", 30, y, "V_B_BIAS", "GPLUS", "G+ / RTN feed (1.2 mA at V_b 157 V)")
+    note("BIAS (D1, D8): RTN = 51 V zener (sinks tube current), G+ = RTN + 39 V = 90 V; feed 2 x 20k from V_b", 20, 22)
+    r("R201", "20k", 30, y - 10, "V_B_BIAS", "STR_GF1", "G+ / RTN feed 1/2 (2 x 20k: 1.5-2.1 mA)")
+    r("R218", "20k", 30, y + 14, "STR_GF1", "GPLUS", "G+ / RTN feed 2/2 (<= 93 mW per part at V_b 175 V)")
     sh.part(DZ, "D201", "39V", 55, y, {"1": "GPLUS", "2": "RTN"}, angle=270, footprint=FP_SOD123,
             fields=F("G+ above RTN: guide bias 39 V", "MMSZ5259B", "onsemi", "39 V, 500 mW"))
     sh.part(DZ, "D202", "51V", 80, y, {"1": "RTN", "2": "GND"}, angle=270, footprint=FP_SOD123,
