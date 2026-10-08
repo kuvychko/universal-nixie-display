@@ -101,6 +101,18 @@ pass 8). What the pieces do:
   Mounting-hole references are hidden; on this board C115 has no legal spot and is labelled on
   the Fab layer only.
 
+### Fab outputs
+
+OSH Park Gerbers and drill into `hardware/dekatron/fab/` (its README lists the files), then zip
+the nine fab files that README lists for upload (the zip is git-ignored):
+
+```
+kicad-cli pcb export gerbers --check-zones --subtract-soldermask -l F.Cu,B.Cu,F.Mask,B.Mask,F.Silkscreen,B.Silkscreen,F.Paste,Edge.Cuts -o hardware/dekatron/fab/ hardware/dekatron/dekatron.kicad_pcb
+kicad-cli pcb export drill --format excellon --excellon-units mm --generate-report --report-path hardware/dekatron/fab/dekatron-drill_report.txt -o hardware/dekatron/fab/ hardware/dekatron/dekatron.kicad_pcb
+```
+
+Regenerate only for a board change that will be ordered; the files are a record of what was sent.
+
 ### DRC baseline (2026-10-07)
 
 `kicad-cli pcb drc --severity-all --schematic-parity hardware/dekatron/dekatron.kicad_pcb`:

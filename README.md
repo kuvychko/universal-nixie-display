@@ -7,15 +7,16 @@ Raspberry Pi or experiment, driven over USB serial with a small SCPI-style comma
 
 ## Status
 
-**Phase 1A — design for 12 VDC (dekatron controller/PSU board).** Nothing is built yet. The
-planning baseline is [docs/project_plan.md](docs/project_plan.md); the open Phase 1A decisions are
-tracked in [docs/hardware.md](docs/hardware.md#dekatron-controllerpsu).
+**Phase 1C — dekatron controller/PSU board ready to order.** Schematics, simulations, PCB
+and fab files are done; nothing is built yet. The
+planning baseline is [docs/project_plan.md](docs/project_plan.md); the design decisions and
+open items are tracked in [docs/hardware.md](docs/hardware.md#dekatron-controllerpsu).
 
 | Phase | Deliverable | State |
 |---|---|---|
-| 1A | Dekatron board architecture and power budget for 12 VDC input | **In progress** |
-| 1B | Hierarchical schematics and simulation evidence | Not started |
-| 1C | Dekatron controller/PSU PCB, BOM, fab files | Not started |
+| 1A | Dekatron board architecture and power budget for 12 VDC input | Done |
+| 1B | Hierarchical schematics and simulation evidence | Done (open simulation items in `docs/hardware.md`) |
+| 1C | Dekatron controller/PSU PCB, BOM, fab files | **Fab files generated, not yet ordered** |
 | 1D | Sectional bring-up and standalone firmware | Not started |
 | 2 | Nixie PSU qualification and six-tube controller/mount | Not started |
 | 3 | ESP32 UI, encoder, I2C master, USB host commands | Not started |
