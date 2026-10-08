@@ -912,7 +912,7 @@ review of failure modes and the bring-up procedure.
 | 3 | Net-class pattern `*SW` also matched the buck's `BUCK_SW`, which would give the TPS54202's 0.95 mm-pitch pins a 1.5 mm rule | Pattern changed to `*/SW` |
 | 4 | `OVP_TRIP` (GP8) reads the EN/UVLO node; the RP2040's default pull-down loads it | Firmware disables GP8's pull-down (EN still reaches 2.55 V with it enabled) |
 | 5 | Without firmware, an OVP trip makes the converter cycle at the trip point instead of latching | Firmware latches: drops `HV_EN` when `OVP_TRIP` reads low with `HV_EN` high |
-| 6 | 500 V setting power margin is thin with the kit inductor | Open: simulate before using 500 V (see HV boost stage) |
+| 6 | 500 V setting power margin is thin with the kit inductor | **Resolved** (2026-10-07): `hv_500.cir` regulates at 499.4 V out of current limit even at 10.8 V in with the limit 7 % low (see HV boost stage) |
 
 ## Nixie controller/mount
 
