@@ -188,8 +188,14 @@ it removes feedback. Sharing monitor and OVP leaves one weak point, a monitor cl
 GND, which also blinds the OVP tap; that takes a second fault (feedback must also fail) to matter.
 Simulated with the feedback divider open (`fault_fbopen.cir`): HV ramps at ~7 V/ms at the current
 limit. With 100 nF on `HV_SENSE` the OVP tap lagged HV by the equivalent of 15.8 V (trip near
-568 V), so that capacitor became 10 nF (1.6 V lag). With the tube lit, HV levelled at 546.9 V, just
-below the trip; a dark-tube run, which should cross it, is still to do.
+568 V), so that capacitor became 10 nF (1.6 V lag). With the tube dark (`fault_fbopen_dark.cir`,
+near-ideal comparator) the OVP trips at **553.4 V**, then bursts the converter with HV between
+550.3 and 553.0 V; V_b peaks at 188.6 V (below its own 201.6 V trip) and the switch node at 189.5 V
+(400 V MOSFET, 2.1×). 553.5 V needs 2.77 mm under the D13 rule, inside the 3.0 mm used. (An
+earlier tube-lit run that "levelled at 546.9 V" was the comparator model's soft edge clamping EN.)
+**The OVP does not latch**, as simulated: with the feedback divider open, HV sits at the trip
+until firmware drops `HV_EN` on seeing `OVP_TRIP` low (review item 5 below). `HV_SENSE` gives a
+second check: 2.90 V at the trip against 2.38 V at 453 V and 2.62 V at 499 V.
 **A further divider watches V_b** (added in the Phase 1B review): with
 feedback from HV, an open tripler diode or capacitor makes HV fall while the controller drives V_b
 upward, unseen by the HV OVP. A second TLV3011 trips at ≈ 202 V (HVR25 2.0M / 12.4k; V_b is ≈ 157 V
@@ -695,10 +701,14 @@ rated 0.80 A); kept as a fallback since one part meets the requirement.
 
 **With the tube-sheet bias load** (G+/RTN feed, 1.7 mA from V_b, added after the 2 × 20k change):
 `hv_warm.cir` gives HV 451.5 V, 5.8 V p-p ripple, tube 382 µA, inductor ≤ 0.464 A, PGOOD high.
-**Open check, 500 V setting:** the converter then needs ≈ 0.89 W of output, ≈ 1.1 W at the input at
-80 % efficiency, against 1.2 W available at the low end of the current limit and −10 %
-inductance: thin. Simulate the 500 V setting before using it, or use the two kit 47 µH parts
-(rated 0.80 A, allowing a higher current limit) if it is needed.
+**500 V setting, simulated (`hv_500.cir`, 2026-10-07):** on the current design (no dedicated
+bleeder, 9.53k feedback bottom, 2 × 402k anode, 40.2k G+/RTN feed) the earlier ≈ 0.89 W estimate
+no longer applies. At 10.8 V in, the current limit 7 % low (0.42 A) and 90 µH, HV settles at
+499.4 V (setpoint 499.4 V) with the tube at 373 µA, an inductor peak of 0.29 A (out of current
+limit, ≈ 2× power headroom) and 0.58 W from the input; nominal: 0.32 A, 0.71 W. Peaks: HV 503.2 V
+at start-up (48 V below the OVP trip), V_b 172.2 V (V_b OVP 201.6 V), switch node 173 V, capacitors
+≤ 171 V, diode reverse ≤ 167 V. The tube going out gives 0.5 V of overshoot. The kit 100 µH part
+is enough; the 2 × 47 µH fallback is not needed for 500 V.
 
 **MOSFET margin: resolved with a 400 V part.** With HV feedback the stack's per-stage shortfall
 pushes V_b up: the simulated switch-node peak is 161-163 V at the 450 V setting, and scaling to the
@@ -740,6 +750,8 @@ pump current is ~1.2 mA. 100 Ω also works but charges the stack about half as f
 | `hv_warm.cir`, tube held dark | Steady state with no tube current | **HV 453.3 V, 1.7 V p-p**, V_b 157.9 V, PGOOD high. Load regulation dark → lit 0.9 % |
 | `hv_warm.cir`, V_b feedback (superseded) | Same, regulating V_b = 150 V | HV only 442 V with the tube dark: the reason feedback moved to HV |
 | `hv_warm.cir` stresses | Peaks over the run | Switch node 161 V; capacitors ≤ 159 V (400 V parts); diode reverse ≤ 149 V (600 V); CS pin ≤ 0.10 V (0.3 V abs max); switch current spike 1.86 A with the 47 Ω pump resistor |
+| `hv_500.cir` | 500 V setting, warm start, 12 ms: 12 V nominal; 10.8 V with the current limit −7 %; tube out at 8 ms | **HV 499.2-499.4 V, tube 373 µA, inductor ≤ 0.32 A** (limit 0.42-0.46 A); peaks HV 503.2 V, V_b 172 V, switch node 173 V; 0.5 V overshoot on tube-out |
+| `fault_fbopen_dark.cir` | Feedback divider open, tube dark, from 540 V | **OVP trips at 553.4 V**, then bursts at 550.3-553.0 V (no latch); V_b ≤ 188.6 V, switch node ≤ 189.5 V |
 | `hv_startup.cir` | Cold start from 0 V, 40 ms, HV feedback, 400 V MOSFET with 10 V drive | **Completes:** tube strikes at 9.5 ms; at 38-40 ms HV 449.9 V, 0.11 V p-p ripple, tube 379 µA, PGOOD high; switch node 163 V, CS ≤ 0.10 V, switch spike 1.84 A, inductor 0.76 A at the current limit during start-up. (The earlier logic-level configuration gave the same figures within 1 %.) |
 
 Model limitations: generic MOSFET and diode models (AOD5N40- and ES1J-like), film capacitors as

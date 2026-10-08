@@ -1,0 +1,176 @@
+* 500 V SETTING (D1 option B) on the current design (0207 rework), warm start.
+* Feedback HVR25 4.75M / 9.53k -> 499.4 V (1.00 V reference); anode 2 x HVR37 402k = 804k; shared
+* monitor / OVP divider 4.64M - HV_SENSE (10 nF) - 14.0k - OVP tap - 10.5k (trip 551.8 V); V_b OVP
+* 2.0M / 12.4k (trip 201.6 V); V_b bleeder 2.4M; G+/RTN feed 40.2k from V_b into the ~90 V G+ node.
+* Both OVP comparators are smooth current sinks on EN/UVLO (as in fault_d5open.cir).
+* Cases (edit the .param line; logs hv_500_<case>.log):
+*   nom   VINP=12   RSNS=0.22   LIND=90u  TKILL=1     12 V in, nominal limit, inductor -10 %
+*   low   VINP=10.8 RSNS=0.2354 LIND=90u  TKILL=1     input -10 %, limit -7 % (0.42 A), inductor -10 %
+*   dump  VINP=12   RSNS=0.22   LIND=90u  TKILL=8m    tube current cut at 8 ms (tube goes out):
+*                                                     overshoot against the 551.8 V OVP trip
+* Questions: does it regulate at 499.4 V with the low-end power (docs/hardware.md "Open check, 500 V
+* setting")? tube current vs 300-450 uA (D1); margin to both OVP trips; switch node vs the 400 V
+* MOSFET; capacitor and diode stress.
+* Result (2026-10-07; nom / low / dump), steady state 7.5-8 ms and 11.5-12 ms:
+*   HV 499.2 / 499.4 / 499.2 V (setpoint 499.4 V), 0.14-0.44 V p-p; tube 372.5 / 372.8 uA (D1
+*   300-450 uA); inductor peak 0.32 / 0.29 A against the 0.46 / 0.43 A limit, so it regulates out of
+*   current limit with ~2x power headroom in the low case; input 0.71 / 0.58 W; PGOOD high.
+*   Peaks: HV 503.2 V (start-up from the 485 V precharge), OVP tap 1.131 V (= 503 V; trip 551.8 V),
+*   V_b 172.2 V (V_b OVP tap 1.061 V; trip 201.6 V), switch node 173 V (400 V MOSFET), capacitors
+*   <= 171 V (400 V), diode reverse <= 167 V (600 V), CS <= 0.10 V. Dump: HV max 499.9 V after the
+*   tube goes out at 8 ms (0.5 V overshoot).
+* Models and tube as in hv_warm.cir (strike 380 V assumed; lit at once from the precharged stack).
+* Run from this directory:  ngspice_con -b hv_500.cir > hv_500_<case>.log  (about 10 min per case)
+
+.include models/vendor/ti/LM5156-Q1_PSPICE_TRANS/LM5156-Q1_TRANS.ngspice.lib
+
+.param VSTRIKE=380 VMAINT=150 VRTN=50 RGATE=2
+.param VINP=12 RSNS=0.22 LIND=90u TKILL=1
+
+VIN   vin  0  {VINP}
+* HV_EN: on at 100 us through 10k, 100k pull-down on EN/UVLO
+VEN   en_drv 0 PULSE(0 3.3 100u 1u 1u 1 2)
+REN   en_drv uvlo 10k
+RPD   uvlo 0 100k
+
+* BIAS = VCC from the 10 V gate-drive regulator (LP2951; LM5156 BIAS=VCC mode, 2.97-16 V)
+VDRV  vdrv 0 10
+XU1   vdrv comp cs vdrv fb gate 0 pgood rt ss uvlo vdrv LM5156-Q1_TRANS
+* 147k: ~150 kHz (kit inductor design)
+RRT   rt 0 147k
+CSS   ss 0 2.2n
+RC    comp c1 10k
+CC    c1 0 10n
+CHF   comp 0 100p
+RPG   pgood v3 100k
+V3    v3 0 3.3
+
+* Boost stage
+CIN   vin 0 22u
+* Kit inductor: 100 uH +/-10 %, DCR 0.35 ohm; simulated at the -10 % corner
+L1    vin lx {LIND}
+RL1   lx sw 0.35
+RG    gate g1 {RGATE}
+M1    sw g1 src M250
+RS    src 0 {RSNS}
+* CS filter: the pump capacitors recharge through the switch at turn-on, a current spike that would
+* otherwise reach the CS pin (abs max 0.3 V) directly
+RCSF  src cs 100
+CCSF  cs 0 470p
+D1    sw vb DES1J
+XC1   vb 0 CFILM
+* Feedback from HV: 1.00 V * (1 + 4.75M / 9.53k) = 499.4 V
+RFT   hv fb 4.75Meg
+RFB   fb 0 9.53k
+RBLB  vb 0 2.4Meg
+* G+/RTN regulator feed (tube sheet): 40.2k from V_b into the ~90 V G+ node
+RBIASF vb gpn 40.2k
+VGPN  gpn 0 90
+* V_b OVP and the shared HV monitor / OVP divider, comparators as smooth sinks on EN/UVLO
+RVO1  vb vbs 2Meg
+RVO2  vbs 0 12.4k
+CVO   vbs 0 1n
+RMT   hv mon 4.64Meg
+CMON  mon 0 10n
+RMM   mon hvs 14.0k
+RHO2  hvs 0 10.5k
+CHO   hvs 0 1n
+BOVPV uvlo 0 I = 0.5*(1+tanh((V(vbs)-1.242)*200)) * V(uvlo)/20
+BOVPH uvlo 0 I = 0.5*(1+tanh((V(hvs)-1.242)*200)) * V(uvlo)/20
+
+* Series-stack tripler: every capacitor and diode sees at most V_b
+* Film capacitors with ESR: without it the switch / pump-capacitor / diode loop has no impedance and
+* the solver fails ("timestep too small" at node cs) at the first hard pump edges. ESL is left out:
+* nH-scale parasitics ring at ~100 MHz, which a 5 ns step cannot resolve.
+* Pump surge resistor: limits the pump-capacitor recharge current that flows through the switch
+* at turn-on (14 A spike, 0.99 V at CS without it; 1.9 A and <= 0.1 V at CS with 47 ohm)
+RPUMP sw swp 47
+XCP1  swp p1 CFILM
+XCP2  p1 p2 CFILM
+XC2   vb n2 CFILM
+XC3   n2 hv CFILM
+.subckt CFILM a b
+C1 a m 0.47u
+R1 m b 0.1
+.ends
+D2    vb p1 DES1J
+D3    p1 n2 DES1J
+D4    n2 p2 DES1J
+D5    p2 hv DES1J
+
+* Anode string 2 x 402k (500 V option), then the tube model to the 50 V RTN
+RA    hv anode 804k
+* Tube-out switch for the load-dump case: 1 until TKILL, then 0 over 1 us
+VKILL kill 0 PWL(0 1 {TKILL} 1 {TKILL+1u} 0)
+* Tube: behavioural, with no hard edges (a hysteretic SW element and a conditional latch both
+* stalled the solver). A strike latch sets when anode-cathode exceeds VSTRIKE and clears when it falls to VMAINT + 5 V; it is
+* smoothed by a 1 us RC. While lit, current rises smoothly above VMAINT through ~1 kohm dynamic
+* resistance.
+* Smooth latch: s1 = strike step, s2 = "still above extinction" step; lat = s1 + (1 - s1) * s2 * latf
+* Strike is judged on V(hv,rtn), the voltage the anode would have while dark (no current through
+* the anode string); judging it on V(anode,rtn) is circular and lets the model settle with a small
+* pre-strike current holding the anode just below VSTRIKE. Extinction uses the actual anode voltage.
+BLATCH lat 0 V = 0.5*(1+tanh((V(hv,rtn)-{VSTRIKE})/2)) + (1-0.5*(1+tanh((V(hv,rtn)-{VSTRIKE})/2))) * 0.5*(1+tanh((V(anode,rtn)-{VMAINT}-5)/2)) * V(latf)
+RLAT   lat latf 1k
+CLAT   latf 0 1n
+* Current is gated by a sharp function of the latch (0.5*(1+tanh(200*(latf-0.5)))): a partly-set
+* latch must not leak current, or a dark tube draws enough through the anode string to never strike
+BTUBE  anode rtn I = V(kill) * 0.5*(1+tanh(200*(V(latf)-0.5))) * (0.5/1k) * ((V(anode,rtn)-{VMAINT}) + sqrt((V(anode,rtn)-{VMAINT})^2 + 1))
+RTLEAK anode rtn 10G
+VRTNS  rtn 0 {VRTN}
+
+.model M250 VDMOS(nchan Vto=4.0 Kp=2 Rd=1.0 Rs=0.1 Cgdmax=60p Cgdmin=5p Cgs=350p Cjo=40p Is=1e-12 Rb=0.2 BV=400)
+.model DES1J D(Is=5e-9 Rs=0.15 N=1.9 Cjo=12p Tt=25n BV=600 Ibv=1u)
+
+* Stack precharged to ~485 V (stage voltages scaled from hv_warm.cir); sense taps at their DC values
+.ic v(vb)=162 v(sw)=12 v(swp)=12 v(p1)=174 v(n2)=323 v(p2)=335 v(hv)=485 v(latf)=0 v(lat)=0
++ v(xc1.m)=0 v(xcp1.m)=174 v(xcp2.m)=335 v(xc2.m)=323 v(xc3.m)=485
++ v(mon)=2.547 v(hvs)=1.092 v(vbs)=0.996
+* Relaxed tolerances: with defaults the TI model stalls the solver at light-load mode changes
+.options reltol=0.003 abstol=1n vntol=10u chgtol=1e-13 itl4=50
+.tran 5n 12m 0 5n uic
+.control
+run
+rusage totaltime
+meas tran vb_ss     AVG v(vb)                from=7.5m to=8m
+meas tran hv_ss     AVG v(hv)                from=7.5m to=8m
+meas tran hv_rip    PP  v(hv)                from=7.5m to=8m
+meas tran itube_ss  AVG i(VRTNS)             from=7.5m to=8m
+meas tran lat_end FIND v(latf) AT=8m
+meas tran t_lit WHEN v(latf)=0.5 RISE=1
+meas tran hv_min MIN v(hv) from=0.5m to=12m
+meas tran hv_max MAX v(hv) from=0.5m to=12m
+meas tran vb_max MAX v(vb) from=0.5m to=12m
+meas tran ilim_pk   MAX i(L1)                from=0.5m to=12m
+meas tran fsw_n     WHEN v(gate)=5 RISE=1 from=7.5m
+meas tran il_ss     MAX i(L1)                from=7.5m to=8m
+meas tran vsw_pk    MAX v(sw)                from=0.5m to=12m
+let vcp1 = v(p1)-v(swp)
+let vc2 = v(n2)-v(vb)
+let vc3 = v(hv)-v(n2)
+let vcp2 = v(p2)-v(p1)
+let vd5r = v(hv)-v(p2)
+meas tran vcp1_max  MAX vcp1                 from=0.5m to=12m
+meas tran vcp1_min  MIN vcp1                 from=0.5m to=12m
+meas tran vc2_max   MAX vc2                  from=0.5m to=12m
+meas tran vc3_max   MAX vc3                  from=0.5m to=12m
+meas tran vcp2_max  MAX vcp2                 from=0.5m to=12m
+meas tran vd5_rev   MAX vd5r                 from=0.5m to=12m
+meas tran pg_ss     AVG v(pgood)             from=7.5m to=8m
+let isrc = v(src)/@rs[resistance]
+meas tran isw_pk MAX isrc from=0.5m to=12m
+meas tran vcs_pk MAX v(cs) from=0.5m to=12m
+let iin = -i(VIN)
+meas tran iin_ss    AVG iin                  from=7.5m to=8m
+meas tran hv_end    AVG v(hv)                from=11.5m to=12m
+meas tran hv_rip_end PP v(hv)                from=11.5m to=12m
+meas tran hvs_max   MAX v(hvs)               from=0.5m to=12m
+meas tran vbs_max   MAX v(vbs)               from=0.5m to=12m
+meas tran uvlo_min  MIN v(uvlo)              from=0.5m to=12m
+meas tran comp_ss   AVG v(comp)              from=7.5m to=8m
+meas tran mon_ss    AVG v(mon)               from=7.5m to=8m
+meas tran hv_6_65   AVG v(hv)                from=6m to=6.5m
+meas tran il_end    MAX i(L1)                from=11.5m to=12m
+meas tran hv_max_late MAX v(hv)              from=8m to=12m
+.endc
+.end

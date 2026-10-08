@@ -127,9 +127,11 @@ VRTNS  rtn 0 {VRTN}
 * lag of the sense taps behind HV on it: 15.8 V of HV with CMON = 100 nF, 1.6 V with 10 nF.
 * MON / OVP start 1.6 V of HV behind, as on the ramp.
 * Result (2026-10-07): HV peaked at 546.9 V at 1.09 ms and then fell; the OVP tap peaked at 1.228 V
-* (trip 1.242 V), so with the tube lit the current-limited converter balances its load just below
-* the trip. The TI model then failed to converge at 3.5 ms (timestep too small in xu1). A dark-tube
-* run, which should cross the trip, is still to do.
+* (trip 1.242 V). The TI model then failed to converge at 3.5 ms (timestep too small in xu1).
+* Correction (fault_fbopen_dark.cir): this was the OVP acting, not the converter levelling off. The
+* comparator sinks here have a 200 /V tanh edge, which already pulls EN/UVLO part-way 13 mV below
+* the threshold, so they behave as a soft clamp ~5 V of HV below the trip. With a near-ideal edge the
+* OVP trips at 553.4 V and bursts the converter around the trip (see that bench).
 .ic v(vb)=185 v(sw)=12 v(swp)=12 v(p1)=197 v(n2)=366 v(p2)=378 v(hv)=540 v(latf)=1 v(lat)=1
 + v(mon)=2.828 v(hvs)=1.212 v(xc1.m)=0 v(xcp1.m)=197 v(xcp2.m)=378 v(xc2.m)=366 v(xc3.m)=540
 * Relaxed tolerances: with defaults the TI model stalls the solver at light-load mode changes
