@@ -39,7 +39,7 @@ pinout and sectional test provisions defined.
 | D9 | Index sense: threshold, level translation to 3.3 V, protection | **Proposed** | MMBTA92 level shifter, 220k/13k divider, Schottky clamp; 2.67-2.95 V out; see [Index sense](#index-sense-d9) |
 | D10 | A101 socket pinout, verified against the tube drawing | **Decided** 2026-10-06 | User's tube is an A-101 in a stock socket for this tube (RSH30 base / PL30-2p socket), so the socket follows the tube pinout in [A101 pinout](#a101-pinout). Wiring check before first HV: [bringup.md](bringup.md) |
 | D11 | Sectional test provisions: removable links, test points, dummy-load landing | **Proposed** | Links L1-L14, HV inhibit jumper, dummy-load footprints, test-point list; see [Test provisions](#test-provisions-d11) |
-| D12 | Discharge path and target discharge time | **Proposed** | No dedicated bleeder: the always-connected feedback and monitor / OVP dividers (4.76 / 4.66 MΩ) discharge HV, < 50 V in 1.9 s (3.9 s with one divider open; simulated); target < 50 V within 10 s without firmware; see [Discharge](#discharge-d12) |
+| D12 | Discharge path and target discharge time | **Proposed** | No dedicated bleeder: the always-connected feedback and monitor / OVP dividers (4.71 / 4.72 MΩ) discharge HV, < 50 V in 1.9 s (3.9 s with one divider open; simulated); target < 50 V within 10 s without firmware; see [Discharge](#discharge-d12) |
 | D13 | Clearance/creepage rules for ~450 V, component voltage ratings | **Proposed** | Four net classes, `HV` ≥ 3.0 mm; one leaded HHV-25 / HHV-50 per high-voltage leg (2026-10-07); see [Clearance and ratings](#clearance-and-ratings-d13) |
 | D14 | Connectors: 12 V in, 5 V out, I2C, programming access | **Decided** 2026-10-06 (approach) | Harness wires solder directly to board pads; connectors only at the far end where a module needs one. Dekatron harness soldered at both ends. See [Harness landings](#harness-landings-d14) |
 
@@ -93,8 +93,8 @@ Consequences, computed from those values:
 | G+ (guide rest) | RTN + 40 V = +90 V | Centre of datasheet bias range |
 | Guide pulse | Guide switched to ~0 V: −50 V vs. cathodes | Reference practice; datasheet says −150 Vp |
 | Anode supply HV | **Option A:** 450 V to ground (400 V above RTN); **Option B:** 500 V to ground (450 V above RTN) | See below |
-| Anode resistor | A: 664 kΩ (2 × 332k HHV-50); B: 804 kΩ (2 × 402k) | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
-| Tube current | A: 314-443 µA (379 typ); B: 315-426 µA (≈ 370 typ) | Within datasheet 300-450 µA |
+| Anode resistor | A: 660 kΩ (2 × 330k HHV-50); B: 800 kΩ (330k + 470k) | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
+| Tube current | A: 314-443 µA (379 typ); B: ≈ 319-431 µA | Within datasheet 300-450 µA |
 | Step rate | ≤ 200 steps/s for homing (plan §5) | Datasheet limit 1 kHz |
 
 The datasheet supply figure (425 min / 450 typ) is referred to the cathodes. With cathodes at
@@ -108,10 +108,11 @@ only if striking or glow transfer is marginal. The setpoint is fixed by the feed
 the anode resistor is paired with it. It was designed as **660 kΩ at 450 V** (314-443 µA) and
 **810 kΩ at 500 V** (315-426 µA), both within 300-450 µA over V_m 130-170 V and HV ±5 %. Since the
 0207 rework (2026-10-07, [Component conventions](#component-conventions)) it is two Yageo HHV-50
-in series: **2 × 332k = 664 kΩ** (currents 0.6 % lower: 312-440 µA) and **2 × 402k = 804 kΩ** for
-500 V (0.7 % higher: 317-429 µA), still inside 300-450 µA. Two parts rather than one because a
-shorted anode puts the full 550 V across the leg: 0.46 W, which two 0.5 W parts share at 0.23 W
-each. In normal operation each dissipates 67 mW at 0.45 mA.
+in series, in E12 values (HHV stock follows E12; 332k and 402k were not stocked): **2 × 330k =
+660 kΩ**, the design value, and **330k + 470k = 800 kΩ** for 500 V (1.2 % below 810 kΩ: currents
+≈ 319-431 µA), inside 300-450 µA. Two parts rather than one because a shorted anode puts the full
+550 V across the leg: 0.46 W, which two 0.5 W parts share at 0.23 W each (500 V option: 0.16 W in
+the 330k, 0.22 W in the 470k). In normal operation each dissipates 67 mW at 0.45 mA.
 
 ### HV converter (D2)
 
@@ -180,25 +181,27 @@ the RP2040. The RP2040 measures the 12 V input itself and withholds `HV_EN` when
 **Independent overvoltage shutdown:** if the top resistor of the feedback divider fails open, FB
 falls to 0 and the converter runs to its current limit with no voltage limit. A second, independent
 divider from **HV** (the regulated quantity since Phase 1B) drives a TLV3011 comparator, which pulls
-EN/UVLO low above **551.8 V**. Since the 0207 rework (2026-10-07) this divider is shared with the HV
-monitor: HV → HHV-25 4.64M → `HV_SENSE` tap → 14.0k → OVP tap → 10.5k → GND, so the OVP trips at
-1.242 V × 4.6645 MΩ / 10.5 kΩ = 551.8 V and `HV_SENSE` reads HV / 190.4. Feedback stays on its own
+EN/UVLO low above **548.4 V**. Since the 0207 rework (2026-10-07) this divider is shared with the HV
+monitor: HV → HHV-25 4.7M → `HV_SENSE` tap → 14.0k → OVP tap → 10.7k → GND, so the OVP trips at
+1.242 V × 4.7247 MΩ / 10.7 kΩ = 548.4 V and `HV_SENSE` reads HV / 191.3 (E12 top since
+2026-10-07; was 4.64M / 10.5k, 551.8 V). Feedback stays on its own
 divider: if one divider served both, its top resistor opening would blind the OVP at the same moment
 it removes feedback. Sharing monitor and OVP leaves one weak point, a monitor clamp diode shorted to
 GND, which also blinds the OVP tap; that takes a second fault (feedback must also fail) to matter.
 Simulated with the feedback divider open (`fault_fbopen.cir`): HV ramps at ~7 V/ms at the current
 limit. With 100 nF on `HV_SENSE` the OVP tap lagged HV by the equivalent of 15.8 V (trip near
 568 V), so that capacitor became 10 nF (1.6 V lag). With the tube dark (`fault_fbopen_dark.cir`,
-near-ideal comparator) the OVP trips at **553.4 V**, then bursts the converter with HV between
-550.3 and 553.0 V; V_b peaks at 188.6 V (below its own 201.6 V trip) and the switch node at 189.5 V
-(400 V MOSFET, 2.1×). 553.5 V needs 2.77 mm under the D13 rule, inside the 3.0 mm used. (An
+near-ideal comparator, E12 divider) the OVP trips at **550.3 V**, then bursts the converter with HV
+between 547.1 and 549.7 V; V_b peaks at 187.4 V (below its own trip, 200.7 V) and the switch node at
+188.3 V (MOSFET 500 V, 2.7×). 550.4 V needs 2.75 mm under the D13 rule, inside the 3.0 mm used. (First
+run, 4.64M / 10.5k divider: trip 553.4 V.) (An
 earlier tube-lit run that "levelled at 546.9 V" was the comparator model's soft edge clamping EN.)
 **The OVP does not latch**, as simulated: with the feedback divider open, HV sits at the trip
 until firmware drops `HV_EN` on seeing `OVP_TRIP` low (review item 5 below). `HV_SENSE` gives a
-second check: 2.90 V at the trip against 2.38 V at 453 V and 2.62 V at 499 V.
+second check: 2.87 V at the trip against 2.37 V at 452.9 V and 2.58 V at 494.2 V.
 **A further divider watches V_b** (added in the Phase 1B review): with
 feedback from HV, an open tripler diode or capacitor makes HV fall while the controller drives V_b
-upward, unseen by the HV OVP. A second TLV3011 trips at ≈ 202 V (HHV-25 2.0M / 12.4k; V_b is ≈ 157 V
+upward, unseen by the HV OVP. A second TLV3011 trips at **200.7 V** (HHV-25 2.2M / 13.7k: 1.242 V × 2.2137 MΩ / 13.7 kΩ; was 2.0M / 12.4k, 201.6 V, until those values proved unstocked; V_b is ≈ 157 V
 at 450 V and ≈ 175 V at 500 V), wired-OR on the same EN/UVLO node. The RP2040 also measures HV and can drop `HV_EN`,
 but that does not replace a hardware limit.
 
@@ -212,9 +215,9 @@ that. Both fit the same footprint.
 | Load | At HV (450 V) | Basis |
 |---|---|---|
 | Tube via anode resistor | ≤ 0.43 mA | D1 worst case |
-| Feedback divider 4.76 MΩ | 95 µA | Feedback moved to HV in Phase 1B; HHV-25 4.75M + 10.5k |
-| Monitor / OVP divider 4.66 MΩ | 96 µA | `HV_SENSE` and the independent OVP share it (0207 rework); also the HV discharge path with the feedback divider (D12) |
-| V_b OVP divider 2.01 MΩ | 78 µA at V_b | Review fix; loads V_b, not HV |
+| Feedback divider 4.71 MΩ | 96 µA | Feedback moved to HV in Phase 1B; HHV-25 4.7M + 10.4k |
+| Monitor / OVP divider 4.72 MΩ | 96 µA | `HV_SENSE` and the independent OVP share it (0207 rework); also the HV discharge path with the feedback divider (D12) |
+| V_b OVP divider 2.21 MΩ | 71 µA at V_b | Review fix; loads V_b, not HV |
 | **Total / design value** | ≈ 0.62 mA / **1 mA** | ~1.6× margin. No dedicated bleeder since the 0207 rework |
 
 | Load at boost node V_b | Current | Basis |
@@ -311,8 +314,8 @@ nets (desolder to open; the open gap then meets the HV clearance rule).
 | JP_HVINH | 2-pin header: shunt fitted = EN/UVLO held low | Any time: HV cannot start, whatever the firmware does |
 
 * **HV dummy load, off-board** (no footprint since Phase 1C: it could not sit next to HV_STACK
-  without crowding a mounting hole or the board edge): one Yageo HHV-50 910k (0.5 W,
-  3500 V) soldered across TP108 (`HV_STACK`) and a GND point with L4 open; 0.5 mA and 0.23 W at
+  without crowding a mounting hole or the board edge): one Yageo HHV-50 1M (0.5 W,
+  3500 V) soldered across TP108 (`HV_STACK`) and a GND point with L4 open; 0.46 mA and 0.21 W at
   455 V. Removed after step 2. (The V_b dummy load
   was removed in the Phase 1B review: the boost cannot be run without the tripler.)
 * **Test points**: `VIN_PROT`, `5V`, `3V3`, `VCC` (LM5156), `SW` (switch node, with an adjacent
@@ -324,18 +327,18 @@ nets (desolder to open; the open gap then meets the HV clearance rule).
 ### Discharge (D12)
 
 * **No dedicated bleeder** (user, 2026-10-07). The two always-connected HV dividers, feedback
-  (4.76 MΩ) and monitor / OVP (4.66 MΩ), sit directly across the tripler output upstream of link L4,
+  (4.71 MΩ) and monitor / OVP (4.72 MΩ), sit directly across the tripler output upstream of link L4,
   so they stay connected whatever is isolated. Together they are 2.36 MΩ, less than the 4.8 MΩ
   bleeder they replace. Neither is ever switched, so discharge needs no firmware, and either one
   alone still meets the target.
-* **V_b node:** discharged by its own 2.4 MΩ bleeder (HHV-25) and the 2.01 MΩ V_b OVP divider. G+
+* **V_b node:** discharged by its own 2.2 MΩ bleeder (HHV-25) and the 2.21 MΩ V_b OVP divider. G+
   and RTN discharge through their regulators and feeds.
 * **Target:** every node **below 50 V within 10 s** after `HV_EN` falls or 12 V is lost, by the
   passive path alone.
-* **Capacitance budget:** sized for a single fault, one HV divider open: τ = 4.76 MΩ × C_eff, so
+* **Capacitance budget:** sized for a single fault, one HV divider open: τ = 4.72 MΩ × C_eff, so
   550 V (OVP trip) → 50 V in 10 s requires **C_eff ≤ 0.87 µF** as seen from the HV node.
 * **Simulated** (`hv_discharge.cir`, from 450 V, passive paths only): HV below 50 V in **1.94 s**
-  with both dividers, **3.87 s** with the feedback divider open and **3.50 s** with the monitor /
+  with both dividers, **3.93 s** with the feedback divider open and **3.47 s** with the monitor /
   OVP divider open; V_b below 50 V in 0.27-0.36 s.
 * **Measured in 1D** (plan §9): discharge curve from 450 V and from the 500 V setting.
 * Optional, decide in 1B: a neon indicator across HV through its own string, which glows while HV
@@ -438,7 +441,7 @@ keeps dim or off (D5).
 | GP16 | `LED` | out | WS2812 | On the module |
 | GP26 | `NDX` | in | ADC0 / Schmitt input | Index (D9); digital read normally, analog level for diagnostics |
 | GP27 | `VIN_SENSE` | in | ADC1 | Protected 12 V: 100k / 12k → 1.29 V at 12 V, 2.57 V at the 24 V TVS clamp |
-| GP28 | `HV_SENSE` | in | ADC2 | HV: HHV-25 4.64M / (14.0k + 10.5k) → 2.36 V at 450 V, 2.90 V at the 551.8 V OVP trip; the divider is shared with the OVP comparator (D2) |
+| GP28 | `HV_SENSE` | in | ADC2 | HV: HHV-25 4.7M / (14.0k + 10.7k) → 2.37 V at 452.9 V, 2.87 V at the 548.4 V OVP trip; the divider is shared with the OVP comparator (D2) |
 | GP29 | `RTN_SENSE` | in | ADC3 | RTN: HHV-25 200k / 10k → 2.38 V at 50 V, 2.86 V at 60 V |
 
 Facts this relies on, from the RP2040 datasheet:
@@ -601,26 +604,29 @@ P1 `VIN` reading ~4.6 V confirms the back-feed path.
     HHV range starts at 100 kΩ) that needs power rather than voltage.
   * The HHV parts replaced the **Vishay HVR25 / HVR37** (2026-10-07: out of stock at Mouser; the
     user orders from one distributor). Same ratings, bodies no larger, same footprints.
-* **Voltage rating needed** (1.5× rule, D13), per part: the two HV divider tops see up to 553 V
-  (the OVP trip as simulated), so **≥ 830 V**; the anode resistors 275 V each if the anode shorts,
+* **Voltage rating needed** (1.5× rule, D13), per part: the two HV divider tops see up to 550 V
+  (the OVP trip as simulated), so **≥ 825 V**; the anode resistors 275 V each if the anode shorts,
   **≥ 415 V** and 0.5 W; the V_b-side parts (bleeder, V_b OVP top, RTN_SENSE top, index top)
   ≤ 202 V, **≥ 303 V**. So 1600 V is more than needed everywhere; only the divider tops need a
   genuine high-voltage part. A 350 V part (e.g. MRS25) would do for the V_b side if a value is
   out of stock, but not for the divider tops or the anode string.
+* **E12 values only** for the HHV parts (2026-10-07): Mouser stocks HHV-25 2.2M and 2.7M but not
+  2.0M or 2.4M, so stock follows E12. Precision trims go in the 1206 bottom resistors, where E96
+  values are routine.
 * Ordering codes follow the HHV datasheet: `HHV-25` / `HHV-50` + tolerance (`F` = 1 %) +
   packing (`T` = box) + `-52-` (52.4 mm tape) + value (`4M75`, `332K`). Check Mouser stock per
   value before ordering; it was not verified here (Mouser blocks automated lookups).
 
 | Resistor | Voltage / power | Part |
 |---|---|---|
-| Feedback divider top (D2) | Up to 552 V; 64 mW at 552 V | HHV-25 4.75M `HHV-25FT-52-4M75`; bottom 10.5k sets 453.4 V (9.53k for 500 V: 499.4 V) |
-| Monitor / OVP divider top (D2) | Up to 552 V; 65 mW | HHV-25 4.64M `HHV-25FT-52-4M64`; 14.0k + 10.5k below |
-| HV dummy load (D11, off-board, bring-up only) | 455 V; 0.23 W | HHV-50 910k `HHV-50FT-52-910K` |
-| Anode resistor (D1) | 250-300 V while conducting; 550 V if the anode shorts (0.46 W) | 2 × HHV-50 332k `HHV-50FT-52-332K` (2 × 402k `HHV-50FT-52-402K` for 500 V) |
-| V_b bleeder | ≤ 202 V | HHV-25 2.4M `HHV-25FT-52-2M4` |
-| V_b OVP divider top | ≤ 202 V | HHV-25 2.0M `HHV-25FT-52-2M`; 12.4k below |
+| Feedback divider top (D2) | Up to 550 V; 64 mW at 550 V | HHV-25 4.7M `HHV-25FT-52-4M7`; bottom 10.4k sets 452.9 V (9.53k for 500 V: 494.2 V) |
+| Monitor / OVP divider top (D2) | Up to 550 V; 64 mW | HHV-25 4.7M `HHV-25FT-52-4M7`; 14.0k + 10.7k below (trip 548.4 V) |
+| HV dummy load (D11, off-board, bring-up only) | 455 V; 0.21 W | HHV-50 1M `HHV-50FT-52-1M` |
+| Anode resistor (D1) | 250-300 V while conducting; 550 V if the anode shorts (0.46 W) | 2 × HHV-50 330k `HHV-50FT-52-330K` (500 V: replace one with 470k `HHV-50FT-52-470K`) |
+| V_b bleeder | ≤ 202 V | HHV-25 2.2M `HHV-25FT-52-2M2` (was 2.4M: not stocked) |
+| V_b OVP divider top | ≤ 202 V | HHV-25 2.2M `HHV-25FT-52-2M2`; 13.7k below, trip 200.7 V (was 2.0M / 12.4k: 2.0M not stocked) |
 | G+ / RTN feed | V_b − 90 V: 0.18 W at V_b 175 V, 0.31 W at the 202 V V_b OVP trip | MRS25 40.2k `MRS25000C4022FCT00` (was 2 × 20k: 2.13 mA vs 2.10 mA at V_b 175 V) |
-| RTN_SENSE top (D9 rules) | 51 V; 175 V if RTN fails to V_b | HHV-25 200k `HHV-25FT-52-200K` |
+| RTN_SENSE top (D9 rules) | 51 V; 175 V if RTN fails to V_b | HHV-25 200k `HHV-25FT-52-200K` (E24, but stocked: already ordered) |
 | Index R15 (D9) | 50 V; 167 V if the RTN regulator fails | HHV-25 220k `HHV-25FT-52-220K` |
 | Guide pull-ups 470k (D8) | ≤ 90 V | 1206, single part |
 
@@ -685,8 +691,8 @@ and RTN regulators belong to the `tube` sheet. Simulation benches live in
 | Boost diode | ES1J: 600 V, 1 A, t_rr 35 ns, SMA | |
 | Soft-start | C_SS = 47 nF (10 µA → 4.7 ms ramp) | LM5156H (no hiccup); start-up is energy-limited anyway |
 | Compensation | 10 kΩ + 10 nF, 100 pF to ground | Smoke-test values; load-step check pending |
-| Feedback | **From HV:** HHV-25 4.75M / 10.5k → HV = 453.4 V (1.00 V ref); 500 V option: bottom 9.53k → 499.4 V | Moved from V_b in simulation (see results); one HHV-25 since the 0207 rework (the simulations use 4.4M / 9.8k, the same 450 V setpoint) |
-| V_b bleeder | HHV-25 2.4M (63 µA) | V_b's own discharge path when link L3 separates the boost from the tripler (D11) |
+| Feedback | **From HV:** HHV-25 4.7M / 10.4k → HV = 452.9 V (1.00 V ref); 500 V option: bottom 9.53k → 494.2 V | Moved from V_b in simulation (see results); one HHV-25 since the 0207 rework (the simulations use 4.4M / 9.8k, the same 450 V setpoint) |
+| V_b bleeder | HHV-25 2.2M (68 µA at 150 V) | V_b's own discharge path when link L3 separates the boost from the tripler (D11) |
 
 **Kit inductor (2026-10-06).** The user's kit 100 µH part is rated 0.71 A (DCR 0.35 Ω), below the
 original 0.71-0.82 A current limit. The limit drops to 0.42-0.49 A (0.22 Ω) and the frequency
@@ -708,13 +714,14 @@ rated 0.80 A); kept as a fallback since one part meets the requirement.
 
 **With the tube-sheet bias load** (G+/RTN feed, 1.7 mA from V_b, added after the 2 × 20k change):
 `hv_warm.cir` gives HV 451.5 V, 5.8 V p-p ripple, tube 382 µA, inductor ≤ 0.464 A, PGOOD high.
-**500 V setting, simulated (`hv_500.cir`, 2026-10-07):** on the current design (no dedicated
-bleeder, 9.53k feedback bottom, 2 × 402k anode, 40.2k G+/RTN feed) the earlier ≈ 0.89 W estimate
-no longer applies. At 10.8 V in, the current limit 7 % low (0.42 A) and 90 µH, HV settles at
-499.4 V (setpoint 499.4 V) with the tube at 373 µA, an inductor peak of 0.29 A (out of current
-limit, ≈ 2× power headroom) and 0.58 W from the input; nominal: 0.32 A, 0.71 W. Peaks: HV 503.2 V
-at start-up (48 V below the OVP trip), V_b 172.2 V (V_b OVP 201.6 V), switch node 173 V, capacitors
-≤ 171 V, diode reverse ≤ 167 V. The tube going out gives 0.5 V of overshoot. The kit 100 µH part
+**500 V setting, simulated (`hv_500.cir`, 2026-10-07, E12 values):** on the current design (no
+dedicated bleeder, 4.7M / 9.53k feedback, 330k + 470k anode, 40.2k G+/RTN feed) the earlier
+≈ 0.89 W estimate no longer applies. At 10.8 V in, the current limit 7 % low (0.43 A peak) and
+90 µH, HV settles at 494.1 V (setpoint 494.2 V) with the tube at 368 µA, an inductor peak of 0.32 A
+(out of current limit, ≈ 1.8× power headroom) and 0.70 W from the input; nominal: 494.1 V, 0.32 A,
+0.68 W. Peaks: HV 498.0 V at start-up (50 V below the 548.4 V OVP trip), V_b 170.3 V (V_b OVP
+200.7 V), switch node 171 V, capacitors ≤ 169 V, diode reverse ≤ 165 V, CS ≤ 0.10 V. The tube going
+out gave 0.5 V of overshoot (first run, 499 V setting). The kit 100 µH part
 is enough; the 2 × 47 µH fallback is not needed for 500 V.
 
 **MOSFET margin: resolved with a 400 V part.** With HV feedback the stack's per-stage shortfall
@@ -760,8 +767,8 @@ pump current is ~1.2 mA. 100 Ω also works but charges the stack about half as f
 | `hv_warm.cir`, tube held dark | Steady state with no tube current | **HV 453.3 V, 1.7 V p-p**, V_b 157.9 V, PGOOD high. Load regulation dark → lit 0.9 % |
 | `hv_warm.cir`, V_b feedback (superseded) | Same, regulating V_b = 150 V | HV only 442 V with the tube dark: the reason feedback moved to HV |
 | `hv_warm.cir` stresses | Peaks over the run | Switch node 161 V; capacitors ≤ 159 V (400 V parts); diode reverse ≤ 149 V (600 V); CS pin ≤ 0.10 V (0.3 V abs max); switch current spike 1.86 A with the 47 Ω pump resistor |
-| `hv_500.cir` | 500 V setting, warm start, 12 ms: 12 V nominal; 10.8 V with the current limit −7 %; tube out at 8 ms | **HV 499.2-499.4 V, tube 373 µA, inductor ≤ 0.32 A** (limit 0.42-0.46 A); peaks HV 503.2 V, V_b 172 V, switch node 173 V; 0.5 V overshoot on tube-out |
-| `fault_fbopen_dark.cir` | Feedback divider open, tube dark, from 540 V | **OVP trips at 553.4 V**, then bursts at 550.3-553.0 V (no latch); V_b ≤ 188.6 V, switch node ≤ 189.5 V |
+| `hv_500.cir` | 500 V setting, warm start, 12 ms: 12 V nominal; 10.8 V with the current limit −7 %; tube out at 8 ms | **HV 494.0-494.2 V (setpoint 494.2 V), tube 368 µA, inductor ≤ 0.32 A** (limit 0.43-0.46 A); peaks HV 498.0 V, V_b 170 V, switch node 171 V; 0.5 V overshoot on tube-out (first run) |
+| `fault_fbopen_dark.cir` | Feedback divider open, tube dark, from 540 V | **OVP trips at 550.3 V** (548.4 V + tap lag), then bursts at 547.1-549.7 V (no latch); V_b ≤ 187.4 V, switch node ≤ 188.3 V |
 | `hv_startup.cir` | Cold start from 0 V, 40 ms, HV feedback, 400 V MOSFET with 10 V drive | **Completes:** tube strikes at 9.5 ms; at 38-40 ms HV 449.9 V, 0.11 V p-p ripple, tube 379 µA, PGOOD high; switch node 163 V, CS ≤ 0.10 V, switch spike 1.84 A, inductor 0.76 A at the current limit during start-up. (The earlier logic-level configuration gave the same figures within 1 %.) |
 
 Model limitations: generic MOSFET and diode models (AOD5N40- and ES1J-like; the board now uses the IPD50R1K4CE, see HV boost stage), film capacitors as
@@ -825,7 +832,7 @@ from the user's radial kit where noted.
 | HV MOSFET / gate-drive LDO | Infineon **IPD50R1K4CE** / onsemi **LP2951ACDR2G** (143k / 20.0k → 10.07 V) |
 | HV inductor / diodes | **Kit 100 µH radial** (0.71 A, 0.35 Ω) / onsemi **ES1J** × 5 |
 | HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4 class) |
-| OVP comparators | 2 × TI **TLV3011AIDBVR** (open-drain): HV 551.8 V, V_b ≈ 202 V |
+| OVP comparators | 2 × TI **TLV3011AIDBVR** (open-drain): HV 548.4 V, V_b 200.7 V |
 | High-voltage resistors | Yageo **HHV-25** × 6, **HHV-50** × 2 (+ 1 off-board bring-up load), Vishay **MRS25** × 1 (see [Component conventions](#component-conventions)) |
 | 5 V buck / inductor | TI **TPS54202DDCR** / **kit 15 µH radial** (1.31 A) |
 | Ideal diodes | TI **LM66100DCKR** × 3 |
@@ -921,12 +928,12 @@ review of failure modes and the bring-up procedure.
 
 | # | Finding | Fix |
 |---|---|---|
-| 1 | **No limit on V_b.** With feedback and OVP both on HV, an open tripler diode or capacitor (or link L3 open) lets the controller drive V_b up at full current limit, unseen, toward the 400 V parts' ratings | Second TLV3011 on V_b, trip ≈ 202 V, wired-OR on EN/UVLO. Simulated (`fault_d5open.cir`: top tripler diode open, fault fully developed): V_b held at ≤ 199.3 V and the switch node at ≤ 200.1 V (400 V parts), HV 385 V, PGOOD low. Without it V_b rose ≈ 4.5 V/ms with no limit |
+| 1 | **No limit on V_b.** With feedback and OVP both on HV, an open tripler diode or capacitor (or link L3 open) lets the controller drive V_b up at full current limit, unseen, toward the 400 V parts' ratings | Second TLV3011 on V_b, trip 200.7 V (2.2M / 13.7k), wired-OR on EN/UVLO. Simulated (`fault_d5open.cir`: top tripler diode open, fault fully developed): V_b held at ≤ 198.4 V and the switch node at ≤ 199.3 V (400 V parts), HV 384 V, PGOOD low. Without it V_b rose ≈ 4.5 V/ms with no limit |
 | 2 | Bring-up step 2 ran the boost alone with L3 open: unregulated for the same reason | Step 2 now keeps the tripler connected, opens L4 and fits the HV dummy load; V_b dummy-load footprints removed; L3 is fault isolation only |
 | 3 | Net-class pattern `*SW` also matched the buck's `BUCK_SW`, which would give the TPS54202's 0.95 mm-pitch pins a 1.5 mm rule | Pattern changed to `*/SW` |
 | 4 | `OVP_TRIP` (GP8) reads the EN/UVLO node; the RP2040's default pull-down loads it | Firmware disables GP8's pull-down (EN still reaches 2.55 V with it enabled) |
 | 5 | Without firmware, an OVP trip makes the converter cycle at the trip point instead of latching | Firmware latches: drops `HV_EN` when `OVP_TRIP` reads low with `HV_EN` high |
-| 6 | 500 V setting power margin is thin with the kit inductor | **Resolved** (2026-10-07): `hv_500.cir` regulates at 499.4 V out of current limit even at 10.8 V in with the limit 7 % low (see HV boost stage) |
+| 6 | 500 V setting power margin is thin with the kit inductor | **Resolved** (2026-10-07): `hv_500.cir` regulates at the 500 V setting (494.2 V with E12 values) out of current limit even at 10.8 V in with the limit 7 % low (see HV boost stage) |
 
 ## Nixie controller/mount
 

@@ -57,17 +57,17 @@ XC1   vb 0 CFILM
 RFT   hv fb 4.4Meg
 RFB   fb 0 9.8k
 
-* V_b OVP: 2 x 1.0M / 12.4k into a TLV3011 (1.242 V); HV OVP: 4 x 2.2M / 20k. Comparators as
+* V_b OVP: 2.2M / 13.7k into a TLV3011 (1.242 V; trip 200.7 V; was 2 x 1.0M / 12.4k, 201.6 V); HV OVP: 4 x 2.2M / 20k. Comparators as
 * smooth current sinks on the EN/UVLO node (open drain), 6 us comparator delay ignored.
-RVO1  vb vbs 2Meg
-RVO2  vbs 0 12.4k
+RVO1  vb vbs 2.2Meg
+RVO2  vbs 0 13.7k
 CVO   vbs 0 1n
 RHO1  hv hvs 8.8Meg
 RHO2  hvs 0 20k
 CHO   hvs 0 1n
 BOVPV uvlo 0 I = 0.5*(1+tanh((V(vbs)-1.242)*200)) * V(uvlo)/20
 BOVPH uvlo 0 I = 0.5*(1+tanh((V(hvs)-1.242)*200)) * V(uvlo)/20
-RBLB  vb 0 2.4Meg
+RBLB  vb 0 2.2Meg
 * G+/RTN regulator feed on the tube sheet (2 x 20k into 90 V): 1.7 mA at V_b 157 V, as 92k to ground
 RBIASF vb 0 92k
 

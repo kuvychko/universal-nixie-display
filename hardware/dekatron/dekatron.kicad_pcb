@@ -104,7 +104,7 @@
 				)
 			)
 		)
-		(property "Value" "332k"
+		(property "Value" "330k"
 			(at 7.62 2.92 180)
 			(layer "F.Fab")
 			(uuid "915a84db-4328-4b36-8bda-09bd87b18228")
@@ -161,7 +161,7 @@
 				)
 			)
 		)
-		(property "MPN" "HHV-50FT-52-332K"
+		(property "MPN" "HHV-50FT-52-330K"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -1223,7 +1223,7 @@
 				)
 			)
 		)
-		(property "Value" "332k"
+		(property "Value" "330k"
 			(at 7.62 2.92 0)
 			(layer "F.Fab")
 			(uuid "92872390-589a-4e19-9310-dbf1e9592f5c")
@@ -1280,7 +1280,7 @@
 				)
 			)
 		)
-		(property "MPN" "HHV-50FT-52-332K"
+		(property "MPN" "HHV-50FT-52-330K"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -2072,7 +2072,7 @@
 				)
 			)
 		)
-		(property "Value" "2.0M"
+		(property "Value" "2.2M"
 			(at 5.08 2.37 180)
 			(layer "F.Fab")
 			(uuid "f05711d7-a28a-4407-9347-4c67b9999195")
@@ -2129,7 +2129,7 @@
 				)
 			)
 		)
-		(property "MPN" "HHV-25FT-52-2M"
+		(property "MPN" "HHV-25FT-52-2M2"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -6078,7 +6078,7 @@
 				)
 			)
 		)
-		(property "Value" "10.5k"
+		(property "Value" "10.4k"
 			(at 0 1.83 0)
 			(layer "F.Fab")
 			(uuid "5d904fd4-eb7f-418d-9e93-c9f6921d14d2")
@@ -6123,7 +6123,7 @@
 				)
 			)
 		)
-		(property "Function" "HV feedback, lower (453.4 V; 9.53k for 500 V)"
+		(property "Function" "HV feedback, lower (452.9 V; 9.53k for 500 V: 494.2 V)"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -10191,7 +10191,7 @@
 				)
 			)
 		)
-		(property "Value" "12.4k"
+		(property "Value" "13.7k"
 			(at 0 1.83 90)
 			(layer "F.Fab")
 			(uuid "f7ad5d64-f918-41a5-a7c6-fa099a0a4424")
@@ -10236,7 +10236,7 @@
 				)
 			)
 		)
-		(property "Function" "V_b OVP divider, lower (trip ~202 V)"
+		(property "Function" "V_b OVP divider, lower (trip 200.7 V)"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
@@ -14201,7 +14201,7 @@
 				)
 			)
 		)
-		(property "Function" "HV monitor / OVP divider, middle (HV_SENSE 2.36 V at 450 V)"
+		(property "Function" "HV monitor / OVP divider, middle (HV_SENSE 2.37 V at 452.9 V)"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -18450,7 +18450,7 @@
 				)
 			)
 		)
-		(property "Value" "4.64M"
+		(property "Value" "4.7M"
 			(at 5.08 2.37 180)
 			(layer "F.Fab")
 			(uuid "35d77f02-9d60-4d81-836c-43c85ecd8a02")
@@ -18507,7 +18507,7 @@
 				)
 			)
 		)
-		(property "MPN" "HHV-25FT-52-4M64"
+		(property "MPN" "HHV-25FT-52-4M7"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -20752,7 +20752,7 @@
 				)
 			)
 		)
-		(property "Value" "10.5k"
+		(property "Value" "10.7k"
 			(at 0 1.83 90)
 			(layer "F.Fab")
 			(uuid "b69652d2-82d1-4915-b47c-db3e56dd7ae5")
@@ -20797,7 +20797,7 @@
 				)
 			)
 		)
-		(property "Function" "HV monitor / OVP divider, lower (OVP trip 551.8 V)"
+		(property "Function" "HV monitor / OVP divider, lower (OVP trip 548.4 V)"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
@@ -27227,7 +27227,7 @@
 				)
 			)
 		)
-		(property "Value" "2.4M"
+		(property "Value" "2.2M"
 			(at 5.08 2.37 180)
 			(layer "F.Fab")
 			(uuid "ad402387-2873-403b-8c10-94355efcac59")
@@ -27284,7 +27284,7 @@
 				)
 			)
 		)
-		(property "MPN" "HHV-25FT-52-2M4"
+		(property "MPN" "HHV-25FT-52-2M2"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -30211,7 +30211,7 @@
 				)
 			)
 		)
-		(property "Value" "4.75M"
+		(property "Value" "4.7M"
 			(at 5.08 2.37 180)
 			(layer "F.Fab")
 			(uuid "c7d373b5-a641-4bcf-8e33-8eda8cb7d709")
@@ -30268,7 +30268,7 @@
 				)
 			)
 		)
-		(property "MPN" "HHV-25FT-52-4M75"
+		(property "MPN" "HHV-25FT-52-4M7"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)

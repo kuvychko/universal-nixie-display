@@ -1045,19 +1045,20 @@ def build_power(lib: SymbolLib) -> Sheet:
     c = v2(C, "C122", "0.47uF 400V", 256.54, Y + 3.81, F("Tripler stack C1 (V_b)", rating="400 V PET film"), FP_FILM)
     sh.w((256.54, Y), c["1"])
     down_gnd(c["2"])
-    ra = v2(R, "R119", "2.4M", XV1, Y, F("V_b bleeder (V_b's own discharge path with L3 open)",
-                                          hhv("HHV-25", "2404"), **{k: HHV25[k] for k in ("mfr", "rating")}), HHV25["fp"])
+    ra = v2(R, "R119", "2.2M", XV1, Y, F("V_b bleeder (V_b's own discharge path with L3 open)",
+                                          hhv("HHV-25", "2204"), **{k: HHV25[k] for k in ("mfr", "rating")}), HHV25["fp"])
     down_gnd(ra["2"])
     tp("TP106", "V_B", (XTV, Y))
     lk = link("LK5", XL5, Y, "D11 link L5: V_b to the G+/RTN regulators", hv=True)
     sh.w(lk["2"], (XL5 + 15.24, Y))
     sh.gl("V_B_BIAS", (XL5 + 15.24, Y), 0)
-    # V_b overvoltage: 2 x 1.0M / 12.4k -> TLV3011 (~202 V), wired-OR on EN/UVLO
-    ra = v2(R, "R141", "2.0M", XVO, Y, F("V_b OVP divider, upper", hhv("HHV-25", "2004"),
+    # V_b overvoltage: 2.2M / 13.7k -> TLV3011, 1.242 V x 2.2137M / 13.7k = 200.7 V, wired-OR on EN/UVLO
+    # (was 2.0M / 12.4k, 201.6 V; 2.0M and 2.4M are not stocked in HHV-25, 2.2M is)
+    ra = v2(R, "R141", "2.2M", XVO, Y, F("V_b OVP divider, upper", hhv("HHV-25", "2204"),
                                           **{k: HHV25[k] for k in ("mfr", "rating")}), HHV25["fp"])
     VS = (XVO, ra["2"][1] + 2.54)
     sh.w(ra["2"], VS)
-    r = vR("R143", "12.4k", XVO, VS[1], "V_b OVP divider, lower (trip ~202 V)", "1 %")
+    r = vR("R143", "13.7k", XVO, VS[1], "V_b OVP divider, lower (trip 200.7 V)", "1 %")
     down_gnd(r["2"])
 
     def comparator(ref, x, y, sense_pt, cap_x, sense, refnet, cref, cpre, fn):
@@ -1137,20 +1138,21 @@ def build_power(lib: SymbolLib) -> Sheet:
     note("HV DIVIDERS (D2, D12)", "One leaded HHV-25 per leg. Feedback and OVP stay on separate dividers;\n"
          "monitor and OVP share one. No dedicated bleeder: both dividers discharge HV", 139.7, 233.68)
     XF, XM = 152.4, 177.8
-    # feedback: 1.00 V x (1 + 4.75M / 10.5k) = 453.4 V (9.53k for the 500 V setting: 499.4 V)
-    n = node_below(top("R126", H25, "4.75M", "4754", XF, "HV feedback divider, upper"))
-    r = vR("R130", "10.5k", XF, n[1], "HV feedback, lower (453.4 V; 9.53k for 500 V)", "1 %")
+    # feedback: 1.00 V x (1 + 4.7M / 10.4k) = 452.9 V (9.53k for the 500 V setting: 494.2 V). HHV tops
+    # are E12 values (HHV stock follows E12); the trim is in the 1206 bottom resistor
+    n = node_below(top("R126", H25, "4.7M", "4704", XF, "HV feedback divider, upper"))
+    r = vR("R130", "10.4k", XF, n[1], "HV feedback, lower (452.9 V; 9.53k for 500 V: 494.2 V)", "1 %")
     down_gnd(r["2"])
     sh.w(n, (XF + 5.08, n[1]))
     sh.nl("LM5156_FB", (XF + 5.08, n[1]))
     # shared monitor / OVP: HV - 4.64M - MON (HV_SENSE) - 14.0k - OVP tap - 10.5k - GND
-    # MON = HV / 190.4 (2.36 V at 450 V); OVP trips at 1.242 V x 4.6645M / 10.5k = 551.8 V
-    mon = node_below(top("R131", H25, "4.64M", "4644", XM, "HV monitor / OVP divider, upper"))
+    # MON = HV / 191.3 (2.37 V at 452.9 V); OVP trips at 1.242 V x 4.7247M / 10.7k = 548.4 V
+    mon = node_below(top("R131", H25, "4.7M", "4704", XM, "HV monitor / OVP divider, upper"))
     sh.w(mon, (XM + 5.08, mon[1]))
     sh.gl("HV_SENSE", (XM + 5.08, mon[1]), 0)
-    r = vR("R135", "14.0k", XM, mon[1], "HV monitor / OVP divider, middle (HV_SENSE 2.36 V at 450 V)", "1 %")
+    r = vR("R135", "14.0k", XM, mon[1], "HV monitor / OVP divider, middle (HV_SENSE 2.37 V at 452.9 V)", "1 %")
     ovp = node_below(r["2"])
-    r = vR("R140", "10.5k", XM, ovp[1], "HV monitor / OVP divider, lower (OVP trip 551.8 V)", "1 %")
+    r = vR("R140", "10.7k", XM, ovp[1], "HV monitor / OVP divider, lower (OVP trip 548.4 V)", "1 %")
     down_gnd(r["2"])
     comparator("U107", 233.68, ovp[1] - 2.54, ovp, 190.5, "OVP_SENSE", "OVP_REF", "C127", "OVP",
                "Independent OVP comparator (open drain)")
@@ -1158,7 +1160,7 @@ def build_power(lib: SymbolLib) -> Sheet:
     sh.w(c["1"], (266.7, ovp[1] - 12.7))
     sh.pwr("+5V", (266.7, ovp[1] - 12.7))
     down_gnd(c["2"])
-    # HV dummy load for bring-up step 2: off-board (an HHV-50 910k soldered across TP108 and a GND
+    # HV dummy load for bring-up step 2: off-board (an HHV-50 1M soldered across TP108 and a GND
     # point with LK4 open); no footprint, which kept HV_STACK compact on the PCB
     tp("TP108", "HV_STACK", (256.54, YT), textpos=(1.27, -6.4))
     lk = link("LK4", 266.7, YT, "D11 link L4: tripler output to the anode string", hv=True)
@@ -1223,7 +1225,8 @@ def build_tube(lib: SymbolLib) -> Sheet:
     sh.gnd((55.88, 104.14))
     sh.nl("GPLUS", (76.2, 66.04))
     sh.nl("RTN", (63.5, 86.36))
-    # RTN_SENSE divider (2 x 100k / 10k) to the ADC
+    # RTN_SENSE divider (200k / 10k; 2.43 V at 51 V) to the ADC. 200k is E24, but HHV-25 200k was stocked
+    # and is already ordered (2026-10-07)
     sh.w(RT, (25.4, 86.36))
     b = sh.place(R, "R202", "200k", 25.4, 102.87, footprint=HHV25["fp"],
                  fields=F("RTN_SENSE divider, upper (175 V if RTN fails to V_b)", hhv("HHV-25", "2003"),
@@ -1302,12 +1305,12 @@ def build_tube(lib: SymbolLib) -> Sheet:
     sh.gl("NDX", (c1x + 27.94, 200.66), 0)
 
     # ---- anode string and tube harness -------------------------------------------------------------
-    note("ANODE STRING (D1)", "2 x HHV-50 332k = 664k (2 x 402k for the 500 V setting); each part takes half of\n"
-         "a shorted anode (0.23 W of 0.5 W at 550 V); 67 mW per part at 0.45 mA", 152.4, 142.24)
+    note("ANODE STRING (D1)", "2 x HHV-50 330k = 660k (330k + 470k = 800k for the 500 V setting); a shorted\n"
+         "anode puts 0.23 W of 0.5 W on each 330k at 550 V; 67 mW per part at 0.45 mA", 152.4, 142.24)
     note("TUBE HARNESS (D14)", "Wires soldered to board and socket; cathodes tied at the socket", 205.74, 76.2)
     xs = [175.26, 195.58]
-    rs = [sh.place(R, ref, "332k", x, 160.02, angle=90, footprint=HHV50["fp"],
-                   fields=F(f"Anode resistor {k + 1}/2", hhv("HHV-50", "3323"), HHV50["mfr"], HHV50["rating"]))
+    rs = [sh.place(R, ref, "330k", x, 160.02, angle=90, footprint=HHV50["fp"],
+                   fields=F(f"Anode resistor {k + 1}/2", hhv("HHV-50", "3303"), HHV50["mfr"], HHV50["rating"]))
           for k, (ref, x) in enumerate(zip(("R215", "R216"), xs))]
     sh.w((162.56, 160.02), rs[0]["1"])
     sh.gl("HV", (162.56, 160.02), 180)
