@@ -73,6 +73,7 @@ sh tools/route_loop.sh 10                                                 # rout
 uv run tools/route_pcb.py build/geom_filled.json build/routes_gnd.json --repair build/routes.json
 cp build/placed.kicad_pcb hardware/dekatron/dekatron.kicad_pcb
 "C:/Program Files/KiCad/10.0/bin/python.exe" tools/pcb_io.py apply hardware/dekatron/dekatron.kicad_pcb build/routes_gnd.json
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/silk.py hardware/dekatron/dekatron.kicad_pcb
 ```
 
 About 35 minutes on this machine (the routing loop is ~4 min per pass; this board converged on
@@ -94,13 +95,18 @@ pass 8). What the pieces do:
 * `pcb_io.py apply` writes the tracks, fills the pours and adds GND stitching vias on a 2.5 mm
   grid wherever both pours have solid copper; the `--repair` pass then re-routes GND against
   the real main fill, so pour islands that only touch a pad get connected.
+* `silk.py` re-places the reference designators: around each courtyard, clear of pads, silk,
+  other references and the board edge, preferring spots not under another part; 1.0 mm text,
+  0.8 mm (the board minimum) where it is tight. It only moves text, so it can be re-run on its own.
+  Mounting-hole references are hidden; on this board C115 has no legal spot and is labelled on
+  the Fab layer only.
 
 ### DRC baseline (2026-10-07)
 
 `kicad-cli pcb drc --severity-all --schematic-parity hardware/dekatron/dekatron.kicad_pcb`:
-**0 unconnected, 0 clearance, 0 schematic parity.** Remaining: 184 silkscreen warnings
-(reference text over pads or overlapping, clipped by the fab; tidy before ordering), the
-expected U106 library mismatch (thermal vias above), and an occasional starved-thermal warning.
+**1 violation, expected:** the U106 library mismatch (thermal vias above). 0 unconnected,
+0 clearance, 0 silkscreen, 0 schematic parity. An occasional starved-thermal warning may appear
+after a re-route.
 
 ## Simulation
 
