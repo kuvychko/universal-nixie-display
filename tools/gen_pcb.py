@@ -129,6 +129,8 @@ ANCHOR = {
     # cap sit just below them rather than up with the other ideal diodes
     "U103": (9.0, 72.5, 0), "C301": (3.6, 72.5, 90),
     "U102": (21.0, 75.0, 0),       # 5V_DISP ideal diode beside J301 pin 1
+    "R301": (15.935, 75.225, 0),   # 0.6 mm left of where the placer put it: room for U102's GND escape via
+    "C108": (15.96, 25.55, 0),     # 0.6 mm right of where the placer put it: room for U104's GND escape via
     "C303": (14.4, 71.1, 270),     # VIN_SENSE reservoir: GND pad down beside D301's (a sealed GND pocket otherwise)
     "JP101": (38.6, 26.0, 0),      # HV inhibit header, beside the EN parts
     "R110": (44.4, 31.0, 90),      # EN/UVLO pull-down

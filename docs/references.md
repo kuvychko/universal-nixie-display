@@ -35,6 +35,7 @@ revision as it is used.
 | (not stored) | Infineon IPD50R1K4CE, 500 V CoolMOS CE (HV boost switch). Official PDF not yet fetched; figures from distributor listings | https://www.infineon.com/part/IPD50R1K4CE | — |
 | `ipd50p04p4l-11.pdf` | Infineon IPD50P04P4L-11, −40 V P-channel (reverse-polarity protection) | https://www.infineon.com/assets/row/public/documents/10/49/infineon-ipd50p04p4l-11-datasheet-en.pdf | Rev. 1.1, 2019-07-04 |
 | `yageo_hhv.pdf` | Yageo HHV metal glaze high-voltage resistors (HHV-25 1600 V, HHV-50 3500 V; replaced Vishay HVR25 / HVR37) | https://yageogroup.com/content/datasheet/asset/file/YAGEO-HHV_DATASHEET | V.3, 2024-04-03 |
+| `lm66100.pdf` | TI LM66100 ideal diode (CE to VOUT for always-on reverse-current blocking, §8.3.2) | https://www.ti.com/lit/ds/symlink/lm66100.pdf | SLVSEZ8A, Jun 2019 |
 | `tps54202.pdf` | TPS54202 2 A buck (reference design Figure 7-1) | https://www.ti.com/lit/gpn/tps54202 | SLVSD26C, Feb 2026 |
 | `rp2040.pdf` | RP2040 datasheet (pad reset state Table 341; IO characteristics Table 625) | https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf | — |
 | (not stored) | RP2040-Zero pinout figure (top view) | https://www.waveshare.com/w/upload/1/1f/900px-RP2040-Zero-details-7.jpg | — |

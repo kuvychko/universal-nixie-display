@@ -44,11 +44,12 @@ anyone edits the project in KiCad, delete it and re-run; afterwards edit it in K
 python tools/gen_schematics.py
 ```
 
-### ERC baseline (all sheets: power, tube, mcu; 2026-10-06)
+### ERC baseline (all sheets: power, tube, mcu; 2026-10-07)
 
-`kicad-cli sch erc --severity-all hardware/dekatron/dekatron.kicad_sch`: **1 violation, expected:**
+`kicad-cli sch erc --severity-all hardware/dekatron/dekatron.kicad_sch`: **4 violations, expected:**
 `pin_to_pin` power output to power output, the LP2951 output driving the LM5156 VCC pin in
-BIAS = VCC mode (intentional, D2). Every inter-sheet global label connects.
+BIAS = VCC mode (intentional, D2); and three `pin_to_pin` open collector to power output, the
+unused LM66100 ST pins tied to GND as their datasheet asks (U102-U104, 2026-10-07). Every inter-sheet global label connects.
 
 ### Project footprint
 
@@ -90,16 +91,25 @@ pass 8). What the pieces do:
   no rip-up, so order is the lever: the LM5156's fine-pitch nets first, in an order that keeps
   each pin's escape open; each LM5156 signal pin gets a reserved 1 mm escape stub; failed nets
   are promoted in the next pass (`route_loop.sh`). Raster margins: 0.075 mm (tracks), 0.12 mm
-  (vias), 0.08 mm within 0.4 mm of the LM5156 pins. The GND pour counts as connected copper on
-  the bottom layer only, so a top-side GND pad gets a stitching via.
+  (vias), 0.08 mm within 0.4 mm of the LM5156 pins, plus 0.03 mm against other nets' pads (a
+  diagonal track grazing a pad corner came out 0.175 mm against the 0.2 mm rule). Vias also keep
+  0.25 mm hole-to-hole from every plated hole, not only the unplated ones. The GND pour counts as
+  connected copper on the bottom layer only, so a top-side GND pad gets a stitching via.
+* Fixed copper laid before routing (`BRIDGES`, `GND_ESCAPES` in `route_pcb.py`): each LM66100's
+  CE-to-VOUT connection runs under the package body (pin 3 in to the centreline, along it, out to
+  pin 6; 0.2 mm wide, 0.225 mm from pins 2 and 5), and its GND pin 2 and ST pin 5 each get a short
+  track out to a GND via 0.65 mm past the pad (direction searched for 0.3 mm from other pads).
+  Routed around the package, CE-to-VOUT walled in the GND pins, and at 0.65 mm pitch the pour
+  cannot reach a middle pin. `gen_pcb.py` anchors R301 and C108 0.6 mm clear of two of those
+  vias.
 * `pcb_io.py apply` writes the tracks, fills the pours and adds GND stitching vias on a 2.5 mm
   grid wherever both pours have solid copper; the `--repair` pass then re-routes GND against
   the real main fill, so pour islands that only touch a pad get connected.
 * `silk.py` re-places the reference designators: around each courtyard, clear of pads, silk,
   other references and the board edge, preferring spots not under another part; 1.0 mm text,
   0.8 mm (the board minimum) where it is tight. It only moves text, so it can be re-run on its own.
-  Mounting-hole references are hidden; on this board C115 has no legal spot and is labelled on
-  the Fab layer only.
+  Mounting-hole references are hidden; on this board L101 and TP104 have no legal spot and are
+  labelled on the Fab layer only.
 
 ### Fab outputs
 
@@ -113,12 +123,13 @@ kicad-cli pcb export drill --format excellon --excellon-units mm --generate-repo
 
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.
 
-### DRC baseline (2026-10-07)
+### DRC baseline (2026-10-07, after the LM66100 CE fix; routing converged on pass 5)
 
 `kicad-cli pcb drc --severity-all --schematic-parity hardware/dekatron/dekatron.kicad_pcb`:
-**1 violation, expected:** the U106 library mismatch (thermal vias above). 0 unconnected,
-0 clearance, 0 silkscreen, 0 schematic parity. An occasional starved-thermal warning may appear
-after a re-route.
+**2 violations, expected:** the U106 library mismatch (thermal vias above) and one
+`starved_thermal` (U107 GND pin 2 reaches the front pour with one spoke instead of two; it is
+connected). 0 unconnected, 0 clearance, 0 silkscreen, 0 schematic parity. Which pad shows a
+starved thermal can change after a re-route.
 
 ## Simulation
 

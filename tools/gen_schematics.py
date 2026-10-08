@@ -876,7 +876,8 @@ def build_power(lib: SymbolLib) -> Sheet:
     sh.pwr("+5V", (408.94, Y5))
 
     # ==== IDEAL DIODES (D6) =========================================================================
-    note("IDEAL DIODES (D6)", "One LM66100 per external 5 V feed; CE grounded = always on", 15.24, 91.44)
+    note("IDEAL DIODES (D6)", "One LM66100 per external 5 V feed; CE tied to VOUT = always-on reverse-current\n"
+         "blocking (datasheet SLVSEZ8A 8.3.2; CE to GND would not block); ST unused, to GND", 15.24, 91.44)
     Y = 104.14
     sh.pwr("+5V", (20.32, Y))
     rail = [20.32]
@@ -887,10 +888,11 @@ def build_power(lib: SymbolLib) -> Sheet:
         c = vC(cref, "0.1uF", xx - 25.4, Y, f"{ref} input bypass", "50 V X7R")
         down_gnd(c["2"])
         sh.w((xx - 12.7, Y), (xx - 12.7, u["VIN"][1]), u["VIN"])
-        sh.w(u["~{CE}"], (xx - 10.16, u["~{CE}"][1]), (xx - 10.16, u["GND"][1] + 2.54))
-        sh.gnd((xx - 10.16, u["GND"][1] + 2.54))
+        sh.w(u["~{CE}"], (xx - 10.16, u["~{CE}"][1]))
+        sh.gl(out, (xx - 10.16, u["~{CE}"][1]), 180)          # CE joins VOUT: turns off when VOUT > VIN
         down_gnd(u["GND"])
-        sh.noconn(*u["ST"])
+        sh.w(u["ST"], (xx + 10.16, u["ST"][1]), (xx + 10.16, u["ST"][1] + 2.54))
+        sh.gnd((xx + 10.16, u["ST"][1] + 2.54))
         sh.w(u["VOUT"], (xx + 15.24, u["VOUT"][1]))
         sh.gl(out, (xx + 15.24, u["VOUT"][1]), 0)
         rail += [xx - 25.4, xx - 12.7]
@@ -1138,21 +1140,21 @@ def build_power(lib: SymbolLib) -> Sheet:
     note("HV DIVIDERS (D2, D12)", "One leaded HHV-25 per leg. Feedback and OVP stay on separate dividers;\n"
          "monitor and OVP share one. No dedicated bleeder: both dividers discharge HV", 139.7, 233.68)
     XF, XM = 152.4, 177.8
-    # feedback: 1.00 V x (1 + 4.7M / 10.4k) = 452.9 V (9.53k for the 500 V setting: 494.2 V). HHV tops
-    # are E12 values (HHV stock follows E12); the trim is in the 1206 bottom resistor
-    n = node_below(top("R126", H25, "4.7M", "4704", XF, "HV feedback divider, upper"))
-    r = vR("R130", "10.4k", XF, n[1], "HV feedback, lower (452.9 V; 9.53k for 500 V: 494.2 V)", "1 %")
+    # feedback: 1.00 V x (1 + 2.7M / 5.97k) = 453.3 V (5.49k for the 500 V setting: 492.8 V). HHV tops are
+    # stocked E12 values (2.7M; 4.7M has a 10-week lead time); the trim is in the 1206 bottom resistor
+    n = node_below(top("R126", H25, "2.7M", "2704", XF, "HV feedback divider, upper"))
+    r = vR("R130", "5.97k", XF, n[1], "HV feedback, lower (453.3 V; 5.49k for 500 V: 492.8 V)", "1 %")
     down_gnd(r["2"])
     sh.w(n, (XF + 5.08, n[1]))
     sh.nl("LM5156_FB", (XF + 5.08, n[1]))
     # shared monitor / OVP: HV - 4.64M - MON (HV_SENSE) - 14.0k - OVP tap - 10.5k - GND
-    # MON = HV / 191.3 (2.37 V at 452.9 V); OVP trips at 1.242 V x 4.7247M / 10.7k = 548.4 V
-    mon = node_below(top("R131", H25, "4.7M", "4704", XM, "HV monitor / OVP divider, upper"))
+    # MON = HV / 193.0 (2.35 V at 453.3 V); OVP trips at 1.242 V x 2.71406M / 6.19k = 544.6 V
+    mon = node_below(top("R131", H25, "2.7M", "2704", XM, "HV monitor / OVP divider, upper"))
     sh.w(mon, (XM + 5.08, mon[1]))
     sh.gl("HV_SENSE", (XM + 5.08, mon[1]), 0)
-    r = vR("R135", "14.0k", XM, mon[1], "HV monitor / OVP divider, middle (HV_SENSE 2.37 V at 452.9 V)", "1 %")
+    r = vR("R135", "7.87k", XM, mon[1], "HV monitor / OVP divider, middle (HV_SENSE 2.35 V at 453.3 V)", "1 %")
     ovp = node_below(r["2"])
-    r = vR("R140", "10.7k", XM, ovp[1], "HV monitor / OVP divider, lower (OVP trip 548.4 V)", "1 %")
+    r = vR("R140", "6.19k", XM, ovp[1], "HV monitor / OVP divider, lower (OVP trip 544.6 V)", "1 %")
     down_gnd(r["2"])
     comparator("U107", 233.68, ovp[1] - 2.54, ovp, 190.5, "OVP_SENSE", "OVP_REF", "C127", "OVP",
                "Independent OVP comparator (open drain)")

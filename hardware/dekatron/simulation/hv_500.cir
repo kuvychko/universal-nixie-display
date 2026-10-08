@@ -1,7 +1,7 @@
 * 500 V SETTING (D1 option B) on the current design (0207 rework), warm start.
-* E12 HHV values (2026-10-07): feedback HHV-25 4.7M / 9.53k -> 494.2 V (1.00 V reference); anode
-* HHV-50 330k + 470k = 800k; shared monitor / OVP divider 4.7M - HV_SENSE (10 nF) - 14.0k - OVP tap -
-* 10.7k (trip 548.4 V); V_b OVP 2.2M / 13.7k (trip 200.7 V); V_b bleeder 2.2M; G+/RTN feed 40.2k from
+* Stocked HHV values (2026-10-07): feedback HHV-25 2.7M / 5.49k -> 492.8 V (1.00 V reference); anode
+* HHV-50 330k + 470k = 800k; shared monitor / OVP divider 2.7M - HV_SENSE (10 nF) - 7.87k - OVP tap -
+* 6.19k (trip 544.6 V); V_b OVP 2.2M / 13.7k (trip 200.7 V); V_b bleeder 2.2M; G+/RTN feed 40.2k from
 * V_b into the ~90 V G+ node. (First run, results below the case list: 4.75M, 2 x 402k, 4.64M / 10.5k,
 * 2.0M / 12.4k, 2.4M.)
 * Both OVP comparators are smooth current sinks on EN/UVLO (as in fault_d5open.cir).
@@ -13,10 +13,11 @@
 * Questions: does it regulate at 499.4 V with the low-end power (docs/hardware.md "Open check, 500 V
 * setting")? tube current vs 300-450 uA (D1); margin to both OVP trips; switch node vs the 400 V
 * MOSFET; capacitor and diode stress.
-* Result, E12 values (nom / low): HV 494.1 / 494.1 V (setpoint 494.2 V), 0.12-0.13 V p-p at 11.5-12 ms;
-*   tube 368 uA; inductor peak 0.32 / 0.32 A against 0.46 / 0.43 A; input 0.68 / 0.70 W; PGOOD high.
-*   Peaks: HV 498.0 V, OVP tap 1.126 V (trip 1.242 V), V_b 170.3 V (V_b OVP tap 1.054 V), switch
-*   node 171 V, capacitors <= 169 V, diode reverse <= 165 V, CS <= 0.10 V. Dump case not rerun.
+* Result, 2.7M dividers (nom / low): HV 492.7 / 492.7 V (setpoint 492.8 V), 0.13-0.15 V p-p at
+*   11.5-12 ms; tube 366 uA; inductor peak 0.33 / 0.34 A against 0.46 / 0.43 A; input 0.75 / 0.78 W;
+*   PGOOD high. Peaks: HV 496.4 V, OVP tap 1.131 V (trip 1.242 V), V_b 169.9 V (V_b OVP tap 1.051 V),
+*   switch node 171 V, capacitors <= 169 V, diode reverse <= 164 V, CS <= 0.10 V. Dump case not rerun.
+* Previous run (4.7M / 9.53k, 4.7M / 14.0k / 10.7k): HV 494.1 V, 0.32 A, 0.68 / 0.70 W, peak 498.0 V.
 * First run (2026-10-07; nom / low / dump; 4.75M / 9.53k, 2 x 402k), steady state 7.5-8 ms and 11.5-12 ms:
 *   HV 499.2 / 499.4 / 499.2 V (setpoint 499.4 V), 0.14-0.44 V p-p; tube 372.5 / 372.8 uA (D1
 *   300-450 uA); inductor peak 0.32 / 0.29 A against the 0.46 / 0.43 A limit, so it regulates out of
@@ -66,8 +67,8 @@ CCSF  cs 0 470p
 D1    sw vb DES1J
 XC1   vb 0 CFILM
 * Feedback from HV: 1.00 V * (1 + 4.75M / 9.53k) = 499.4 V
-RFT   hv fb 4.7Meg
-RFB   fb 0 9.53k
+RFT   hv fb 2.7Meg
+RFB   fb 0 5.49k
 RBLB  vb 0 2.2Meg
 * G+/RTN regulator feed (tube sheet): 40.2k from V_b into the ~90 V G+ node
 RBIASF vb gpn 40.2k
@@ -76,10 +77,10 @@ VGPN  gpn 0 90
 RVO1  vb vbs 2.2Meg
 RVO2  vbs 0 13.7k
 CVO   vbs 0 1n
-RMT   hv mon 4.7Meg
+RMT   hv mon 2.7Meg
 CMON  mon 0 10n
-RMM   mon hvs 14.0k
-RHO2  hvs 0 10.7k
+RMM   mon hvs 7.87k
+RHO2  hvs 0 6.19k
 CHO   hvs 0 1n
 BOVPV uvlo 0 I = 0.5*(1+tanh((V(vbs)-1.242)*200)) * V(uvlo)/20
 BOVPH uvlo 0 I = 0.5*(1+tanh((V(hvs)-1.242)*200)) * V(uvlo)/20
@@ -131,7 +132,7 @@ VRTNS  rtn 0 {VRTN}
 * Stack precharged to ~485 V (stage voltages scaled from hv_warm.cir); sense taps at their DC values
 .ic v(vb)=162 v(sw)=12 v(swp)=12 v(p1)=174 v(n2)=323 v(p2)=335 v(hv)=485 v(latf)=0 v(lat)=0
 + v(xc1.m)=0 v(xcp1.m)=174 v(xcp2.m)=335 v(xc2.m)=323 v(xc3.m)=485
-+ v(mon)=2.536 v(hvs)=1.098 v(vbs)=1.003
++ v(mon)=2.513 v(hvs)=1.106 v(vbs)=1.003
 * Relaxed tolerances: with defaults the TI model stalls the solver at light-load mode changes
 .options reltol=0.003 abstol=1n vntol=10u chgtol=1e-13 itl4=50
 .tran 5n 12m 0 5n uic

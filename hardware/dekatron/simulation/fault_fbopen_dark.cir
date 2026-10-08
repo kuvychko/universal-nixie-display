@@ -1,6 +1,6 @@
 * FAULT TEST, TUBE DARK (variant of fault_fbopen.cir): feedback divider top open, so FB falls to 0 V and the LM5156 runs at its
-* current limit. Protection: the shared monitor / OVP divider (HHV-25 4.7M - MON - 14.0k - OVP tap -
-* 10.7k, trip 548.4 V; E12 values since 2026-10-07, first run 4.64M / 10.5k, 551.8 V) into the HV OVP
+* current limit. Protection: the shared monitor / OVP divider (HHV-25 2.7M - MON - 7.87k - OVP tap -
+* 6.19k, trip 544.6 V; since 2026-10-07; earlier runs 4.64M / 10.5k, 551.8 V, and 4.7M / 10.7k, 548.4 V) into the HV OVP
 * comparator, and the V_b OVP (2.2M / 13.7k, 200.7 V). CMON is the ADC reservoir on MON (C304).
 * Derived from fault_d5open.cir (all tripler diodes present).
 * HV supply warm start: stack precharged to its operating voltages, so regulation is reached in
@@ -64,7 +64,7 @@ XC1   vb 0 CFILM
 * Feedback: V_b = 1.00 V * (1 + 1.5M / 10.07k) = 150 V
 * Feedback top open (fault)
 RFT   hv fb 1T
-RFB   fb 0 10.4k
+RFB   fb 0 5.97k
 
 * V_b OVP: 2.2M / 13.7k into a TLV3011 (1.242 V); HV OVP: shared divider below. Comparators as
 * smooth current sinks on the EN/UVLO node (open drain), 6 us comparator delay ignored.
@@ -72,10 +72,10 @@ RVO1  vb vbs 2.2Meg
 RVO2  vbs 0 13.7k
 CVO   vbs 0 1n
 .param CMON=10n
-RMT   hv mon 4.7Meg
+RMT   hv mon 2.7Meg
 CMONC mon 0 {CMON}
-RMM   mon hvs 14.0k
-RHO2  hvs 0 10.7k
+RMM   mon hvs 7.87k
+RHO2  hvs 0 6.19k
 CHO   hvs 0 1n
 BOVPV uvlo 0 I = 0.5*(1+tanh((V(vbs)-1.242)*{KCMP})) * V(uvlo)/20
 BOVPH uvlo 0 I = 0.5*(1+tanh((V(hvs)-1.242)*{KCMP})) * V(uvlo)/20
@@ -129,8 +129,9 @@ VRTNS  rtn 0 {VRTN}
 
 * Starts at 540 V on the runaway ramp, 12 V below the trip, with the sense taps 1.6 V of HV behind
 * (as measured on the ramp in fault_fbopen.cir), and no tube current.
-* Result, E12 divider (4.7M / 14.0k / 10.7k, trip 548.4 V), KCMP = 20000: trips at 1.29 ms with HV
-* at 550.3 V; HV peak 550.4 V, V_b peak 187.4 V, switch node 188.3 V; bursts at 547.1-549.7 V.
+* Result, 2.7M divider (2.7M / 7.87k / 6.19k, trip 544.6 V), KCMP = 20000: trips at 0.76 ms with HV
+* at 545.8 V; HV peak 546.0 V, V_b peak 185.9 V, switch node 186.8 V; bursts at 543.5-545.4 V.
+* 4.7M / 14.0k / 10.7k (trip 548.4 V): tripped at 550.3 V, bursts 547.1-549.7 V.
 * First run (4.64M / 10.5k, trip 551.8 V), KCMP = 20000: OVP trips at 1.76 ms with HV at 553.4 V (551.8 V trip + the
 * 1.6 V tap lag); HV peak 553.5 V, V_b peak 188.6 V (V_b OVP 201.6 V, not reached), switch node
 * 189.5 V (400 V MOSFET: 2.1x). EN falls to ~0 V, rises again as HV drops below the trip, and the
@@ -138,7 +139,7 @@ VRTNS  rtn 0 {VRTN}
 * not latch; firmware must drop HV_EN. KCMP = 200 (soft edge, as fault_fbopen.cir): HV clamps at
 * 544-547.6 V with EN held part-way (0.77-1.6 V).
 .ic v(vb)=185 v(sw)=12 v(swp)=12 v(p1)=197 v(n2)=366 v(p2)=378 v(hv)=540 v(latf)=0 v(lat)=0
-+ v(mon)=2.815 v(hvs)=1.219 v(xc1.m)=0 v(xcp1.m)=197 v(xcp2.m)=378 v(xc2.m)=366 v(xc3.m)=540
++ v(mon)=2.789 v(hvs)=1.228 v(xc1.m)=0 v(xcp1.m)=197 v(xcp2.m)=378 v(xc2.m)=366 v(xc3.m)=540
 * Relaxed tolerances: with defaults the TI model stalls the solver at light-load mode changes
 .options reltol=0.003 abstol=1n vntol=10u chgtol=1e-13 itl4=50
 .tran 5n 4m 0 5n uic

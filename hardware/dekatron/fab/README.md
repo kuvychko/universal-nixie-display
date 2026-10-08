@@ -19,7 +19,9 @@ and upload the zip (zips are git-ignored).
 Holes: smallest 0.30 mm (U106 thermal vias; routing vias 0.35 mm), above OSH Park's 0.254 mm.
 Unplated: 1.6 mm harness cable-tie holes, 3.2 mm mounting holes.
 
-At generation: DRC 0 unconnected, 0 clearance, 0 silkscreen, 0 schematic parity; one expected
-finding (U106 differs from its library footprint: added 0.3 mm thermal vias). See
+At generation: DRC 0 unconnected, 0 clearance, 0 silkscreen, 0 schematic parity; two expected
+findings (U106 differs from its library footprint: added 0.3 mm thermal vias; U107 GND pin has a
+one-spoke thermal to the front pour, still connected). Regenerated 2026-10-07 for the LM66100 CE
+fix (CE to VOUT) and the 2.7M HV divider tops; the earlier set had CE grounded and was not ordered. See
 `docs/development.md` for the regeneration commands. These files are committed byte-exact; do
 not edit them by hand — regenerate from the board.

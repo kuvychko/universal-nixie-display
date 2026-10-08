@@ -33,6 +33,10 @@ MARG = 0.075        # raster error on the 0.1 mm grid reaches ~0.07 mm (DRC foun
 MARG_FINE = 0.08    # on the LM5156 pins, where the real gap is 0.30 mm against a 0.2 mm rule
 VIA_MARG = 0.12     # vias: raster error of the drilled circle against diagonal tracks (DRC found 0.161 mm)
 VIA_D = 0.7
+VIA_DRILL = 0.35    # as pcb_io.py
+PAD_MARG = 0.03     # extra margin against other nets' pads: a pad's raster can sit a cell inside its real
+                    # outline, so a diagonal track grazing a pad corner came out 0.175-0.1875 mm (rule 0.2)
+HOLE_GAP = 0.25     # drilled hole to drilled hole (board setup); vias keep it from every plated hole too
 VIA_COST = 2.0
 TURN = (0.0, 0.12, 0.5)
 DIRS = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]
@@ -89,6 +93,19 @@ def width(net):
 FANOUT = {"U106": 1.0}
 FANOUT_SKIP = {("U106", "8")}     # COMP leaves its end pin sideways to C118; a stub there pockets VDRV (pin 9)
 STUB_W = 0.25
+# Fixed pad-to-pad ties laid before routing, under a package body where no other net can reach. The
+# LM66100s' CE (pin 3) joins VOUT (pin 6, the opposite corner): routed around the package it walled in
+# GND (pin 2) and ST (pin 5, to GND), so it runs under the body instead: from pin 3 in to the body
+# centreline, along it, and out to pin 6 (0.33 mm from pins 2 and 5). (ref, from pin, to pin, across pin
+# pair that sets the centreline)
+BRIDGES = [(u, "3", "6", ("2", "5")) for u in ("U102", "U103", "U104")]
+# Fixed GND escapes: a short track straight out of the pad to a via 0.65 mm past its outer end (0.45 mm
+# from the neighbouring pads), into the bottom pour. At 0.65 mm pitch the top pour cannot reach a
+# middle pin between its neighbours, and the routed neighbours closed the outer end (LM66100 GND pin 2
+# and ST pin 5 ended up on pour islands).
+GND_ESCAPES = [(u, n) for u in ("U102", "U103", "U104") for n in ("2", "5")]
+GND_ESCAPE_GAP = 0.65
+BRIDGE_W = 0.2       # 0.225 mm from pins 2 and 5 (0.25 would sit exactly on the 0.2 mm rule)
 
 FIRST = ["+12V_RAW", "/power/+12V_FUSED", "VIN_PROT", "/power/BUCK_SW", "/power/5V_BUCK", "/power/BUCK_BOOT",
          "+5V", "5V_MCU", "5V_NIX", "5V_DISP",      # long 5 V feeds before the board fills up
@@ -168,8 +185,14 @@ class Board:
         edge[1:-1, 1:-1] = False
         self.d_edge = ndimage.distance_transform_edt(~edge) * G
         hole = np.zeros((R.NY, R.NX), bool)
+        phole = np.zeros((R.NY, R.NX), bool)                 # every drilled hole, plated or not
+        self.padcell = np.zeros((R.NY, R.NX), bool)
         self.pads = {}
         for p in geom["pads"]:
+            if p["drill"] > 0:
+                img = R.blank()
+                R.circle(ImageDraw.Draw(img), p["pos"][0], p["pos"][1], p["drill"] / 2)
+                phole |= R.arr(img)
             if not p["net"]:
                 if p["drill"] > 0:
                     img = R.blank()
@@ -185,6 +208,7 @@ class Board:
             m = R.arr(img)
             nid = self.nid(p["net"] or f"__nc_{p['ref']}_{p['num']}")
             self.own[L][m & (self.own[L] == -1)] = nid
+            self.padcell |= m
             if not p["net"]:
                 continue
             key = (p["ref"], p["num"])
@@ -195,6 +219,7 @@ class Board:
                 lst.append(ent)
             ent["mask"][L] = m
         self.d_hole = ndimage.distance_transform_edt(~hole) * G
+        self.d_phole = ndimage.distance_transform_edt(~phole) * G
         self.novia = np.zeros((R.NY, R.NX), bool)       # rule areas without vias (under the RP2040-Zero)
         for poly in geom.get("novia", []):
             img = R.blank()
@@ -422,6 +447,7 @@ def main():
     failed = []
     t0 = time.time()
     nets_to_route = order(list(B.pads))
+    bridge_m = {}
     if REPAIR:
         for n, L, w, pts in prev["tracks"]:
             B.add_track(n, L, w, [tuple(p) for p in pts])
@@ -429,12 +455,68 @@ def main():
             B.add_via(n, x, y)
         B.stubs = {}                              # the stubs are already in PREV's tracks
         nets_to_route = ["GND"]
+    else:
+        pos = {(q["ref"], q["num"]): q for q in geom["pads"] if q["layer"] in ("F", "*")}
+        for ref, n1, n2, (c1, c2) in BRIDGES:
+            p1, p2 = pos[(ref, n1)], pos[(ref, n2)]
+            assert p1["net"] == p2["net"], (ref, p1["net"], p2["net"])
+            a1, a2 = pos[(ref, c1)]["pos"], pos[(ref, c2)]["pos"]
+            ux, uy = (a2[0] - a1[0]) / 2, (a2[1] - a1[1]) / 2        # half-way across the body
+            q1, q2 = p1["pos"], p2["pos"]
+            m = B.add_track(p1["net"], 0, BRIDGE_W, [tuple(q1), (q1[0] + ux, q1[1] + uy),
+                                                     (q2[0] - ux, q2[1] - uy), tuple(q2)])
+            bridge_m.setdefault(p1["net"], []).append([m, np.zeros_like(m)])   # its net's copper, like a stub
+        others = [q["poly"] for q in geom["pads"] if q["net"] != "GND" and q["layer"] in ("F", "*")]
+
+        def escape_gap(p, q, polys):
+            """Closest approach of point p (q None) or segment p-q to the outlines of the other nets' pads."""
+            def sd(a, b, c):
+                ux, uy = c[0] - b[0], c[1] - b[1]
+                ll = ux * ux + uy * uy
+                t = 0.0 if ll == 0 else max(0.0, min(1.0, ((a[0] - b[0]) * ux + (a[1] - b[1]) * uy) / ll))
+                return math.hypot(a[0] - b[0] - t * ux, a[1] - b[1] - t * uy)
+            best = 1e9
+            for pl in polys:
+                for poly in pl:
+                    edges = list(zip(poly, poly[1:] + poly[:1]))
+                    if q is None:
+                        best = min(best, min(sd(p, e0, e1) for e0, e1 in edges))
+                    else:   # segment to polygon: closest of the endpoint/edge combinations (no crossings here)
+                        best = min(best, min(min(sd(e0, p, q), sd(p, e0, e1), sd(q, e0, e1)) for e0, e1 in edges))
+            return best
+
+        for ref, n in GND_ESCAPES:
+            pd = pos[(ref, n)]
+            assert pd["net"] == "GND", (ref, n, pd["net"])
+            mine = [q["pos"] for (r2, _), q in pos.items() if r2 == ref]
+            cx, cy = sum(x for x, _ in mine) / len(mine), sum(y for _, y in mine) / len(mine)
+            (px, py), poly = pd["pos"], pd["poly"][0]
+            dx, dy = px - cx, py - cy
+            ln = math.hypot(dx, dy)
+            dx, dy = dx / ln, dy / ln
+            reach = max((x - px) * dx + (y - py) * dy for x, y in poly)       # pad centre to outer end
+            ex, ey = px + dx * reach, py + dy * reach
+            for ang in (0, 30, -30, 45, -45, 60, -60):     # straight out first, then angled past a neighbour
+                c, s_ = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+                rx, ry = dx * c - dy * s_, dx * s_ + dy * c
+                vx, vy = round(ex + rx * GND_ESCAPE_GAP, 4), round(ey + ry * GND_ESCAPE_GAP, 4)
+                if (escape_gap((vx, vy), None, others) >= VIA_D / 2 + 0.3
+                        and escape_gap((px, py), (vx, vy), others) >= STUB_W / 2 + 0.2):
+                    break
+            else:
+                raise SystemExit(f"no clear GND escape for {ref} pin {n}")
+            mt = B.add_track("GND", 0, STUB_W, [(px, py), (vx, vy)])
+            mv = B.add_via("GND", round(vx, 4), round(vy, 4))
+            bridge_m.setdefault("GND", []).append([mt | mv, mv])
     for net in nets_to_route:
         w = width(net)
         nid = B.nid(net)
         mycls = B.cls[nid]
         items = [[m if m is not None else np.zeros((NY, NX), bool) for m in pd["mask"]] for pd in B.pads[net]]
+        # bridges and escapes count as the net's copper (items) but not as places a route may start from:
+        # that exemption let a 5V_DISP route leave the bridge 0.187 mm from U102's GND pad
         stub_m = [m for _, m in B.stubs.get(net, [])]
+        items += [list(m) for m in bridge_m.get(net, [])]
         # the exemption covers the pads' interior only (one cell in): a centreline on a pad's edge puts half
         # the track outside it, next to the neighbouring pin (DRC: GATE 0.125 mm from pin 3)
         own_pads = [ndimage.binary_erosion(np.logical_or.reduce([it[0] for it in items] + stub_m
@@ -500,6 +582,9 @@ def main():
                     if marg != MARG:                       # fine-pitch nets: the tight margin near the pins only
                         lim = np.where(B.near_fine, clr + w / 2 + marg, lim)
                     blk |= d < lim
+                    mp = m & B.padcell                     # other nets' pads: a little more (PAD_MARG)
+                    if mp.any():
+                        blk |= ndimage.distance_transform_edt(~mp) * G < lim + PAD_MARG
                     vbl |= d < clr + VIA_D / 2 + VIA_MARG
                 e_clr = 3.0 if mycls == "HV" else 0.5
                 blk |= B.d_edge < e_clr + w / 2 + MARG
@@ -513,6 +598,7 @@ def main():
                 vb |= vbl
             vb |= B.d_edge < (3.0 if mycls == "HV" else 0.5) + VIA_D / 2 + MARG
             vb |= B.d_hole < HOLE + VIA_D / 2 + MARG
+            vb |= B.d_phole < HOLE_GAP + VIA_DRILL / 2 + MARG   # plated holes too (a via 0.21 mm from U106's)
             vb |= ndimage.binary_dilation(B.novia, iterations=int(round((VIA_D / 2 + MARG) / G)))
             vb |= res[0] | res[1]
             return res, vb
