@@ -6,7 +6,7 @@
 * Chain: adapter -> cable (1 uH, 0.1 ohm: ~1 m of adapter lead, assumed) -> fuse 0468002 (~0.05 ohm)
 *   -> P-MOSFET AOD4185 (reverse-polarity, gate to ground via 10k, 10 V gate-source zener).
 *      DMP3098L (SOT-23) was rejected: its 11-14 A pulsed rating is below the 50 A inrush.
-*   -> VIN_PROT: SMBJ15A TVS, 100 uF EEE-FK1V101P (160 mohm ESR, if BULK=1), ceramics
+*   -> VIN_PROT: SMBJ15A TVS, 100 uF EEE-FK1V101XP (340 mohm ESR, if BULK=1), ceramics
 *   -> loads as constant-power sinks (5 V buck input 3.7 W, HV boost ~1 W)
 *   -> PTC 1812L075/33 (0.11-0.4 ohm) -> Nixie HV module (assumed 47 uF input, 4.5 W)
 * Models are generic approximations written for this bench (AOD4185-, SMBJ15A-, BZT52C10-like).
@@ -30,7 +30,7 @@ DZG   gp vprot DZ10
 * VIN_PROT
 DTVS  0 vprot DTVS15
 CBLK  vprot cb {BULK ? 100u : 1p}
-RBLK  cb 0 0.16
+RBLK  cb 0 0.34
 CCER1 vprot 0 10u
 CCER2 vprot 0 22u
 CCER3 vprot 0 1u

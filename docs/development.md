@@ -92,7 +92,11 @@ pass 8). What the pieces do:
   each pin's escape open; each LM5156 signal pin gets a reserved 1 mm escape stub; failed nets
   are promoted in the next pass (`route_loop.sh`). Raster margins: 0.075 mm (tracks), 0.12 mm
   (vias), 0.08 mm within 0.4 mm of the LM5156 pins, plus 0.03 mm against other nets' pads (a
-  diagonal track grazing a pad corner came out 0.175 mm against the 0.2 mm rule). Vias also keep
+  diagonal track grazing a pad corner came out 0.175 mm against the 0.2 mm rule) and 0.05 mm
+  against other nets' tracks for every net outside the LM5156 pin group (a 1 mm VIN_PROT end came
+  out 0.153 mm from a 0.25 mm PGOOD diagonal; applied to the pin group too, it walls PGOOD in at
+  the pins). `pcb_io.py apply` now and then fails with a pcbnew SWIG `AttributeError`; re-run it
+  on a fresh copy of the placed board. Vias also keep
   0.25 mm hole-to-hole from every plated hole, not only the unplated ones. The GND pour counts as
   connected copper on the bottom layer only, so a top-side GND pad gets a stitching via.
 * Fixed copper laid before routing (`BRIDGES`, `GND_ESCAPES` in `route_pcb.py`): each LM66100's
@@ -108,7 +112,7 @@ pass 8). What the pieces do:
 * `silk.py` re-places the reference designators: around each courtyard, clear of pads, silk,
   other references and the board edge, preferring spots not under another part; 1.0 mm text,
   0.8 mm (the board minimum) where it is tight. It only moves text, so it can be re-run on its own.
-  Mounting-hole references are hidden; on this board L101 and TP104 have no legal spot and are
+  Mounting-hole references are hidden; on this board L101 and R214 have no legal spot and are
   labelled on the Fab layer only.
 
 ### Fab outputs
@@ -123,11 +127,11 @@ kicad-cli pcb export drill --format excellon --excellon-units mm --generate-repo
 
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.
 
-### DRC baseline (2026-10-07, after the LM66100 CE fix; routing converged on pass 5)
+### DRC baseline (2026-10-08, W8 film capacitors and 6.3 × 7.7 C101; routing converged on pass 5)
 
 `kicad-cli pcb drc --severity-all --schematic-parity hardware/dekatron/dekatron.kicad_pcb`:
 **2 violations, expected:** the U106 library mismatch (thermal vias above) and one
-`starved_thermal` (U107 GND pin 2 reaches the front pour with one spoke instead of two; it is
+`starved_thermal` (R111 GND pad 2 reaches the front pour with one spoke instead of two; it is
 connected). 0 unconnected, 0 clearance, 0 silkscreen, 0 schematic parity. Which pad shows a
 starved thermal can change after a re-route.
 

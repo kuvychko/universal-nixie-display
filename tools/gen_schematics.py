@@ -668,8 +668,8 @@ class Sheet:
 FP_R = "Resistor_SMD:R_1206_3216Metric"
 FP_C = "Capacitor_SMD:C_1206_3216Metric"
 FP_C1210 = "Capacitor_SMD:C_1210_3225Metric"
-FP_FILM = "Capacitor_THT:C_Rect_L18.0mm_W7.0mm_P15.00mm_FKS3_FKP3"   # confirm against the chosen 0.47 uF 400 V part
-FP_ELEC = "Capacitor_SMD:CP_Elec_8x10.5"
+FP_FILM = "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3"   # WIMA MKS4 0.47 uF 400 V: 18 x 8 x 15 mm
+FP_ELEC = "Capacitor_SMD:CP_Elec_6.3x7.7"
 FP_DPAK = "Package_TO_SOT_SMD:TO-252-2"     # pad 1 G, pad 2 (tab) D, pad 3 S
 FP_SMA = "Diode_SMD:D_SMA"
 FP_SMB = "Diode_SMD:D_SMB"
@@ -799,8 +799,8 @@ def build_power(lib: SymbolLib) -> Sheet:
                   fields=F("Input TVS, unidirectional", "SMBJ15A", "Littelfuse", "15 V standoff, 24.4 V clamp"))
     sh.w((XD2, Y), tv["K"])
     down_gnd(tv["A"])
-    c = v2(CP, "C101", "100uF 35V", XC1, Y + 3.81, F("Input bulk, damps hot-plug ringing", "EEE-FK1V101P", "Panasonic",
-                                                    "35 V, 160 mohm ESR"), FP_ELEC)
+    c = v2(CP, "C101", "100uF 35V", XC1, Y + 3.81, F("Input bulk, damps hot-plug ringing", "EEE-FK1V101XP", "Panasonic",
+                                                    "35 V, 340 mohm ESR"), FP_ELEC)
     sh.w((XC1, Y), c["1"])
     down_gnd(c["2"])
     c = vC("C102", "0.1uF", XC2, Y + 3.81, "Input HF bypass", "50 V X7R")
@@ -1044,7 +1044,7 @@ def build_power(lib: SymbolLib) -> Sheet:
     vb = [256.54, 261.62, XV1, XTV, XVO, XL5]
     sh.w(d["K"], *[(x, Y) for x in vb])
     sh.nl("V_B", (261.62, Y))
-    c = v2(C, "C122", "0.47uF 400V", 256.54, Y + 3.81, F("Tripler stack C1 (V_b)", rating="400 V PET film"), FP_FILM)
+    c = v2(C, "C122", "0.47uF 400V", 256.54, Y + 3.81, F("Tripler stack C1 (V_b)", "MKS4G034704F00MSSD", "WIMA", rating="400 V PET film"), FP_FILM)
     sh.w((256.54, Y), c["1"])
     down_gnd(c["2"])
     ra = v2(R, "R119", "2.2M", XV1, Y, F("V_b bleeder (V_b's own discharge path with L3 open)",
@@ -1097,7 +1097,7 @@ def build_power(lib: SymbolLib) -> Sheet:
     rp = hR("R121", "47", 22.86, YB, "Pump surge resistor")
     sh.w((17.78, YB), rp["1"])
     sh.nl("SW", (17.78, YB), 180)
-    film = F("", rating="400 V PET film")
+    film = F("", "MKS4G034704F00MSSD", "WIMA", rating="400 V PET film")
     caps = {}
     for ref, x, y, fn in (("C125", 72.39, YT, "Tripler stack C2"), ("C126", 113.03, YT, "Tripler stack C3"),
                           ("C123", 46.99, YB, "Tripler pump CP1"), ("C124", 87.63, YB, "Tripler pump CP2")):

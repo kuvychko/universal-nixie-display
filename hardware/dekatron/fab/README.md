@@ -20,8 +20,9 @@ Holes: smallest 0.30 mm (U106 thermal vias; routing vias 0.35 mm), above OSH Par
 Unplated: 1.6 mm harness cable-tie holes, 3.2 mm mounting holes.
 
 At generation: DRC 0 unconnected, 0 clearance, 0 silkscreen, 0 schematic parity; two expected
-findings (U106 differs from its library footprint: added 0.3 mm thermal vias; U107 GND pin has a
-one-spoke thermal to the front pour, still connected). Regenerated 2026-10-07 for the LM66100 CE
-fix (CE to VOUT) and the 2.7M HV divider tops; the earlier set had CE grounded and was not ordered. See
+findings (U106 differs from its library footprint: added 0.3 mm thermal vias; R111 GND pad has a
+one-spoke thermal to the front pour, still connected). Regenerated 2026-10-08 for the WIMA MKS4
+film capacitors (18 × 8 mm footprint, C126 0.2 mm lower) and the 6.3 × 7.7 mm C101
+(EEE-FK1V101XP); earlier sets (2026-10-07, LM66100 CE fix) were not ordered. See
 `docs/development.md` for the regeneration commands. These files are committed byte-exact; do
 not edit them by hand — regenerate from the board.

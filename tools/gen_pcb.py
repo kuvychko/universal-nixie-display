@@ -142,7 +142,7 @@ ANCHOR = {
     "L102": (43.4, 39.6, 0), "Q102": (52.0, 47.0, 0), "D103": (60.5, 54.5, 0),
     # tripler column: film capacitors (origin = pad 1, pad 2 at +15 mm; rotation 180 puts pad 2 at -15 mm),
     # oriented so shared nodes face each other: N2 on the left (C126, C125), P1 on the right (C125/C124)
-    "C126": (66.0, 15.0, 0),       # pad 1 N2 left, pad 2 HV_STACK right
+    "C126": (66.0, 15.2, 0),       # pad 1 N2 left, pad 2 HV_STACK right; 0.2 down clears R131 (8 mm body)
     "C125": (81.0, 24.0, 180),     # pad 1 V_BT right, pad 2 N2 left
     "C124": (81.0, 33.0, 180),     # pad 1 P1 right, pad 2 P2 left
     "C123": (66.0, 42.0, 0),       # pad 1 PUMP left, pad 2 P1 right

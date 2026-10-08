@@ -34,6 +34,9 @@ MARG_FINE = 0.08    # on the LM5156 pins, where the real gap is 0.30 mm against 
 VIA_MARG = 0.12     # vias: raster error of the drilled circle against diagonal tracks (DRC found 0.161 mm)
 VIA_D = 0.7
 VIA_DRILL = 0.35    # as pcb_io.py
+TRK_MARG = 0.05     # extra margin against other nets' tracks: a thin diagonal's raster sits ~0.05 mm inside
+                    # its real edge (DRC: a 1 mm VIN_PROT end 0.153 mm from a 0.25 mm PGOOD diagonal). Not
+                    # for the LM5156 pin nets, whose escapes it walls in (PGOOD then fails)
 PAD_MARG = 0.03     # extra margin against other nets' pads: a pad's raster can sit a cell inside its real
                     # outline, so a diagonal track grazing a pad corner came out 0.175-0.1875 mm (rule 0.2)
 HOLE_GAP = 0.25     # drilled hole to drilled hole (board setup); vias keep it from every plated hole too
@@ -585,6 +588,9 @@ def main():
                     mp = m & B.padcell                     # other nets' pads: a little more (PAD_MARG)
                     if mp.any():
                         blk |= ndimage.distance_transform_edt(~mp) * G < lim + PAD_MARG
+                    mt = m & ~B.padcell                    # other nets' tracks: TRK_MARG, except the LM5156 group
+                    if net not in FINE and mt.any():
+                        blk |= ndimage.distance_transform_edt(~mt) * G < lim + TRK_MARG
                     vbl |= d < clr + VIA_D / 2 + VIA_MARG
                 e_clr = 3.0 if mycls == "HV" else 0.5
                 blk |= B.d_edge < e_clr + w / 2 + MARG

@@ -754,7 +754,7 @@ with no part across the full HV.
 
 | Item | Value | Basis |
 |---|---|---|
-| Capacitors | 0.47 µF, 400 V, PET film, THT (WIMA MKS4 class) | 400 V = 2.05 × 195 V. Film instead of MLCC: no DC-bias capacitance loss, no piezo noise from a pulse-skipping supply. Deviation from the 1206 default, recorded here |
+| Capacitors | 0.47 µF, 400 V, PET film, THT: WIMA MKS4G034704F00MSSD (18 × 8 mm body, 15 mm tall, 15 mm pitch; user choice, Mouser stock) | 400 V = 2.05 × 195 V. Film instead of MLCC: no DC-bias capacitance loss, no piezo noise from a pulse-skipping supply. Deviation from the 1206 default, recorded here |
 | Diodes | ES1J (600 V) | 3.1× V_b at OVP |
 | Pump surge resistor | **47 Ω** between the switch node and CP1 | **Required:** see below |
 | Ripple | < 1 V at 0.58 mA (I/(f·C) ≈ 12 mV per stage) | Checked in simulation |
@@ -807,12 +807,18 @@ constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W be
 
 | Case | Rail peak | Inrush peak | Fuse I²t | Notes |
 |---|---|---|---|---|
-| Lead 1 µH / 0.1 Ω, with bulk capacitor | 11.9 V | 44 A | 0.059 A²s | |
-| Lead 2 µH / 0.02 Ω (worst), with bulk | **12.5 V** | **52.5 A** | **0.088 A²s** | TVS never conducts (breakdown 16.7 V) |
-| Same, without the bulk electrolytic | 13.7 V | 41 A | 0.034 A²s | Shows why the 160 mΩ-ESR electrolytic is there |
+| Lead 1 µH / 0.1 Ω, with bulk capacitor | 11.9 V | 42.2 A | 0.050 A²s | |
+| Lead 2 µH / 0.02 Ω (worst), with bulk | **12.0 V** | **47.9 A** | **0.070 A²s** | TVS never conducts (breakdown 16.7 V) |
+| Same, without the bulk electrolytic | 13.7 V | 41 A | 0.034 A²s | Shows why the lossy electrolytic is there |
+
+Bulk capacitor: Panasonic EEE-FK1V101XP (100 µF 35 V, 6.3 × 7.7 mm, 340 mΩ at 100 kHz, 280 mA
+ripple at 100 kHz / 105 °C; distributor listings, user choice 2026-10-08). It replaced the
+EEE-FK1V101P (8 × 10.2 mm, 160 mΩ, 600 mA), which gave 12.5 V / 52.5 A / 0.088 A²s on the worst
+lead: the higher ESR damps the plug-in ringing better. Its ripple rating is not simulated; the
+ceramics beside the converters carry the switching ripple (HV boost inductor peak 0.34 A).
 | Adapter reversed | 0 V | 12 mA blip | — | Blocked |
 
-* **Fuse:** 0.088 A²s is 17 % of the 0468002's 0.506 A²s nominal melting I²t: survives repeated
+* **Fuse:** 0.070 A²s is 14 % of the 0468002's 0.506 A²s nominal melting I²t: survives repeated
   plug-ins.
 * **Reverse-polarity MOSFET changed:** the SOT-23 DMP3098L is rated only 11-14 A pulsed, far below
   the 52.5 A inrush. The AOD4185 (DPAK, −40 V, 15 mΩ, 115 A pulsed, V_GS ±20 V) had 2.2× margin;
@@ -821,7 +827,8 @@ constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W be
   intended for reverse-battery protection). Gate: 10k to ground and a 10 V zener (BZT52C10)
   gate-source. Re-simulated with its resistance (8.2 mΩ typ.), worst lead: inrush 52.5 A, rail
   12.6 V, fuse I²t 0.089 A²s, V_GS −9.97 to +0.14 V (inside +5 / −16 V); reversed adapter blocked,
-  V_GS −1.3 to 0 V.
+  V_GS −1.3 to 0 V. With the EEE-FK1V101XP bulk capacitor: 47.9 A, 12.1 V, 0.070 A²s, V_GS min
+  −9.96 V.
 * Model limitations: generic MOSFET, TVS and zener models; adapter lead values are assumptions;
   the adapter's own output impedance (which would lower the inrush) is ignored.
 
@@ -839,14 +846,14 @@ from the user's radial kit where noted.
 | HV controller | TI **LM5156HPWPR** |
 | HV MOSFET / gate-drive LDO | Infineon **IPD50R1K4CE** / onsemi **LP2951ACDR2G** (143k / 20.0k → 10.07 V) |
 | HV inductor / diodes | **Kit 100 µH radial** (0.71 A, 0.35 Ω) / onsemi **ES1J** × 5 |
-| HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4 class) |
+| HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4G034704F00MSSD, 18 × 8 × 15 mm) |
 | OVP comparators | 2 × TI **TLV3011AIDBVR** (open-drain): HV 544.6 V, V_b 200.7 V |
 | High-voltage resistors | Yageo **HHV-25** × 6, **HHV-50** × 2 (+ 1 off-board bring-up load), Vishay **MRS25** × 1 (see [Component conventions](#component-conventions)) |
 | 5 V buck / inductor | TI **TPS54202DDCR** / **kit 15 µH radial** (1.31 A) |
 | Ideal diodes | TI **LM66100DCKR** × 3 |
 | Fuse / PTC | Littelfuse **0468002.NRHF** / **1812L075/33DR** |
 | Reverse polarity / TVS | Infineon **IPD50P04P4L-11** + BZT52C10 / Littelfuse **SMBJ15A** |
-| Bulk capacitor | Panasonic **EEE-FK1V101P** |
+| Bulk capacitor | Panasonic **EEE-FK1V101XP** (6.3 × 7.7 mm) |
 
 TI's own store showed the TI parts out of stock on 2026-10-06; check Mouser stock when ordering.
 
