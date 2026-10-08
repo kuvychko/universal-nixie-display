@@ -681,17 +681,23 @@ FP_HVLINK = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal"   # 
 FP_WIRE2 = "Connector_Wire:SolderWire-0.5sqmm_1x02_P4.8mm_D0.9mm_OD2.3mm"   # strain relief: cable-tie anchor on the PCB (D14)
 FP_HDR2 = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 # High-voltage legs (0207 rework): one leaded resistor per leg instead of a 1206 string
-FP_AX0207 = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"   # HVR25 (L2 7.5, D 2.5 max), MRS25
-FP_AX0411 = "Resistor_THT:R_Axial_DIN0411_L9.9mm_D3.6mm_P15.24mm_Horizontal"   # HVR37 (L2 12, D 4 max)
+FP_AX0207 = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"   # HHV-25 (6.3 x 2.4 mm), MRS25
+FP_AX0411 = "Resistor_THT:R_Axial_DIN0411_L9.9mm_D3.6mm_P15.24mm_Horizontal"   # HHV-50 (9.0 x 3.3 mm)
 
 
-def hvr(model, value_code, tol="F"):
-    """Vishay HVR25 / HVR37 ordering code (datasheet 30260): HVR2500 + 00 + 3-digit value + multiplier."""
-    return f"{model}00{value_code}{tol}R500"
+def hhv(model, value_code, tol="F"):
+    """Yageo HHV ordering code (datasheet V.3, 2024): HHV-25 / HHV-50 + tolerance + T (box) + -52- (52.4 mm
+    tape) + value (E24/E96 written as 4M75, 332K). value_code is 3 digits + multiplier, e.g. "4754" = 4.75M."""
+    ohms = int(value_code[:3]) * 10 ** int(value_code[3])
+    v = f"{ohms / 1e6:g}M" if ohms >= 1e6 else f"{ohms / 1e3:g}K"
+    v = re.sub(r"^(\d+)\.(\d+)([MK])$", r"\1\3\2", v)
+    return f"{model}{tol}T-52-{v}"
 
 
-HVR25 = dict(mfr="Vishay", rating="HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K", fp=FP_AX0207)
-HVR37 = dict(mfr="Vishay", rating="HVR37: 0.5 W, 3500 V DC, 1 %, 200 ppm/K", fp=FP_AX0411)
+# Yageo HHV replaced the Vishay HVR25 / HVR37 (same ratings and bodies; HVR out of stock at Mouser,
+# 2026-10-07)
+HHV25 = dict(mfr="Yageo", rating="HHV-25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K", fp=FP_AX0207)
+HHV50 = dict(mfr="Yageo", rating="HHV-50: 0.5 W, 3500 V DC, 1 %, 200 ppm/K", fp=FP_AX0411)
 MRS25 = dict(mfr="Vishay", rating="MRS25: 0.6 W, 350 V, 1 %, 50 ppm/K", fp=FP_AX0207)
 
 
@@ -1040,15 +1046,15 @@ def build_power(lib: SymbolLib) -> Sheet:
     sh.w((256.54, Y), c["1"])
     down_gnd(c["2"])
     ra = v2(R, "R119", "2.4M", XV1, Y, F("V_b bleeder (V_b's own discharge path with L3 open)",
-                                          hvr("HVR2500", "2404"), **{k: HVR25[k] for k in ("mfr", "rating")}), HVR25["fp"])
+                                          hhv("HHV-25", "2404"), **{k: HHV25[k] for k in ("mfr", "rating")}), HHV25["fp"])
     down_gnd(ra["2"])
     tp("TP106", "V_B", (XTV, Y))
     lk = link("LK5", XL5, Y, "D11 link L5: V_b to the G+/RTN regulators", hv=True)
     sh.w(lk["2"], (XL5 + 15.24, Y))
     sh.gl("V_B_BIAS", (XL5 + 15.24, Y), 0)
     # V_b overvoltage: 2 x 1.0M / 12.4k -> TLV3011 (~202 V), wired-OR on EN/UVLO
-    ra = v2(R, "R141", "2.0M", XVO, Y, F("V_b OVP divider, upper", hvr("HVR2500", "2004"),
-                                          **{k: HVR25[k] for k in ("mfr", "rating")}), HVR25["fp"])
+    ra = v2(R, "R141", "2.0M", XVO, Y, F("V_b OVP divider, upper", hhv("HHV-25", "2004"),
+                                          **{k: HHV25[k] for k in ("mfr", "rating")}), HHV25["fp"])
     VS = (XVO, ra["2"][1] + 2.54)
     sh.w(ra["2"], VS)
     r = vR("R143", "12.4k", XVO, VS[1], "V_b OVP divider, lower (trip ~202 V)", "1 %")
@@ -1117,7 +1123,7 @@ def build_power(lib: SymbolLib) -> Sheet:
     def top(ref, part, value, code, x, fn, dnp=False):
         """Single leaded high-voltage resistor hanging from the HV_STACK bus; returns its lower pin."""
         sh.w((x, YT), (x, YT + 5.08))
-        r = v2(R, ref, value, x, YT + 5.08, F(fn, hvr(part["model"], code), part["mfr"], part["rating"]),
+        r = v2(R, ref, value, x, YT + 5.08, F(fn, hhv(part["model"], code), part["mfr"], part["rating"]),
                part["fp"], dnp=dnp)
         return r["2"]
 
@@ -1126,9 +1132,9 @@ def build_power(lib: SymbolLib) -> Sheet:
         sh.w(pin, node)
         return node
 
-    H25 = dict(HVR25, model="HVR2500")
-    H37 = dict(HVR37, model="HVR3700")
-    note("HV DIVIDERS (D2, D12)", "One leaded HVR25 per leg. Feedback and OVP stay on separate dividers;\n"
+    H25 = dict(HHV25, model="HHV-25")
+    H37 = dict(HHV50, model="HHV-50")
+    note("HV DIVIDERS (D2, D12)", "One leaded HHV-25 per leg. Feedback and OVP stay on separate dividers;\n"
          "monitor and OVP share one. No dedicated bleeder: both dividers discharge HV", 139.7, 233.68)
     XF, XM = 152.4, 177.8
     # feedback: 1.00 V x (1 + 4.75M / 10.5k) = 453.4 V (9.53k for the 500 V setting: 499.4 V)
@@ -1152,7 +1158,7 @@ def build_power(lib: SymbolLib) -> Sheet:
     sh.w(c["1"], (266.7, ovp[1] - 12.7))
     sh.pwr("+5V", (266.7, ovp[1] - 12.7))
     down_gnd(c["2"])
-    # HV dummy load for bring-up step 2: off-board (an HVR37 910k soldered across TP108 and a GND
+    # HV dummy load for bring-up step 2: off-board (an HHV-50 910k soldered across TP108 and a GND
     # point with LK4 open); no footprint, which kept HV_STACK compact on the PCB
     tp("TP108", "HV_STACK", (256.54, YT), textpos=(1.27, -6.4))
     lk = link("LK4", 266.7, YT, "D11 link L4: tripler output to the anode string", hv=True)
@@ -1219,9 +1225,9 @@ def build_tube(lib: SymbolLib) -> Sheet:
     sh.nl("RTN", (63.5, 86.36))
     # RTN_SENSE divider (2 x 100k / 10k) to the ADC
     sh.w(RT, (25.4, 86.36))
-    b = sh.place(R, "R202", "200k", 25.4, 102.87, footprint=HVR25["fp"],
-                 fields=F("RTN_SENSE divider, upper (175 V if RTN fails to V_b)", hvr("HVR2500", "2003"),
-                          HVR25["mfr"], HVR25["rating"]))
+    b = sh.place(R, "R202", "200k", 25.4, 102.87, footprint=HHV25["fp"],
+                 fields=F("RTN_SENSE divider, upper (175 V if RTN fails to V_b)", hhv("HHV-25", "2003"),
+                          HHV25["mfr"], HHV25["rating"]))
     c = sh.place(R, "R204", "10k", 25.4, 127.0, footprint=FP_R, fields=F("RTN_SENSE divider, lower (2.43 V at 51 V)", rating="1 %"))
     sh.w((25.4, 86.36), b["1"])
     NS = (25.4, 116.84)
@@ -1277,8 +1283,8 @@ def build_tube(lib: SymbolLib) -> Sheet:
     sh.w(K1, (q["E"][0], 149.86), (96.52, 149.86))
     sh.nl("TUBE_K1", (96.52, 149.86))
     c1x = q["C"][0]
-    r13 = sh.place(R, "R212", "220k", c1x, 186.69, footprint=HVR25["fp"],
-                   fields=F("Index divider, upper (167 V fault)", hvr("HVR2500", "2203"), HVR25["mfr"], HVR25["rating"]))
+    r13 = sh.place(R, "R212", "220k", c1x, 186.69, footprint=HHV25["fp"],
+                   fields=F("Index divider, upper (167 V fault)", hhv("HHV-25", "2203"), HHV25["mfr"], HHV25["rating"]))
     sh.w(q["C"], (c1x, 173.99), r13["1"])
     sh.nl("NDX_C", (c1x, 173.99))
     ND = (c1x, 200.66)
@@ -1296,12 +1302,12 @@ def build_tube(lib: SymbolLib) -> Sheet:
     sh.gl("NDX", (c1x + 27.94, 200.66), 0)
 
     # ---- anode string and tube harness -------------------------------------------------------------
-    note("ANODE STRING (D1)", "2 x HVR37 332k = 664k (2 x 402k for the 500 V setting); each part takes half of\n"
+    note("ANODE STRING (D1)", "2 x HHV-50 332k = 664k (2 x 402k for the 500 V setting); each part takes half of\n"
          "a shorted anode (0.23 W of 0.5 W at 550 V); 67 mW per part at 0.45 mA", 152.4, 142.24)
     note("TUBE HARNESS (D14)", "Wires soldered to board and socket; cathodes tied at the socket", 205.74, 76.2)
     xs = [175.26, 195.58]
-    rs = [sh.place(R, ref, "332k", x, 160.02, angle=90, footprint=HVR37["fp"],
-                   fields=F(f"Anode resistor {k + 1}/2", hvr("HVR3700", "3323"), HVR37["mfr"], HVR37["rating"]))
+    rs = [sh.place(R, ref, "332k", x, 160.02, angle=90, footprint=HHV50["fp"],
+                   fields=F(f"Anode resistor {k + 1}/2", hhv("HHV-50", "3323"), HHV50["mfr"], HHV50["rating"]))
           for k, (ref, x) in enumerate(zip(("R215", "R216"), xs))]
     sh.w((162.56, 160.02), rs[0]["1"])
     sh.gl("HV", (162.56, 160.02), 180)

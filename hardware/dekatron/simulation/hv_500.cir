@@ -1,5 +1,5 @@
 * 500 V SETTING (D1 option B) on the current design (0207 rework), warm start.
-* Feedback HVR25 4.75M / 9.53k -> 499.4 V (1.00 V reference); anode 2 x HVR37 402k = 804k; shared
+* Feedback HHV-25 4.75M / 9.53k -> 499.4 V (1.00 V reference); anode 2 x HHV-50 402k = 804k; shared
 * monitor / OVP divider 4.64M - HV_SENSE (10 nF) - 14.0k - OVP tap - 10.5k (trip 551.8 V); V_b OVP
 * 2.0M / 12.4k (trip 201.6 V); V_b bleeder 2.4M; G+/RTN feed 40.2k from V_b into the ~90 V G+ node.
 * Both OVP comparators are smooth current sinks on EN/UVLO (as in fault_d5open.cir).

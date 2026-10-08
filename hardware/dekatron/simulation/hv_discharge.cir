@@ -2,7 +2,7 @@
 *
 * Starts from the 450 V operating state with the converter stopped (switch off), so the
 * switch node rests at V_IN through the inductor. Paths (no dedicated HV bleeder since the 0207
-* rework): feedback divider HVR25 4.75M + 10.5k and the shared monitor / OVP divider HVR25 4.64M +
+* rework): feedback divider HHV-25 4.75M + 10.5k and the shared monitor / OVP divider HHV-25 4.64M +
 * 14.0k + 10.5k at HV; at V_b the V_b bleeder 2.4M and the V_b OVP divider 2.0M + 12.4k; the tube
 * until it extinguishes. Three cases: both HV dividers intact, feedback top open, monitor top open
 * (single-fault discharge). Same tripler as
@@ -19,7 +19,7 @@ CDS   sw 0 90p
 D1    sw vb DES1J
 C1    vb 0 0.47u
 .param RFTV=4.75Meg RMTV=4.64Meg
-* Feedback divider from HV (HVR25 4.75M / 10.5k) and a V_b bleeder (HVR25 2.4M): V_b needs its own
+* Feedback divider from HV (HHV-25 4.75M / 10.5k) and a V_b bleeder (HHV-25 2.4M): V_b needs its own
 * path when link L3 separates the boost from the tripler during bring-up; V_b OVP divider 2.0M / 12.4k
 RFT   hv fb {RFTV}
 RFB   fb 0 10.5k

@@ -1,5 +1,5 @@
 * FAULT TEST (0207 rework): feedback divider top open, so FB falls to 0 V and the LM5156 runs at its
-* current limit. Protection: the shared monitor / OVP divider (HVR25 4.64M - MON - 14.0k - OVP tap -
+* current limit. Protection: the shared monitor / OVP divider (HHV-25 4.64M - MON - 14.0k - OVP tap -
 * 10.5k) into the HV OVP comparator, and the V_b OVP. CMON is the ADC reservoir on MON (C304).
 * Derived from fault_d5open.cir (all tripler diodes present).
 * HV supply warm start: stack precharged to its operating voltages, so regulation is reached in

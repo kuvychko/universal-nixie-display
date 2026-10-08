@@ -40,7 +40,7 @@ pinout and sectional test provisions defined.
 | D10 | A101 socket pinout, verified against the tube drawing | **Decided** 2026-10-06 | User's tube is an A-101 in a stock socket for this tube (RSH30 base / PL30-2p socket), so the socket follows the tube pinout in [A101 pinout](#a101-pinout). Wiring check before first HV: [bringup.md](bringup.md) |
 | D11 | Sectional test provisions: removable links, test points, dummy-load landing | **Proposed** | Links L1-L14, HV inhibit jumper, dummy-load footprints, test-point list; see [Test provisions](#test-provisions-d11) |
 | D12 | Discharge path and target discharge time | **Proposed** | No dedicated bleeder: the always-connected feedback and monitor / OVP dividers (4.76 / 4.66 MΩ) discharge HV, < 50 V in 1.9 s (3.9 s with one divider open; simulated); target < 50 V within 10 s without firmware; see [Discharge](#discharge-d12) |
-| D13 | Clearance/creepage rules for ~450 V, component voltage ratings | **Proposed** | Four net classes, `HV` ≥ 3.0 mm; one leaded HVR25 / HVR37 per high-voltage leg (2026-10-07); see [Clearance and ratings](#clearance-and-ratings-d13) |
+| D13 | Clearance/creepage rules for ~450 V, component voltage ratings | **Proposed** | Four net classes, `HV` ≥ 3.0 mm; one leaded HHV-25 / HHV-50 per high-voltage leg (2026-10-07); see [Clearance and ratings](#clearance-and-ratings-d13) |
 | D14 | Connectors: 12 V in, 5 V out, I2C, programming access | **Decided** 2026-10-06 (approach) | Harness wires solder directly to board pads; connectors only at the far end where a module needs one. Dekatron harness soldered at both ends. See [Harness landings](#harness-landings-d14) |
 
 ### A101 operating point (D1)
@@ -93,7 +93,7 @@ Consequences, computed from those values:
 | G+ (guide rest) | RTN + 40 V = +90 V | Centre of datasheet bias range |
 | Guide pulse | Guide switched to ~0 V: −50 V vs. cathodes | Reference practice; datasheet says −150 Vp |
 | Anode supply HV | **Option A:** 450 V to ground (400 V above RTN); **Option B:** 500 V to ground (450 V above RTN) | See below |
-| Anode resistor | A: 664 kΩ (2 × 332k HVR37); B: 804 kΩ (2 × 402k) | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
+| Anode resistor | A: 664 kΩ (2 × 332k HHV-50); B: 804 kΩ (2 × 402k) | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
 | Tube current | A: 314-443 µA (379 typ); B: 315-426 µA (≈ 370 typ) | Within datasheet 300-450 µA |
 | Step rate | ≤ 200 steps/s for homing (plan §5) | Datasheet limit 1 kHz |
 
@@ -107,7 +107,7 @@ Option B (500 V), and set the regulator for Option A (450 V) at first bring-up. 
 only if striking or glow transfer is marginal. The setpoint is fixed by the feedback resistor, and
 the anode resistor is paired with it. It was designed as **660 kΩ at 450 V** (314-443 µA) and
 **810 kΩ at 500 V** (315-426 µA), both within 300-450 µA over V_m 130-170 V and HV ±5 %. Since the
-0207 rework (2026-10-07, [Component conventions](#component-conventions)) it is two Vishay HVR37
+0207 rework (2026-10-07, [Component conventions](#component-conventions)) it is two Yageo HHV-50
 in series: **2 × 332k = 664 kΩ** (currents 0.6 % lower: 312-440 µA) and **2 × 402k = 804 kΩ** for
 500 V (0.7 % higher: 317-429 µA), still inside 300-450 µA. Two parts rather than one because a
 shorted anode puts the full 550 V across the leg: 0.46 W, which two 0.5 W parts share at 0.23 W
@@ -181,7 +181,7 @@ the RP2040. The RP2040 measures the 12 V input itself and withholds `HV_EN` when
 falls to 0 and the converter runs to its current limit with no voltage limit. A second, independent
 divider from **HV** (the regulated quantity since Phase 1B) drives a TLV3011 comparator, which pulls
 EN/UVLO low above **551.8 V**. Since the 0207 rework (2026-10-07) this divider is shared with the HV
-monitor: HV → HVR25 4.64M → `HV_SENSE` tap → 14.0k → OVP tap → 10.5k → GND, so the OVP trips at
+monitor: HV → HHV-25 4.64M → `HV_SENSE` tap → 14.0k → OVP tap → 10.5k → GND, so the OVP trips at
 1.242 V × 4.6645 MΩ / 10.5 kΩ = 551.8 V and `HV_SENSE` reads HV / 190.4. Feedback stays on its own
 divider: if one divider served both, its top resistor opening would blind the OVP at the same moment
 it removes feedback. Sharing monitor and OVP leaves one weak point, a monitor clamp diode shorted to
@@ -198,7 +198,7 @@ until firmware drops `HV_EN` on seeing `OVP_TRIP` low (review item 5 below). `HV
 second check: 2.90 V at the trip against 2.38 V at 453 V and 2.62 V at 499 V.
 **A further divider watches V_b** (added in the Phase 1B review): with
 feedback from HV, an open tripler diode or capacitor makes HV fall while the controller drives V_b
-upward, unseen by the HV OVP. A second TLV3011 trips at ≈ 202 V (HVR25 2.0M / 12.4k; V_b is ≈ 157 V
+upward, unseen by the HV OVP. A second TLV3011 trips at ≈ 202 V (HHV-25 2.0M / 12.4k; V_b is ≈ 157 V
 at 450 V and ≈ 175 V at 500 V), wired-OR on the same EN/UVLO node. The RP2040 also measures HV and can drop `HV_EN`,
 but that does not replace a hardware limit.
 
@@ -212,7 +212,7 @@ that. Both fit the same footprint.
 | Load | At HV (450 V) | Basis |
 |---|---|---|
 | Tube via anode resistor | ≤ 0.43 mA | D1 worst case |
-| Feedback divider 4.76 MΩ | 95 µA | Feedback moved to HV in Phase 1B; HVR25 4.75M + 10.5k |
+| Feedback divider 4.76 MΩ | 95 µA | Feedback moved to HV in Phase 1B; HHV-25 4.75M + 10.5k |
 | Monitor / OVP divider 4.66 MΩ | 96 µA | `HV_SENSE` and the independent OVP share it (0207 rework); also the HV discharge path with the feedback divider (D12) |
 | V_b OVP divider 2.01 MΩ | 78 µA at V_b | Review fix; loads V_b, not HV |
 | **Total / design value** | ≈ 0.62 mA / **1 mA** | ~1.6× margin. No dedicated bleeder since the 0207 rework |
@@ -285,7 +285,7 @@ RTN (50 V) ──┬───────────────[R_E 220k]─�
 | Output high | (RTN + 0.4) × 13k / 233k = **2.67 / 2.81 / 2.95 V** at RTN = 47.5 / 50 / 52.5 V (±5 % zener) | RP2040 V_IH = 2.0 V min at IOVDD 3.3 V (datasheet Table 625) |
 | Output low | 0 V: R_E holds K1 at RTN, Q off, R16 pulls down | |
 | Current split, glow on K1 | 0.22 mA through the divider, the rest of the ~0.4 mA via the base into RTN | RTN regulator sinks it (D8 note) |
-| Fault: RTN regulator fails to V_b (167 V) | Unclamped output 9.3 V; the clamp conducts 0.74 mA through R15 into 3V3 | Clamp is mandatory. R15 is one HVR25 220k (rated 1600 V) for the 167 V fault |
+| Fault: RTN regulator fails to V_b (167 V) | Unclamped output 9.3 V; the clamp conducts 0.74 mA through R15 into 3V3 | Clamp is mandatory. R15 is one HHV-25 220k (rated 1600 V) for the 167 V fault |
 | Filter | 1 nF with 12.3 kΩ Thevenin: τ = 12 µs | Sample ≥ 60 µs (5τ) after both guides return to rest (plan §5: check index only at a settled phase) |
 | Reset/unpowered | Q is driven by the tube only; with the RP2040 unpowered the clamp to an unpowered 3V3 rail limits the pin | Check the RP2040's unpowered-pin limits in 1B |
 
@@ -311,7 +311,7 @@ nets (desolder to open; the open gap then meets the HV clearance rule).
 | JP_HVINH | 2-pin header: shunt fitted = EN/UVLO held low | Any time: HV cannot start, whatever the firmware does |
 
 * **HV dummy load, off-board** (no footprint since Phase 1C: it could not sit next to HV_STACK
-  without crowding a mounting hole or the board edge): one Vishay HVR37 910k (0411, 0.5 W,
+  without crowding a mounting hole or the board edge): one Yageo HHV-50 910k (0.5 W,
   3500 V) soldered across TP108 (`HV_STACK`) and a GND point with L4 open; 0.5 mA and 0.23 W at
   455 V. Removed after step 2. (The V_b dummy load
   was removed in the Phase 1B review: the boost cannot be run without the tripler.)
@@ -328,7 +328,7 @@ nets (desolder to open; the open gap then meets the HV clearance rule).
   so they stay connected whatever is isolated. Together they are 2.36 MΩ, less than the 4.8 MΩ
   bleeder they replace. Neither is ever switched, so discharge needs no firmware, and either one
   alone still meets the target.
-* **V_b node:** discharged by its own 2.4 MΩ bleeder (HVR25) and the 2.01 MΩ V_b OVP divider. G+
+* **V_b node:** discharged by its own 2.4 MΩ bleeder (HHV-25) and the 2.01 MΩ V_b OVP divider. G+
   and RTN discharge through their regulators and feeds.
 * **Target:** every node **below 50 V within 10 s** after `HV_EN` falls or 12 V is lost, by the
   passive path alone.
@@ -361,8 +361,8 @@ the IPC-2221B **B2** column (external conductors, uncoated, sea level to 3050 m)
   join them: a tripler SMA diode has ≈ 2 mm between its pads. The 3.0 mm
   rule applies between HV and bias or logic nets (up to ~450 V). Implemented as pair rules in
   `hardware/dekatron/dekatron.kicad_dru`; the project's net classes carry only the 0.2 mm base.
-* **High-voltage resistor legs** are single leaded parts since the 0207 rework: an HVR25 on a
-  DIN0207 footprint at 10.16 mm pitch has ≈ 8 mm between its pads, an HVR37 at 15.24 mm ≈ 12 mm,
+* **High-voltage resistor legs** are single leaded parts since the 0207 rework: an HHV-25 on a
+  DIN0207 footprint at 10.16 mm pitch has ≈ 8 mm between its pads, an HHV-50 at 15.24 mm ≈ 12 mm,
   so the 3.0 mm `HV` rule holds across the part itself. The `HVSTR` class (1.5 mm) now covers only
   the node between the two anode resistors (`STR_A1`).
 * Implemented as KiCad net classes plus custom rules (`.kicad_dru`), recorded in development.md.
@@ -438,8 +438,8 @@ keeps dim or off (D5).
 | GP16 | `LED` | out | WS2812 | On the module |
 | GP26 | `NDX` | in | ADC0 / Schmitt input | Index (D9); digital read normally, analog level for diagnostics |
 | GP27 | `VIN_SENSE` | in | ADC1 | Protected 12 V: 100k / 12k → 1.29 V at 12 V, 2.57 V at the 24 V TVS clamp |
-| GP28 | `HV_SENSE` | in | ADC2 | HV: HVR25 4.64M / (14.0k + 10.5k) → 2.36 V at 450 V, 2.90 V at the 551.8 V OVP trip; the divider is shared with the OVP comparator (D2) |
-| GP29 | `RTN_SENSE` | in | ADC3 | RTN: HVR25 200k / 10k → 2.38 V at 50 V, 2.86 V at 60 V |
+| GP28 | `HV_SENSE` | in | ADC2 | HV: HHV-25 4.64M / (14.0k + 10.5k) → 2.36 V at 450 V, 2.90 V at the 551.8 V OVP trip; the divider is shared with the OVP comparator (D2) |
+| GP29 | `RTN_SENSE` | in | ADC3 | RTN: HHV-25 200k / 10k → 2.38 V at 50 V, 2.86 V at 60 V |
 
 Facts this relies on, from the RP2040 datasheet:
 
@@ -591,30 +591,37 @@ P1 `VIN` reading ~4.6 V confirms the back-feed path.
   of 1206 series strings at ≤ 150 V per part, which took 25 more parts and more board area). A
   plain 1/4 W carbon-film part is not enough on its own: those are rated about 250 V working
   (e.g. Yageo CFR-25). The parts used:
-  * **Vishay HVR25**: 0207 body (7.5 × 2.5 mm max), 100 kΩ-10 MΩ, 1 % in E24/E96, 0.25 W at
-    70 °C, **1600 V DC**, ±200 ppm/K, stability ±1.5 % after 1000 h at rated load (datasheet 30260).
+  * **Yageo HHV-25**: 0207-size body (6.3 × 2.4 mm), 100 kΩ-68 MΩ, 1 % in E24/E96, 0.25 W at
+    70 °C, **1600 V DC** working (3000 V overload), ±200 ppm/K (datasheet HHV V.3, 2024-04-03).
     Footprint `R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal`.
-  * **Vishay HVR37**: 0411 body (12 × 4 mm max), 0.5 W, **3500 V DC**; footprint
+  * **Yageo HHV-50**: 9.0 × 3.3 mm body, 0.5 W, **3500 V DC**; footprint
     `R_Axial_DIN0411_L9.9mm_D3.6mm_P15.24mm_Horizontal`. Used where a fault can dissipate more
     than 0.25 W.
   * **Vishay MRS25**: 0207 metal film, 0.6 W, 350 V, 1 %, ±50 ppm/K, for a leg below 100 kΩ (the
-    HVR range starts at 100 kΩ) that needs power rather than voltage.
-* Ordering codes follow the HVR datasheet: `HVR2500` / `HVR3700` + `00` + three value digits +
-  multiplier + tolerance (`F` = 1 %) + packaging (`R5` reel; Mouser sells these as cut quantities).
-  Check Mouser stock per value before ordering; it was not verified here (Mouser blocks automated
-  lookups).
+    HHV range starts at 100 kΩ) that needs power rather than voltage.
+  * The HHV parts replaced the **Vishay HVR25 / HVR37** (2026-10-07: out of stock at Mouser; the
+    user orders from one distributor). Same ratings, bodies no larger, same footprints.
+* **Voltage rating needed** (1.5× rule, D13), per part: the two HV divider tops see up to 553 V
+  (the OVP trip as simulated), so **≥ 830 V**; the anode resistors 275 V each if the anode shorts,
+  **≥ 415 V** and 0.5 W; the V_b-side parts (bleeder, V_b OVP top, RTN_SENSE top, index top)
+  ≤ 202 V, **≥ 303 V**. So 1600 V is more than needed everywhere; only the divider tops need a
+  genuine high-voltage part. A 350 V part (e.g. MRS25) would do for the V_b side if a value is
+  out of stock, but not for the divider tops or the anode string.
+* Ordering codes follow the HHV datasheet: `HHV-25` / `HHV-50` + tolerance (`F` = 1 %) +
+  packing (`T` = box) + `-52-` (52.4 mm tape) + value (`4M75`, `332K`). Check Mouser stock per
+  value before ordering; it was not verified here (Mouser blocks automated lookups).
 
 | Resistor | Voltage / power | Part |
 |---|---|---|
-| Feedback divider top (D2) | Up to 552 V; 64 mW at 552 V | HVR25 4.75M `HVR2500004754FR500`; bottom 10.5k sets 453.4 V (9.53k for 500 V: 499.4 V) |
-| Monitor / OVP divider top (D2) | Up to 552 V; 65 mW | HVR25 4.64M `HVR2500004644FR500`; 14.0k + 10.5k below |
-| HV dummy load (D11, off-board, bring-up only) | 455 V; 0.23 W | HVR37 910k `HVR3700009103FR500` |
-| Anode resistor (D1) | 250-300 V while conducting; 550 V if the anode shorts (0.46 W) | 2 × HVR37 332k `HVR3700003323FR500` (2 × 402k `HVR3700004023FR500` for 500 V) |
-| V_b bleeder | ≤ 202 V | HVR25 2.4M `HVR2500002404FR500` |
-| V_b OVP divider top | ≤ 202 V | HVR25 2.0M `HVR2500002004FR500`; 12.4k below |
+| Feedback divider top (D2) | Up to 552 V; 64 mW at 552 V | HHV-25 4.75M `HHV-25FT-52-4M75`; bottom 10.5k sets 453.4 V (9.53k for 500 V: 499.4 V) |
+| Monitor / OVP divider top (D2) | Up to 552 V; 65 mW | HHV-25 4.64M `HHV-25FT-52-4M64`; 14.0k + 10.5k below |
+| HV dummy load (D11, off-board, bring-up only) | 455 V; 0.23 W | HHV-50 910k `HHV-50FT-52-910K` |
+| Anode resistor (D1) | 250-300 V while conducting; 550 V if the anode shorts (0.46 W) | 2 × HHV-50 332k `HHV-50FT-52-332K` (2 × 402k `HHV-50FT-52-402K` for 500 V) |
+| V_b bleeder | ≤ 202 V | HHV-25 2.4M `HHV-25FT-52-2M4` |
+| V_b OVP divider top | ≤ 202 V | HHV-25 2.0M `HHV-25FT-52-2M`; 12.4k below |
 | G+ / RTN feed | V_b − 90 V: 0.18 W at V_b 175 V, 0.31 W at the 202 V V_b OVP trip | MRS25 40.2k `MRS25000C4022FCT00` (was 2 × 20k: 2.13 mA vs 2.10 mA at V_b 175 V) |
-| RTN_SENSE top (D9 rules) | 51 V; 175 V if RTN fails to V_b | HVR25 200k `HVR2500002003FR500` |
-| Index R15 (D9) | 50 V; 167 V if the RTN regulator fails | HVR25 220k `HVR2500002203FR500` |
+| RTN_SENSE top (D9 rules) | 51 V; 175 V if RTN fails to V_b | HHV-25 200k `HHV-25FT-52-200K` |
+| Index R15 (D9) | 50 V; 167 V if the RTN regulator fails | HHV-25 220k `HHV-25FT-52-220K` |
 | Guide pull-ups 470k (D8) | ≤ 90 V | 1206, single part |
 
 ## Display harness
@@ -678,8 +685,8 @@ and RTN regulators belong to the `tube` sheet. Simulation benches live in
 | Boost diode | ES1J: 600 V, 1 A, t_rr 35 ns, SMA | |
 | Soft-start | C_SS = 47 nF (10 µA → 4.7 ms ramp) | LM5156H (no hiccup); start-up is energy-limited anyway |
 | Compensation | 10 kΩ + 10 nF, 100 pF to ground | Smoke-test values; load-step check pending |
-| Feedback | **From HV:** HVR25 4.75M / 10.5k → HV = 453.4 V (1.00 V ref); 500 V option: bottom 9.53k → 499.4 V | Moved from V_b in simulation (see results); one HVR25 since the 0207 rework (the simulations use 4.4M / 9.8k, the same 450 V setpoint) |
-| V_b bleeder | HVR25 2.4M (63 µA) | V_b's own discharge path when link L3 separates the boost from the tripler (D11) |
+| Feedback | **From HV:** HHV-25 4.75M / 10.5k → HV = 453.4 V (1.00 V ref); 500 V option: bottom 9.53k → 499.4 V | Moved from V_b in simulation (see results); one HHV-25 since the 0207 rework (the simulations use 4.4M / 9.8k, the same 450 V setpoint) |
+| V_b bleeder | HHV-25 2.4M (63 µA) | V_b's own discharge path when link L3 separates the boost from the tripler (D11) |
 
 **Kit inductor (2026-10-06).** The user's kit 100 µH part is rated 0.71 A (DCR 0.35 Ω), below the
 original 0.71-0.82 A current limit. The limit drops to 0.42-0.49 A (0.22 Ω) and the frequency
@@ -808,7 +815,7 @@ constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W be
 The schematic generator writes the board BOM with references, functions, MPNs and ratings:
 [`hardware/dekatron/bom.csv`](../hardware/dekatron/bom.csv) (power, tube and mcu sheets; the
 bring-up HV dummy load is off-board and not in it). Passives without an MPN are specified by value, rating, dielectric and size; 1206
-resistors come from the user's kit, the leaded high-voltage resistors are Vishay HVR25 / HVR37 /
+resistors come from the user's kit, the leaded high-voltage resistors are Yageo HHV-25 / HHV-50 and Vishay
 MRS25 with full ordering codes ([Component conventions](#component-conventions)), and inductors come
 from the user's radial kit where noted.
 
@@ -819,7 +826,7 @@ from the user's radial kit where noted.
 | HV inductor / diodes | **Kit 100 µH radial** (0.71 A, 0.35 Ω) / onsemi **ES1J** × 5 |
 | HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4 class) |
 | OVP comparators | 2 × TI **TLV3011AIDBVR** (open-drain): HV 551.8 V, V_b ≈ 202 V |
-| High-voltage resistors | Vishay **HVR25** × 7, **HVR37** × 2 (+ 1 off-board bring-up load), **MRS25** × 1 (see [Component conventions](#component-conventions)) |
+| High-voltage resistors | Yageo **HHV-25** × 6, **HHV-50** × 2 (+ 1 off-board bring-up load), Vishay **MRS25** × 1 (see [Component conventions](#component-conventions)) |
 | 5 V buck / inductor | TI **TPS54202DDCR** / **kit 15 µH radial** (1.31 A) |
 | Ideal diodes | TI **LM66100DCKR** × 3 |
 | Fuse / PTC | Littelfuse **0468002.NRHF** / **1812L075/33DR** |
@@ -843,7 +850,7 @@ zener → **RTN** → 51 V zener → GND.
 | Feed | **40.2k MRS25** (2 × 20k until the 0207 rework; 56k before that): 1.5 mA at V_b 150 V, 1.7 mA at 157 V, 2.1 mA at 175 V (500 V setting) | Worst case for the 51 V zener: both guide pull-ups (0.38 mA) and the RTN_SENSE divider (0.24 mA) loading it with no tube current: 0.87 mA, above the 0.5 mA knee (I_ZK, Yangjie MMSZ52xx datasheet). 56k left 0.45 mA, below the knee |
 | Dissipation | Feed ≤ 0.18 W (0.6 W part; 0.31 W at the V_b OVP trip); 51 V zener ≤ 118 mW, 39 V ≤ 83 mW (500 mW parts) | 500 V setting, tube lit |
 | Bypass | 0.1 µF 100 V across G+-RTN; 1 µF 100 V RTN-GND | Absorbs guide and tube current steps |
-| RTN_SENSE | HVR25 200k / 10k → 2.43 V at 51 V | ADC (GP29); clamp at the RP2040 (mcu sheet) |
+| RTN_SENSE | HHV-25 200k / 10k → 2.43 V at 51 V | ADC (GP29); clamp at the RP2040 (mcu sheet) |
 
 **Simulation** (`tube_section.cir`: ideal V_b and HV sources, scheduled glow K0 → G1 → G2 → K1 → G1 →
 G2 → K2 at 200 steps/s, generic MMBTA42/92, zener and BAT54S models from datasheet values):

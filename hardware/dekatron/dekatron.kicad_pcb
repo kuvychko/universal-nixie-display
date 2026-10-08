@@ -161,7 +161,7 @@
 				)
 			)
 		)
-		(property "MPN" "HVR3700003323FR500"
+		(property "MPN" "HHV-50FT-52-332K"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -173,7 +173,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -185,7 +185,7 @@
 				)
 			)
 		)
-		(property "Rating" "HVR37: 0.5 W, 3500 V DC, 1 %, 200 ppm/K"
+		(property "Rating" "HHV-50: 0.5 W, 3500 V DC, 1 %, 200 ppm/K"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -1280,7 +1280,7 @@
 				)
 			)
 		)
-		(property "MPN" "HVR3700003323FR500"
+		(property "MPN" "HHV-50FT-52-332K"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -1292,7 +1292,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -1304,7 +1304,7 @@
 				)
 			)
 		)
-		(property "Rating" "HVR37: 0.5 W, 3500 V DC, 1 %, 200 ppm/K"
+		(property "Rating" "HHV-50: 0.5 W, 3500 V DC, 1 %, 200 ppm/K"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -2129,7 +2129,7 @@
 				)
 			)
 		)
-		(property "MPN" "HVR2500002004FR500"
+		(property "MPN" "HHV-25FT-52-2M"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -2141,7 +2141,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -2153,7 +2153,7 @@
 				)
 			)
 		)
-		(property "Rating" "HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
+		(property "Rating" "HHV-25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -8361,7 +8361,7 @@
 				)
 			)
 		)
-		(property "MPN" "HVR2500002203FR500"
+		(property "MPN" "HHV-25FT-52-220K"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
@@ -8373,7 +8373,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
@@ -8385,7 +8385,7 @@
 				)
 			)
 		)
-		(property "Rating" "HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
+		(property "Rating" "HHV-25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
@@ -16627,7 +16627,7 @@
 				)
 			)
 		)
-		(property "MPN" "HVR2500002003FR500"
+		(property "MPN" "HHV-25FT-52-200K"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -16639,7 +16639,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -16651,7 +16651,7 @@
 				)
 			)
 		)
-		(property "Rating" "HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
+		(property "Rating" "HHV-25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -18507,7 +18507,7 @@
 				)
 			)
 		)
-		(property "MPN" "HVR2500004644FR500"
+		(property "MPN" "HHV-25FT-52-4M64"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -18519,7 +18519,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -18531,7 +18531,7 @@
 				)
 			)
 		)
-		(property "Rating" "HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
+		(property "Rating" "HHV-25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -27284,7 +27284,7 @@
 				)
 			)
 		)
-		(property "MPN" "HVR2500002404FR500"
+		(property "MPN" "HHV-25FT-52-2M4"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -27296,7 +27296,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -27308,7 +27308,7 @@
 				)
 			)
 		)
-		(property "Rating" "HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
+		(property "Rating" "HHV-25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -30268,7 +30268,7 @@
 				)
 			)
 		)
-		(property "MPN" "HVR2500004754FR500"
+		(property "MPN" "HHV-25FT-52-4M75"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -30280,7 +30280,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
@@ -30292,7 +30292,7 @@
 				)
 			)
 		)
-		(property "Rating" "HVR25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
+		(property "Rating" "HHV-25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K"
 			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
