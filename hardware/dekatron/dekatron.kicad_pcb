@@ -9289,7 +9289,7 @@
 				)
 			)
 		)
-		(property "Value" "AOD5N40"
+		(property "Value" "IPD50R1K4CE"
 			(at 0 4.5 0)
 			(layer "F.Fab")
 			(uuid "027c28fb-4370-4f38-9d74-4ef2228daf03")
@@ -9346,7 +9346,7 @@
 				)
 			)
 		)
-		(property "MPN" "AOD5N40"
+		(property "MPN" "IPD50R1K4CE"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -9358,7 +9358,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Alpha & Omega"
+		(property "Manufacturer" "Infineon"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -9370,7 +9370,7 @@
 				)
 			)
 		)
-		(property "Rating" "400 V, 1.6 ohm at 10 V"
+		(property "Rating" "500 V, 1.4 ohm at 10 V"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -16797,7 +16797,7 @@
 				)
 			)
 		)
-		(property "Value" "AOD4185"
+		(property "Value" "IPD50P04P4L-11"
 			(at 0 4.5 0)
 			(layer "F.Fab")
 			(uuid "d9e0bb2b-38a8-4bca-b50b-146e972ccc9d")
@@ -16854,7 +16854,7 @@
 				)
 			)
 		)
-		(property "MPN" "AOD4185"
+		(property "MPN" "IPD50P04P4L-11"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -16866,7 +16866,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Alpha & Omega"
+		(property "Manufacturer" "Infineon"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
@@ -16878,7 +16878,7 @@
 				)
 			)
 		)
-		(property "Rating" "-40 V, 115 A pulsed"
+		(property "Rating" "-40 V, 10.6 mohm, 200 A pulsed, VGS +5/-16 V"
 			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)

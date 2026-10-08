@@ -673,7 +673,7 @@ and RTN regulators belong to the `tube` sheet. Simulation benches live in
 | Sense resistor | **0.22 Ω → cycle limit 0.42-0.49 A** (100 mV ±7 %) | Inside the kit inductor's 0.71 A rating |
 | DCM margin | t_on + t_off = L·I_pk·(1/V_IN + 1/(V_b − V_IN)) ≈ 5.3 µs < 6.7 µs at 0.49 A, 110 µH, 10.8 V in | Stays DCM at the current limit, +10 % inductance and −10 % input |
 | CS filter | 100 Ω + 470 pF (47 ns) | **Required:** see pump surge below |
-| MOSFET | **AOS AOD5N40: 400 V**, 1.6 Ω max at V_GS = 10 V, V_th 3.4-4.5 V, Q_g 6.9 nC, DPAK | 2.05× margin at the worst case (below). Chosen over logic-level parts (user, 2026-10-06) |
+| MOSFET | **Infineon IPD50R1K4CE (CoolMOS CE): 500 V**, 1.4 Ω max at V_GS = 10 V, V_th 2.5-3.5 V, Q_g 8.2 nC typ., DPAK (G 1, D tab, S 3) | 2.56× margin at the worst case (below). Replaced the AOS AOD5N40 (400 V, 1.6 Ω, V_th 3.4-4.5 V), which Mouser does not stock (user: one distributor, 2026-10-07). Figures from distributor listings (RS, Farnell): **confirm against Infineon's datasheet** before ordering. Chosen over logic-level parts (user, 2026-10-06) |
 | Gate drive | **10 V**: LM5156 in BIAS = VCC mode (datasheet: 2.97-16 V), fed by an **LP2951** (30 V max input, 100 mA, 380 mV dropout, adjustable, SOIC-8) from the protected 12 V | Internal VCC (6.85 V) is too low for a 4.5 V-threshold MOSFET. Load ≈ 1 mA (Q_g × f + bias). The LP2951 input rating covers the ≈ 24 V TVS clamp |
 | Boost diode | ES1J: 600 V, 1 A, t_rr 35 ns, SMA | |
 | Soft-start | C_SS = 47 nF (10 µA → 4.7 ms ramp) | LM5156H (no hiccup); start-up is energy-limited anyway |
@@ -716,7 +716,10 @@ pushes V_b up: the simulated switch-node peak is 161-163 V at the 450 V setting,
 had 1.28×, below the 1.5× rule (D13). Logic-level options at ≥ 300 V are small-signal parts: the
 Nexperia BSP130 (300 V) is rated 350 mA continuous, 10 Ω max at V_GS 2.4 V, and 83 K/W, which
 cannot carry the 0.82 A current limit through a long current-limited start or a shorted output.
-Instead the gate drive rises to 10 V, and the **AOD5N40 (400 V) gives 400/195 = 2.05×**.
+Instead the gate drive rises to 10 V, and the AOD5N40 (400 V) gave 400/195 = 2.05×; its
+Mouser-stocked replacement, the **IPD50R1K4CE (500 V), gives 500/195 = 2.56×** with lower R_DS(on)
+(1.4 vs 1.6 Ω) and a lower threshold, so the simulations below (generic 4.0 V-threshold model)
+remain conservative.
 Simulated (`hv_warm.cir`, 4.0 V threshold model, 10 V drive): HV 449.1 V, tube 378 µA, switch
 node 161 V, CS ≤ 0.10 V, the same as the logic-level design.
 
@@ -754,7 +757,7 @@ pump current is ~1.2 mA. 100 Ω also works but charges the stack about half as f
 | `fault_fbopen_dark.cir` | Feedback divider open, tube dark, from 540 V | **OVP trips at 553.4 V**, then bursts at 550.3-553.0 V (no latch); V_b ≤ 188.6 V, switch node ≤ 189.5 V |
 | `hv_startup.cir` | Cold start from 0 V, 40 ms, HV feedback, 400 V MOSFET with 10 V drive | **Completes:** tube strikes at 9.5 ms; at 38-40 ms HV 449.9 V, 0.11 V p-p ripple, tube 379 µA, PGOOD high; switch node 163 V, CS ≤ 0.10 V, switch spike 1.84 A, inductor 0.76 A at the current limit during start-up. (The earlier logic-level configuration gave the same figures within 1 %.) |
 
-Model limitations: generic MOSFET and diode models (AOD5N40- and ES1J-like), film capacitors as
+Model limitations: generic MOSFET and diode models (AOD5N40- and ES1J-like; the board now uses the IPD50R1K4CE, see HV boost stage), film capacitors as
 C + 0.1 Ω ESR (ESL omitted: nH parasitics ring faster than the 5 ns step resolves), and a
 behavioural tube whose 380 V strike voltage is an assumption, not tube data. Efficiency is not
 measured yet: the 1 ms averaging window falls inside the converter's burst pauses.
@@ -790,9 +793,13 @@ constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W be
 * **Fuse:** 0.088 A²s is 17 % of the 0468002's 0.506 A²s nominal melting I²t: survives repeated
   plug-ins.
 * **Reverse-polarity MOSFET changed:** the SOT-23 DMP3098L is rated only 11-14 A pulsed, far below
-  the 52.5 A inrush. The **AOD4185** (DPAK, −40 V, 15 mΩ at 10 V, 115 A pulsed, V_GS ±20 V)
-  has 2.2× margin. Gate: 10k to ground and a 10 V zener (BZT52C10) gate-source; simulated V_GS
-  stays at −10 V.
+  the 52.5 A inrush. The AOD4185 (DPAK, −40 V, 15 mΩ, 115 A pulsed, V_GS ±20 V) had 2.2× margin;
+  Mouser does not stock it, so the board uses the **Infineon IPD50P04P4L-11** (DPAK, G 1 / D tab /
+  S 3, −40 V, 10.6 mΩ max at −10 V, **200 A pulsed: 3.8×**, V_GS **+5 / −16 V**; datasheet Rev. 1.1,
+  intended for reverse-battery protection). Gate: 10k to ground and a 10 V zener (BZT52C10)
+  gate-source. Re-simulated with its resistance (8.2 mΩ typ.), worst lead: inrush 52.5 A, rail
+  12.6 V, fuse I²t 0.089 A²s, V_GS −9.97 to +0.14 V (inside +5 / −16 V); reversed adapter blocked,
+  V_GS −1.3 to 0 V.
 * Model limitations: generic MOSFET, TVS and zener models; adapter lead values are assumptions;
   the adapter's own output impedance (which would lower the inrush) is ignored.
 
@@ -808,7 +815,7 @@ from the user's radial kit where noted.
 | Function | Part |
 |---|---|
 | HV controller | TI **LM5156HPWPR** |
-| HV MOSFET / gate-drive LDO | AOS **AOD5N40** / onsemi **LP2951ACDR2G** (143k / 20.0k → 10.07 V) |
+| HV MOSFET / gate-drive LDO | Infineon **IPD50R1K4CE** / onsemi **LP2951ACDR2G** (143k / 20.0k → 10.07 V) |
 | HV inductor / diodes | **Kit 100 µH radial** (0.71 A, 0.35 Ω) / onsemi **ES1J** × 5 |
 | HV capacitors | 0.47 µF 400 V PET film × 5 (WIMA MKS4 class) |
 | OVP comparators | 2 × TI **TLV3011AIDBVR** (open-drain): HV 551.8 V, V_b ≈ 202 V |
@@ -816,7 +823,7 @@ from the user's radial kit where noted.
 | 5 V buck / inductor | TI **TPS54202DDCR** / **kit 15 µH radial** (1.31 A) |
 | Ideal diodes | TI **LM66100DCKR** × 3 |
 | Fuse / PTC | Littelfuse **0468002.NRHF** / **1812L075/33DR** |
-| Reverse polarity / TVS | AOS **AOD4185** + BZT52C10 / Littelfuse **SMBJ15A** |
+| Reverse polarity / TVS | Infineon **IPD50P04P4L-11** + BZT52C10 / Littelfuse **SMBJ15A** |
 | Bulk capacitor | Panasonic **EEE-FK1V101P** |
 
 TI's own store showed the TI parts out of stock on 2026-10-06; check Mouser stock when ordering.

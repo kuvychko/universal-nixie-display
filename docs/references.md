@@ -31,7 +31,9 @@ revision as it is used.
 | `mmbta42.pdf` | MMBTA42 NPN 300 V (guide drivers) | https://assets.nexperia.com/documents/data-sheet/MMBTA42.pdf | 12 Oct 2023 |
 | `mmbta92.pdf` | MMBTA92 PNP 300 V (index sense) | https://assets.nexperia.com/documents/data-sheet/MMBTA92.pdf | 30 Jun 2023 |
 | `bsp130.pdf` | Nexperia BSP130, 300 V logic-level MOSFET (considered, rejected for current rating) | https://assets.nexperia.com/documents/data-sheet/BSP130.pdf | — |
-| `aod5n40.pdf` | AOS AOD5N40, 400 V MOSFET (HV boost switch) | https://www.aosmd.com/res/datasheets/AOD5N40.pdf | — |
+| `aod5n40.pdf` | AOS AOD5N40, 400 V MOSFET (HV boost switch until 2026-10-07; not stocked by Mouser) | https://www.aosmd.com/res/datasheets/AOD5N40.pdf | — |
+| (not stored) | Infineon IPD50R1K4CE, 500 V CoolMOS CE (HV boost switch). Official PDF not yet fetched; figures from distributor listings | https://www.infineon.com/part/IPD50R1K4CE | — |
+| `ipd50p04p4l-11.pdf` | Infineon IPD50P04P4L-11, −40 V P-channel (reverse-polarity protection) | https://www.infineon.com/assets/row/public/documents/10/49/infineon-ipd50p04p4l-11-datasheet-en.pdf | Rev. 1.1, 2019-07-04 |
 | `tps54202.pdf` | TPS54202 2 A buck (reference design Figure 7-1) | https://www.ti.com/lit/gpn/tps54202 | SLVSD26C, Feb 2026 |
 | `rp2040.pdf` | RP2040 datasheet (pad reset state Table 341; IO characteristics Table 625) | https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf | — |
 | (not stored) | RP2040-Zero pinout figure (top view) | https://www.waveshare.com/w/upload/1/1f/900px-RP2040-Zero-details-7.jpg | — |

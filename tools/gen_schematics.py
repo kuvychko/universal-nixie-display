@@ -768,8 +768,8 @@ def build_power(lib: SymbolLib) -> Sheet:
             F("Input fuse", "0468002.NRHF", "Littelfuse", "2 A, 63 V, I2t 0.506 A2s"), FP_F1206)
     sh.w(j1["1"], (27.94, Y), f1["1"])
     sh.nl("+12V_RAW", (27.94, Y))
-    q1 = sh.place("Transistor_FET:Q_PMOS_GDS", "Q101", "AOD4185", 73.66, Y + 2.54, angle=90, footprint=FP_DPAK,
-                  fields=F("Reverse-polarity protection", "AOD4185", "Alpha & Omega", "-40 V, 115 A pulsed"))
+    q1 = sh.place("Transistor_FET:Q_PMOS_GDS", "Q101", "IPD50P04P4L-11", 73.66, Y + 2.54, angle=90, footprint=FP_DPAK,
+                  fields=F("Reverse-polarity protection", "IPD50P04P4L-11", "Infineon", "-40 V, 10.6 mohm, 200 A pulsed, VGS +5/-16 V"))
     sh.w(f1["2"], (53.34, Y), q1["D"])
     sh.nl("+12V_FUSED", (53.34, Y))
     # VIN_PROT rail: Q101 source -> clamps and bulk -> buck input
@@ -992,8 +992,8 @@ def build_power(lib: SymbolLib) -> Sheet:
     sh.nl("LM5156_SS", (180.34, YS))
     down_gnd(c16["2"])
     # gate drive and switch
-    q = sh.place("Transistor_FET:Q_NMOS_GDS", "Q102", "AOD5N40", 231.14, M["GATE"][1], footprint=FP_DPAK,
-                 fields=F("HV boost switch", "AOD5N40", "Alpha & Omega", "400 V, 1.6 ohm at 10 V"))
+    q = sh.place("Transistor_FET:Q_NMOS_GDS", "Q102", "IPD50R1K4CE", 231.14, M["GATE"][1], footprint=FP_DPAK,
+                 fields=F("HV boost switch", "IPD50R1K4CE", "Infineon", "500 V, 1.4 ohm at 10 V"))
     rg = hR("R115", "2.2", 198.12, M["GATE"][1], "Gate resistor")
     sh.w(M["GATE"], (185.42, M["GATE"][1]), rg["1"])
     sh.nl("LM5156_GATE", (185.42, M["GATE"][1]))
