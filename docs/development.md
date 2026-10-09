@@ -27,7 +27,9 @@ Record the ERC/DRC baseline here and check that each change does not add to it.
 ### Generator
 
 `tools/gen_schematics.py` writes the dekatron schematics, the project symbol library and a BOM
-(`hardware/dekatron/bom.csv`) from the values in `docs/hardware.md`. The sheets are drawn as
+(`hardware/dekatron/bom.csv`) from the values in `docs/hardware.md`. Manufacturer and MPN come from
+the frozen `ORDERED_PARTS` table (the 2026-10-08 Mouser order) wherever a reference is listed
+there; the generator fails if a listed reference is missing from the sheets. The sheets are drawn as
 ordinary schematics: each circuit block is wired, with power and GND symbols. `Sheet.place()`
 returns pin coordinates, `Sheet.w()` draws orthogonal wires, and `Sheet.finish()` adds a junction
 wherever three or more wire ends or pins meet. Wires only meet at their ends; the one deliberate
@@ -105,15 +107,18 @@ pass 8). What the pieces do:
   track out to a GND via 0.65 mm past the pad (direction searched for 0.3 mm from other pads).
   Routed around the package, CE-to-VOUT walled in the GND pins, and at 0.65 mm pitch the pour
   cannot reach a middle pin. `gen_pcb.py` anchors R301 and C108 0.6 mm clear of two of those
-  vias.
+  vias. D301 (BAT54S below the RP2040-Zero) gets one too, and is anchored rotated so its GND pin
+  faces the open pour: in the other orientation that pin sat in a pour pocket walled in on both
+  layers. Escape vias stay out of the no-via area under the module.
 * `pcb_io.py apply` writes the tracks, fills the pours and adds GND stitching vias on a 2.5 mm
   grid wherever both pours have solid copper; the `--repair` pass then re-routes GND against
-  the real main fill, so pour islands that only touch a pad get connected.
+  the real main fill, so pour islands that only touch a pad get connected. Repair links are
+  0.3 mm, not GND's 0.5 mm: a pocket around R116 was only reachable between two vias.
 * `silk.py` re-places the reference designators: around each courtyard, clear of pads, silk,
   other references and the board edge, preferring spots not under another part; 1.0 mm text,
   0.8 mm (the board minimum) where it is tight. It only moves text, so it can be re-run on its own.
-  Mounting-hole references are hidden; on this board L101 and R214 have no legal spot and are
-  labelled on the Fab layer only.
+  Mounting-hole references are hidden; on this board C108, C303, L101 and R214 have no legal
+  spot and are labelled on the Fab layer only.
 
 ### Fab outputs
 
@@ -127,7 +132,7 @@ kicad-cli pcb export drill --format excellon --excellon-units mm --generate-repo
 
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.
 
-### DRC baseline (2026-10-08, W8 film capacitors and 6.3 × 7.7 C101; routing converged on pass 5)
+### DRC baseline (2026-10-08, frozen BOM: TPS54302, IPD70R1K4P7S, tantalum C301, 0805 feedback pair; routing converged on pass 5)
 
 `kicad-cli pcb drc --severity-all --schematic-parity hardware/dekatron/dekatron.kicad_pcb`:
 **2 violations, expected:** the U106 library mismatch (thermal vias above) and one

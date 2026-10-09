@@ -105,7 +105,7 @@ for refs, g in (
     ("R109 R110 R112 JP101", "EN"),
     ("LK1 C112 U105 R107 R108 C113 TP104 U106 C114 C115 R111 C116 R113 C117 C118 R114 R115 R116 "
      "R143 C129 C128 C130", "CTRL"),
-    ("R126 R131 R130 R135 R140 C127 U107 U108", "DIV"),
+    ("R126 R131 R130 R144 R135 R140 C127 U107 U108", "DIV"),
     ("Q102 R117 R118 C119 C120 C121 L102 D103 TP105 TP107 TP106 LK5 R119 R141", "SW"),
     ("R121 C122 C123 C124 C125 C126 D104 D105 D106 D107 LK3 LK4 TP108 R215 R216 J201", "HV"),
     ("R201 D201 D202 C201 C202 R202 R204 TP201 TP202 TP206 R205 R206 R207 R208 R209 R210 Q201 Q202 TP203 "
@@ -131,7 +131,8 @@ ANCHOR = {
     "U102": (21.0, 75.0, 0),       # 5V_DISP ideal diode beside J301 pin 1
     "R301": (15.935, 75.225, 0),   # 0.6 mm left of where the placer put it: room for U102's GND escape via
     "C108": (15.96, 25.55, 0),     # 0.6 mm right of where the placer put it: room for U104's GND escape via
-    "C303": (14.4, 71.1, 270),     # VIN_SENSE reservoir: GND pad down beside D301's (a sealed GND pocket otherwise)
+    "C303": (14.4, 71.1, 270),     # VIN_SENSE reservoir: GND pad down, toward the open pour (a sealed GND pocket otherwise)
+    "D301": (18.45, 71.05, 180),   # GND pin toward the open pour (a sealed pocket below the module otherwise)
     "JP101": (38.6, 26.0, 0),      # HV inhibit header, beside the EN parts
     "R110": (44.4, 31.0, 90),      # EN/UVLO pull-down
     "R112": (42.5, 20.4, 0),       # EN/UVLO read-back to OVP_TRIP

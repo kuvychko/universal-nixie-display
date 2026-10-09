@@ -32,11 +32,13 @@ revision as it is used.
 | `mmbta92.pdf` | MMBTA92 PNP 300 V (index sense) | https://assets.nexperia.com/documents/data-sheet/MMBTA92.pdf | 30 Jun 2023 |
 | `bsp130.pdf` | Nexperia BSP130, 300 V logic-level MOSFET (considered, rejected for current rating) | https://assets.nexperia.com/documents/data-sheet/BSP130.pdf | — |
 | `aod5n40.pdf` | AOS AOD5N40, 400 V MOSFET (HV boost switch until 2026-10-07; not stocked by Mouser) | https://www.aosmd.com/res/datasheets/AOD5N40.pdf | — |
-| (not stored) | Infineon IPD50R1K4CE, 500 V CoolMOS CE (HV boost switch). Official PDF not yet fetched; figures from distributor listings | https://www.infineon.com/part/IPD50R1K4CE | — |
+| (not stored) | Infineon IPD50R1K4CE, 500 V CoolMOS CE (HV boost switch until 2026-10-08, End of Life at Mouser). Figures from distributor listings | https://www.infineon.com/part/IPD50R1K4CE | — |
+| `ipd70r1k4p7s.pdf` | Infineon IPD70R1K4P7S, 700 V CoolMOS P7 (HV boost switch) | https://www.infineon.com/dgdl/Infineon-IPD70R1K4P7S-DataSheet-v02_02-EN.pdf?fileId=5546d462602a9dc801607f84c5fe3fea | Rev. 2.2, 2019-08-09 |
 | `ipd50p04p4l-11.pdf` | Infineon IPD50P04P4L-11, −40 V P-channel (reverse-polarity protection) | https://www.infineon.com/assets/row/public/documents/10/49/infineon-ipd50p04p4l-11-datasheet-en.pdf | Rev. 1.1, 2019-07-04 |
 | `yageo_hhv.pdf` | Yageo HHV metal glaze high-voltage resistors (HHV-25 1600 V, HHV-50 3500 V; replaced Vishay HVR25 / HVR37) | https://yageogroup.com/content/datasheet/asset/file/YAGEO-HHV_DATASHEET | V.3, 2024-04-03 |
 | `lm66100.pdf` | TI LM66100 ideal diode (CE to VOUT for always-on reverse-current blocking, §8.3.2) | https://www.ti.com/lit/ds/symlink/lm66100.pdf | SLVSEZ8A, Jun 2019 |
-| `tps54202.pdf` | TPS54202 2 A buck (reference design Figure 7-1) | https://www.ti.com/lit/gpn/tps54202 | SLVSD26C, Feb 2026 |
+| `tps54202.pdf` | TPS54202 2 A buck (original 5 V buck; backordered 2026-10-08) | https://www.ti.com/lit/gpn/tps54202 | SLVSD26C, Feb 2026 |
+| `tps54302.pdf` | TPS54302 3 A buck, pin-compatible (5 V buck; reference design Figure 7-1) | https://www.ti.com/lit/ds/symlink/tps54302.pdf | SLVSDG6C, Mar 2026 |
 | `rp2040.pdf` | RP2040 datasheet (pad reset state Table 341; IO characteristics Table 625) | https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf | — |
 | (not stored) | RP2040-Zero pinout figure (top view) | https://www.waveshare.com/w/upload/1/1f/900px-RP2040-Zero-details-7.jpg | — |
 | (not stored) | RP2040-Zero STEP model (castellation geometry) | https://files.waveshare.com/upload/f/f7/RP2040_Zero_stp.zip | 2022-01-08 |

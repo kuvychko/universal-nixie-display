@@ -802,6 +802,185 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Device:C_Polarized"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "C_Polarized"
+				(at 0.635 -2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" ""
+				(at 0.9652 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Polarized capacitor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "CP_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "C_Polarized_0_1"
+				(rectangle
+					(start -2.286 0.508)
+					(end 2.286 1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.778 2.286)
+						(xy -0.762 2.286)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 2.794)
+						(xy -1.27 1.778)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 2.286 -0.508)
+					(end -2.286 -1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+			)
+			(symbol "C_Polarized_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 2.794)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Device:R"
 			(pin_numbers
 				(hide yes)
@@ -2139,14 +2318,16 @@
 	(label "UART_RX" (at 124.46 66.04 0) (effects (font (size 1.27 1.27)) (justify left bottom)) (uuid "8e5628e1-e7f8-5c91-9660-20bb8d8501c0"))
 	(wire (pts (xy 121.92 60.96) (xy 124.46 60.96)) (stroke (width 0) (type default)) (uuid "4fd528b7-5245-54a8-87f4-c79738f67f0f"))
 	(label "UART_TX" (at 124.46 60.96 0) (effects (font (size 1.27 1.27)) (justify left bottom)) (uuid "9a53522f-597b-582f-9ac4-202e2313f952"))
-	(symbol (lib_id "Device:C") (at 33.02 53.34 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "ed77bf53-32df-518a-9a29-09768d8b9e75")
+	(symbol (lib_id "Device:C_Polarized") (at 33.02 53.34 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "ed77bf53-32df-518a-9a29-09768d8b9e75")
 	  (property "Reference" "C301" (at 36.22 52.34 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Value" "10uF" (at 36.22 54.94 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Footprint" "Capacitor_Tantalum_SMD:CP_EIA-3216-18_Kemet-A" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Datasheet" "" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Description" "Unpolarized capacitor" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Description" "Polarized capacitor" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "5V_MCU bulk at the module" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Rating" "16 V X7R" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "F911C106MAAAJ6" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "KYOCERA AVX" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Rating" "16 V tantalum, 1.5 ohm ESR" (at 33.02 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "59496ed2-7b9b-5bde-8b6f-91650d70f41d"))
 	  (pin "2" (uuid "ff92472c-8462-5c30-86e6-4ac50af22356"))
 	  (instances (project "dekatron" (path "/b14ce2c4-03a1-5284-8a98-bc460407f799/20c62be3-e7e5-5b8f-93c7-52aaca105fa0" (reference "C301") (unit 1))))
@@ -2171,6 +2352,8 @@
 	  (property "Description" "Unpolarized capacitor" (at 48.26 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "3V3 bypass" (at 48.26 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Rating" "50 V X7R" (at 48.26 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "Yageo" (at 48.26 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "CC1206JPX7R9BB104" (at 48.26 53.34 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "09b8006d-4e23-5197-8a19-c3ca442885a2"))
 	  (pin "2" (uuid "618ca672-6ab1-5112-8104-504dfdec4854"))
 	  (instances (project "dekatron" (path "/b14ce2c4-03a1-5284-8a98-bc460407f799/20c62be3-e7e5-5b8f-93c7-52aaca105fa0" (reference "C302") (unit 1))))
@@ -2354,7 +2537,8 @@
 	  (property "Datasheet" "https://www.diodes.com/assets/Datasheets/ds11005.pdf" (at 55.88 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Description" "Vr 30V, If 200mA, Dual schottky barrier diode, in series, SOT-323" (at 55.88 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "VIN_SENSE clamp to 3V3 / GND" (at 55.88 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "MPN" "BAT54S" (at 55.88 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "BAT54S RFG" (at 55.88 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "Taiwan Semiconductor" (at 55.88 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Rating" "30 V Schottky pair" (at 55.88 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "c6c3a43c-6332-5883-a220-4604ab670e80"))
 	  (pin "2" (uuid "a809ed74-10f4-5e85-8c11-8bda1eebc97d"))
@@ -2390,6 +2574,8 @@
 	  (property "Description" "Unpolarized capacitor" (at 55.88 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "VIN_SENSE ADC sampling reservoir" (at 55.88 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Rating" "25 V X7R" (at 55.88 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "Yageo" (at 55.88 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "CC1206JPX7R9BB104" (at 55.88 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "20867e9f-ae76-5f4f-801a-b4ec0e5e3dfe"))
 	  (pin "2" (uuid "1ee15ae5-5a79-5cb3-8af8-adb5ee30399f"))
 	  (instances (project "dekatron" (path "/b14ce2c4-03a1-5284-8a98-bc460407f799/20c62be3-e7e5-5b8f-93c7-52aaca105fa0" (reference "C303") (unit 1))))
@@ -2424,6 +2610,8 @@
 	  (property "Description" "Resistor" (at 45.72 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "VIN_SENSE divider, lower (2.57 V at 24 V)" (at 45.72 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Rating" "1 %" (at 45.72 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "Panasonic" (at 45.72 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "ERJ-8ENF1202V" (at 45.72 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "e365fa1d-4fd0-5826-b396-f0218f05929d"))
 	  (pin "2" (uuid "1f9bcec2-ec8e-5092-8616-72111ee7d15e"))
 	  (instances (project "dekatron" (path "/b14ce2c4-03a1-5284-8a98-bc460407f799/20c62be3-e7e5-5b8f-93c7-52aaca105fa0" (reference "R302") (unit 1))))
@@ -2452,7 +2640,8 @@
 	  (property "Datasheet" "https://www.diodes.com/assets/Datasheets/ds11005.pdf" (at 106.68 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Description" "Vr 30V, If 200mA, Dual schottky barrier diode, in series, SOT-323" (at 106.68 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "HV_SENSE clamp to 3V3 / GND" (at 106.68 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "MPN" "BAT54S" (at 106.68 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "BAT54S RFG" (at 106.68 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "Taiwan Semiconductor" (at 106.68 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Rating" "30 V Schottky pair" (at 106.68 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "148bab21-9a84-575e-b1bb-c8721f7d23a2"))
 	  (pin "2" (uuid "7873469e-0b12-50ba-93d8-a6d4682258ee"))
@@ -2488,6 +2677,8 @@
 	  (property "Description" "Unpolarized capacitor" (at 106.68 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "HV_SENSE ADC sampling reservoir" (at 106.68 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Rating" "25 V X7R" (at 106.68 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "KYOCERA AVX" (at 106.68 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "12063C103JAT2A" (at 106.68 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "6718b1e0-ec04-51e2-bc74-526d9d2dbb36"))
 	  (pin "2" (uuid "a1265e9a-5335-54a0-a714-908c80aec298"))
 	  (instances (project "dekatron" (path "/b14ce2c4-03a1-5284-8a98-bc460407f799/20c62be3-e7e5-5b8f-93c7-52aaca105fa0" (reference "C304") (unit 1))))
@@ -2512,7 +2703,8 @@
 	  (property "Datasheet" "https://www.diodes.com/assets/Datasheets/ds11005.pdf" (at 157.48 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Description" "Vr 30V, If 200mA, Dual schottky barrier diode, in series, SOT-323" (at 157.48 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "RTN_SENSE clamp to 3V3 / GND" (at 157.48 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "MPN" "BAT54S" (at 157.48 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "BAT54S RFG" (at 157.48 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "Taiwan Semiconductor" (at 157.48 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Rating" "30 V Schottky pair" (at 157.48 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "2c2961e1-23c3-5f3e-b08b-55b4c2c9cb5c"))
 	  (pin "2" (uuid "fde4bce0-f83e-5c29-9b5b-559c05f96ed3"))
@@ -2548,6 +2740,8 @@
 	  (property "Description" "Unpolarized capacitor" (at 157.48 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "RTN_SENSE ADC sampling reservoir" (at 157.48 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Rating" "25 V X7R" (at 157.48 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "Yageo" (at 157.48 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "CC1206JPX7R9BB104" (at 157.48 182.88 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "dc227778-1941-5a65-b3de-766f3630e1cb"))
 	  (pin "2" (uuid "0e10d86f-a5e3-5ba2-9645-3ac356f5cb63"))
 	  (instances (project "dekatron" (path "/b14ce2c4-03a1-5284-8a98-bc460407f799/20c62be3-e7e5-5b8f-93c7-52aaca105fa0" (reference "C305") (unit 1))))
@@ -2572,7 +2766,8 @@
 	  (property "Datasheet" "https://www.diodes.com/assets/Datasheets/ds11005.pdf" (at 208.28 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Description" "Vr 30V, If 200mA, Dual schottky barrier diode, in series, SOT-323" (at 208.28 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "NDX clamp to 3V3 / GND" (at 208.28 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "MPN" "BAT54S" (at 208.28 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "BAT54S RFG" (at 208.28 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "Taiwan Semiconductor" (at 208.28 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Rating" "30 V Schottky pair" (at 208.28 160.02 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "0a48dfd7-4310-505f-bc90-a3f9d39d8238"))
 	  (pin "2" (uuid "52fe5771-f734-53ac-88ef-6ac9ebeb3629"))

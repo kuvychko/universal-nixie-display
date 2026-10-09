@@ -588,6 +588,9 @@ class Sheet:
               dnp=False, textpos=None):
         lib, name = lib_id.split(":", 1)
         self.lib.get(lib, name)
+        if ref in ORDERED:                                 # the frozen BOM wins over the design-time MPN
+            fields = dict(fields or {})
+            fields["Manufacturer"], fields["MPN"] = ORDERED[ref]
         pins = [p for p in self.lib.pins(lib_id) if p["unit"] in (0, 1)]
         ends = [xf(p["x"], p["y"], x, y, angle, mirror) for p in pins]
         horizontal = len(pins) == 2 and abs(ends[0][1] - ends[1][1]) < 0.01
@@ -666,6 +669,8 @@ class Sheet:
 # --------------------------------------------------------------------------------------
 
 FP_R = "Resistor_SMD:R_1206_3216Metric"
+FP_TANT_A = "Capacitor_Tantalum_SMD:CP_EIA-3216-18_Kemet-A"   # C301: AVX F91 1206 (EIA 3216-18) tantalum
+FP_R0805 = "Resistor_SMD:R_0805_2012Metric"   # R130 / R144: the user's 3.0k parts are 0805
 FP_C = "Capacitor_SMD:C_1206_3216Metric"
 FP_C1210 = "Capacitor_SMD:C_1210_3225Metric"
 FP_FILM = "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3"   # WIMA MKS4 0.47 uF 400 V: 18 x 8 x 15 mm
@@ -699,6 +704,66 @@ def hhv(model, value_code, tol="F"):
 HHV25 = dict(mfr="Yageo", rating="HHV-25: 0.25 W, 1600 V DC, 1 %, 200 ppm/K", fp=FP_AX0207)
 HHV50 = dict(mfr="Yageo", rating="HHV-50: 0.5 W, 3500 V DC, 1 %, 200 ppm/K", fp=FP_AX0411)
 MRS25 = dict(mfr="Vishay", rating="MRS25: 0.6 W, 350 V, 1 %, 50 ppm/K", fp=FP_AX0207)
+
+
+# Frozen BOM (2026-10-08): exact manufacturer part numbers from the Mouser order
+# (hardware/dekatron/Cart_Oct08_0432PM.xls). Applied to every symbol by Sheet.place(); parts not
+# listed come from the user's kits (generic values) or are wire links and test pads.
+ORDERED_PARTS = [
+    ("Panasonic", "EEE-FK1V101XP", "C101"),
+    ("Yageo", "CC1206JPX7R9BB104", "C102 C104 C105 C109 C110 C111 C115 C121 C128 C130 C302 C303 C305"),
+    ("Yageo", "CC1210KKX7RGBB106", "C103 C120"),
+    ("Taiyo Yuden", "MBAST32MSB7226KPNA18", "C106 C107"),
+    ("KYOCERA AVX", "12065A750JAT2A", "C108"),
+    ("KYOCERA AVX", "1206DC105MAT2A", "C112 C114"),
+    ("Yageo", "CS1206KKX7R8BB225", "C113"),
+    ("Yageo", "CC1206KRX7R8BB473", "C116"),
+    ("KYOCERA AVX", "12063C103JAT2A", "C117 C304"),
+    ("KEMET", "C1206C101K5GAC7210", "C118"),
+    ("Walsin", "1206B471K500CT", "C119"),
+    ("WIMA", "MKS4G034704F00MSSD", "C122 C123 C124 C125 C126"),
+    ("Walsin", "1206N102K501CT", "C127 C129 C204"),
+    ("Yageo", "AC1206KKX7R0BB104", "C201"),
+    ("KEMET", "C1206C105M1RACAUTO", "C202"),
+    ("KYOCERA AVX", "F911C106MAAAJ6", "C301"),
+    ("Diotec Semiconductor", "BZT52C10", "D101"),
+    ("Semtech", "SMBJ15A", "D102"),
+    ("Diotec Semiconductor", "ES1J", "D103 D104 D105 D106 D107"),
+    ("Taiwan Semiconductor", "MMSZ5259BH RHG", "D201"),
+    ("onsemi", "MMSZ5262BT1G", "D202"),
+    ("Taiwan Semiconductor", "BAT54S RFG", "D301 D302 D303 D304"),
+    ("Littelfuse", "0468002.NRHF", "F101"),
+    ("Littelfuse", "1812L075/33DR", "F102"),
+    ("Infineon", "IPD50P04P4L11ATMA2", "Q101"),
+    ("Infineon", "IPD70R1K4P7SAUMA1", "Q102"),
+    ("Diotec Semiconductor", "MMBTA42", "Q201 Q202"),
+    ("Diotec Semiconductor", "MMBTA92", "Q203"),
+    ("Yageo", "RT1206FRE07511KL", "R102"),
+    ("Bourns", "CR1206-FX-1053ELF", "R103"),
+    ("Vishay", "RCC120649R9FKEA", "R104"),
+    ("Bourns", "CR1206-FX-1372ELF", "R106 R143"),
+    ("Bourns", "CR1206-FX-1433ELF", "R107"),
+    ("KOA Speer", "RK73H2BLTD2002F", "R108"),
+    ("Vishay", "CRCW1206147KFKTA", "R111"),
+    ("SEI Stackpole", "RNCL1206FTR220", "R117"),
+    ("Yageo", "HHV-25FT-52-2M2", "R119 R141"),
+    ("Yageo", "HHV-25FR-52-2M7", "R126 R131"),
+    ("Xicon", "292-3.0K-RC", "R130 R144"),
+    ("Panasonic", "ERJ-8ENF7871V", "R135"),
+    ("Vishay", "CRCW12066K20FKEAC", "R140"),
+    ("Vishay", "MRS25000C4022FCT00", "R201"),
+    ("Yageo", "HHV-25FR-52-200K", "R202"),
+    ("Yageo", "HHV-25FR-52-220K", "R212"),
+    ("Bourns", "CR1206-FX-1302ELF", "R214"),
+    ("Yageo", "HHV-50FR-52-330K", "R215 R216"),
+    ("Panasonic", "ERJ-8ENF1202V", "R302"),
+    ("Texas Instruments", "TPS54302DDCR", "U101"),
+    ("Texas Instruments", "LM66100DCKR", "U102 U103 U104"),
+    ("onsemi", "LP2951ACDR2G", "U105"),
+    ("Texas Instruments", "LM5156HPWPR", "U106"),
+    ("Texas Instruments", "TLV3011AIDBVR", "U107 U108"),
+]
+ORDERED = {ref: (mfr, mpn) for mfr, mpn, refs in ORDERED_PARTS for ref in refs.split()}
 
 
 def F(function, mpn="", mfr="", rating=""):
@@ -824,14 +889,15 @@ def build_power(lib: SymbolLib) -> Sheet:
     sh.flag("GND", XF2 + 35.56, N12[1] + 2.54)
 
     # ==== 5 V BUCK ==================================================================================
-    note("5 V BUCK", "TPS54202, TI reference design (SLVSD26C Fig. 7-1); 100k / 13.7k -> 4.95 V; UVLO 511k / 105k",
+    note("5 V BUCK", "TPS54302, TI reference design (SLVSDG6C Fig. 7-1); 100k / 13.7k -> 4.95 V; UVLO 511k / 105k",
          195.58, 25.4)
     for ref, val, x, fn, rating, fp in (("C103", "10uF 35V", 198.12, "Buck input", "35 V X7R", FP_C1210),
                                         ("C104", "0.1uF", 213.36, "Buck input HF", "50 V X7R", FP_C)):
         c = vC(ref, val, x, Y, fn, rating, fp)
         down_gnd(c["2"])
-    u = sh.place("Regulator_Switching:TPS54202DDC", "U101", "TPS54202", 251.46, Y + 2.54, textpos=(-10.16, -9.0),
-                 fields=F("5 V buck regulator", "TPS54202DDCR", "Texas Instruments", "4.5-28 V, 2 A"))
+    # TPS54302 (was TPS54202, backordered 2026-10-08): same pins and 0.596 V reference, 400 kHz, 3 A
+    u = sh.place("Regulator_Switching:TPS54302", "U101", "TPS54302", 251.46, Y + 2.54, textpos=(-10.16, -9.0),
+                 fields=F("5 V buck regulator", "TPS54302DDCR", "Texas Instruments", "4.5-28 V, 3 A, 400 kHz"))
     ra = vR("R102", "511k", 223.52, Y, "Buck EN UVLO, upper")
     rb = vR("R103", "105k", 223.52, ra["2"][1], "Buck EN UVLO, lower")
     down_gnd(rb["2"])
@@ -1000,8 +1066,8 @@ def build_power(lib: SymbolLib) -> Sheet:
     sh.nl("LM5156_SS", (180.34, YS))
     down_gnd(c16["2"])
     # gate drive and switch
-    q = sh.place("Transistor_FET:Q_NMOS_GDS", "Q102", "IPD50R1K4CE", 231.14, M["GATE"][1], footprint=FP_DPAK,
-                 fields=F("HV boost switch", "IPD50R1K4CE", "Infineon", "500 V, 1.4 ohm at 10 V"))
+    q = sh.place("Transistor_FET:Q_NMOS_GDS", "Q102", "IPD70R1K4P7S", 231.14, M["GATE"][1], footprint=FP_DPAK,
+                 fields=F("HV boost switch", "IPD70R1K4P7SAUMA1", "Infineon", "700 V, 1.4 ohm at 10 V, VGS +/-16 V"))
     rg = hR("R115", "2.2", 198.12, M["GATE"][1], "Gate resistor")
     sh.w(M["GATE"], (185.42, M["GATE"][1]), rg["1"])
     sh.nl("LM5156_GATE", (185.42, M["GATE"][1]))
@@ -1140,21 +1206,25 @@ def build_power(lib: SymbolLib) -> Sheet:
     note("HV DIVIDERS (D2, D12)", "One leaded HHV-25 per leg. Feedback and OVP stay on separate dividers;\n"
          "monitor and OVP share one. No dedicated bleeder: both dividers discharge HV", 139.7, 233.68)
     XF, XM = 152.4, 177.8
-    # feedback: 1.00 V x (1 + 2.7M / 5.97k) = 453.3 V (5.49k for the 500 V setting: 492.8 V). HHV tops are
-    # stocked E12 values (2.7M; 4.7M has a 10-week lead time); the trim is in the 1206 bottom resistor
+    # feedback: 1.00 V x (1 + 2.7M / (3.0k + 3.0k)) = 451.0 V (2 x 2.7k for the 500 V setting: 501.0 V).
+    # HHV tops are stocked E12 values (2.7M; 4.7M has a 10-week lead time); the bottom is two common E24
+    # values in series because no single E24 value lands near 450 V (5.6k: 483 V, 6.2k: 436 V)
     n = node_below(top("R126", H25, "2.7M", "2704", XF, "HV feedback divider, upper"))
-    r = vR("R130", "5.97k", XF, n[1], "HV feedback, lower (453.3 V; 5.49k for 500 V: 492.8 V)", "1 %")
+    r = v2(R, "R130", "3.0k", XF, n[1],
+           F("HV feedback, lower 1 of 2 (2 x 3.0k: 451.0 V; 2 x 2.7k for 500 V: 501.0 V)", rating="1 %"), FP_R0805)
+    r = v2(R, "R144", "3.0k", XF, node_below(r["2"])[1],
+           F("HV feedback, lower 2 of 2 (2 x 3.0k: 451.0 V; 2 x 2.7k for 500 V: 501.0 V)", rating="1 %"), FP_R0805)
     down_gnd(r["2"])
     sh.w(n, (XF + 5.08, n[1]))
     sh.nl("LM5156_FB", (XF + 5.08, n[1]))
-    # shared monitor / OVP: HV - 4.64M - MON (HV_SENSE) - 14.0k - OVP tap - 10.5k - GND
-    # MON = HV / 193.0 (2.35 V at 453.3 V); OVP trips at 1.242 V x 2.71406M / 6.19k = 544.6 V
+    # shared monitor / OVP: HV - 2.7M - MON (HV_SENSE) - 7.87k - OVP tap - 6.2k - GND
+    # MON = HV / 192.9 (2.34 V at 451.0 V); OVP trips at 1.242 V x 2.71407M / 6.2k = 543.7 V
     mon = node_below(top("R131", H25, "2.7M", "2704", XM, "HV monitor / OVP divider, upper"))
     sh.w(mon, (XM + 5.08, mon[1]))
     sh.gl("HV_SENSE", (XM + 5.08, mon[1]), 0)
-    r = vR("R135", "7.87k", XM, mon[1], "HV monitor / OVP divider, middle (HV_SENSE 2.35 V at 453.3 V)", "1 %")
+    r = vR("R135", "7.87k", XM, mon[1], "HV monitor / OVP divider, middle (HV_SENSE 2.34 V at 451.0 V)", "1 %")
     ovp = node_below(r["2"])
-    r = vR("R140", "6.19k", XM, ovp[1], "HV monitor / OVP divider, lower (OVP trip 544.6 V)", "1 %")
+    r = vR("R140", "6.2k", XM, ovp[1], "HV monitor / OVP divider, lower (OVP trip 543.7 V)", "1 %")
     down_gnd(r["2"])
     comparator("U107", 233.68, ovp[1] - 2.54, ovp, 190.5, "OVP_SENSE", "OVP_REF", "C127", "OVP",
                "Independent OVP comparator (open drain)")
@@ -1209,7 +1279,7 @@ def build_tube(lib: SymbolLib) -> Sheet:
     RT = (X, 86.36)
     sh.w(d1["A"], RT)
     d2 = sh.place(DZ, "D202", "51V", X, 96.52, angle=270, footprint=FP_SOD123,
-                  fields=F("RTN shunt regulator: sinks tube current", "MMSZ5262B", "onsemi", "51 V, 500 mW"))
+                  fields=F("RTN shunt regulator: sinks tube current", "MMSZ5262BT1G", "onsemi", "51 V, 500 mW"))
     sh.w(RT, d2["K"])
     sh.w(d2["A"], (X, 104.14))
     sh.gnd((X, 104.14))
@@ -1346,7 +1416,7 @@ FP_WIRE5 = "Connector_Wire:SolderWire-0.5sqmm_1x05_P4.8mm_D0.9mm_OD2.3mm"
 def build_mcu(lib: SymbolLib) -> Sheet:
     sh = Sheet("mcu", "mcu.kicad_sch", U("file:mcu"), "A3", lib, f"/{ROOT_UUID}/{MCU_UUID}",
                global_nets=MCU_GLOBALS, title="MCU: RP2040-Zero, ADC conditioning, I2C, harness landings")
-    R, C, TP = "Device:R", "Device:C", "Connector:TestPoint"
+    R, C, CP, TP = "Device:R", "Device:C", "Device:C_Polarized", "Connector:TestPoint"
 
     def note(head, detail, x, y):
         sh.text(head, x, y, 2.0)
@@ -1365,9 +1435,12 @@ def build_mcu(lib: SymbolLib) -> Sheet:
     sh.part("dekatron:RP2040-Zero", "U301", "RP2040-Zero", 106.68, 81.28, nets, textpos=(-12.7, -27.5),
             fields=F("Dekatron controller MCU", "RP2040-Zero", "Waveshare", "headerless, castellated"))
     # supply decoupling at the module
-    for ref, val, x, kind, fn, rating in (("C301", "10uF", 33.02, "5V_MCU", "5V_MCU bulk at the module", "16 V X7R"),
-                                          ("C302", "0.1uF", 48.26, "+3V3", "3V3 bypass", "50 V X7R")):
-        cp = sh.place(C, ref, val, x, 53.34, footprint=FP_C, fields=F(fn, rating=rating))
+    # C301 is a tantalum (user's part, 2026-10-08): polarised symbol and footprint, + (pin 1) to 5V_MCU
+    for ref, val, x, kind, sym, fp, fields in (
+            ("C301", "10uF", 33.02, "5V_MCU", CP, FP_TANT_A,
+             F("5V_MCU bulk at the module", "F911C106MAAAJ6", "KYOCERA AVX", "16 V tantalum, 1.5 ohm ESR")),
+            ("C302", "0.1uF", 48.26, "+3V3", C, FP_C, F("3V3 bypass", rating="50 V X7R"))):
+        cp = sh.place(sym, ref, val, x, 53.34, footprint=fp, fields=fields)
         sh.w(cp["1"], (x, 45.72))
         if kind == "+3V3":
             sh.pwr("+3V3", (x, 45.72))
@@ -1390,7 +1463,8 @@ def build_mcu(lib: SymbolLib) -> Sheet:
     for i, (net, cap) in enumerate((("VIN_SENSE", "100nF"), ("HV_SENSE", "10nF"), ("RTN_SENSE", "100nF"), ("NDX", None))):
         xc = 55.88 + i * 50.8
         d = sh.place("Diode:BAT54S", f"D{301 + i}", "BAT54S", xc, yb, textpos=(-4, -6),
-                     fields=F(f"{net} clamp to 3V3 / GND", "BAT54S", rating="30 V Schottky pair"))
+                     fields=F(f"{net} clamp to 3V3 / GND", "BAT54S RFG", "Taiwan Semiconductor",
+                              "30 V Schottky pair"))
         sh.w(d["A"], (d["A"][0], yb + 5.08))
         sh.gnd((d["A"][0], yb + 5.08))
         sh.w(d["K"], (d["K"][0], yb - 5.08))
@@ -1552,6 +1626,8 @@ def write_bom(path, sheets):
             rows.append([p["ref"], p["value"], f.get("Function", ""), f.get("Manufacturer", ""), f.get("MPN", ""),
                          f.get("Rating", ""), p["footprint"], "DNP" if p["dnp"] else ""])
     rows.sort(key=lambda r: (re.sub(r"\d+", "", r[0]), int(re.sub(r"\D", "", r[0]) or 0)))
+    missing = set(ORDERED) - {r[0] for r in rows}
+    assert not missing, f"ORDERED parts not on any sheet: {sorted(missing)}"
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf8", newline="") as f:
         w = csv.writer(f, lineterminator="\n")

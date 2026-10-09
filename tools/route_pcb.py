@@ -106,7 +106,8 @@ BRIDGES = [(u, "3", "6", ("2", "5")) for u in ("U102", "U103", "U104")]
 # from the neighbouring pads), into the bottom pour. At 0.65 mm pitch the top pour cannot reach a
 # middle pin between its neighbours, and the routed neighbours closed the outer end (LM66100 GND pin 2
 # and ST pin 5 ended up on pour islands).
-GND_ESCAPES = [(u, n) for u in ("U102", "U103", "U104") for n in ("2", "5")]
+GND_ESCAPES = [(u, n) for u in ("U102", "U103", "U104") for n in ("2", "5")] + [
+    ("D301", "1")]   # BAT54S below U301: its GND pin sat in a walled-in pour pocket (GND repair could not reach it)
 GND_ESCAPE_GAP = 0.65
 BRIDGE_W = 0.2       # 0.225 mm from pins 2 and 5 (0.25 would sit exactly on the 0.2 mm rule)
 
@@ -488,6 +489,7 @@ def main():
                         best = min(best, min(min(sd(e0, p, q), sd(p, e0, e1), sd(q, e0, e1)) for e0, e1 in edges))
             return best
 
+        novia_k = ndimage.binary_dilation(B.novia, iterations=int(round((VIA_D / 2 + MARG) / G)))
         for ref, n in GND_ESCAPES:
             pd = pos[(ref, n)]
             assert pd["net"] == "GND", (ref, n, pd["net"])
@@ -503,7 +505,8 @@ def main():
                 c, s_ = math.cos(math.radians(ang)), math.sin(math.radians(ang))
                 rx, ry = dx * c - dy * s_, dx * s_ + dy * c
                 vx, vy = round(ex + rx * GND_ESCAPE_GAP, 4), round(ey + ry * GND_ESCAPE_GAP, 4)
-                if (escape_gap((vx, vy), None, others) >= VIA_D / 2 + 0.3
+                if (not novia_k[int(round(vy / G)), int(round(vx / G))]      # not under the RP2040-Zero
+                        and escape_gap((vx, vy), None, others) >= VIA_D / 2 + 0.3
                         and escape_gap((px, py), (vx, vy), others) >= STUB_W / 2 + 0.2):
                     break
             else:
@@ -512,7 +515,7 @@ def main():
             mv = B.add_via("GND", round(vx, 4), round(vy, 4))
             bridge_m.setdefault("GND", []).append([mt | mv, mv])
     for net in nets_to_route:
-        w = width(net)
+        w = 0.3 if REPAIR else width(net)     # repair links squeeze between vias into walled-in pour pockets
         nid = B.nid(net)
         mycls = B.cls[nid]
         items = [[m if m is not None else np.zeros((NY, NX), bool) for m in pd["mask"]] for pd in B.pads[net]]
@@ -573,6 +576,7 @@ def main():
                 other = (own >= 0) & (own != nid)
                 blk = np.zeros((NY, NX), bool)
                 vbl = np.zeros((NY, NX), bool)
+                hard = np.zeros((NY, NX), bool)           # exact pad clearance, kept inside own pads too
                 oc = np.where(other, own, len(B.cls))
                 ocls = cls_arr[oc]
                 for c in CLASSES:
@@ -587,7 +591,9 @@ def main():
                     blk |= d < lim
                     mp = m & B.padcell                     # other nets' pads: a little more (PAD_MARG)
                     if mp.any():
-                        blk |= ndimage.distance_transform_edt(~mp) * G < lim + PAD_MARG
+                        dp = ndimage.distance_transform_edt(~mp) * G
+                        blk |= dp < lim + PAD_MARG
+                        hard |= dp < clr + w / 2
                     mt = m & ~B.padcell                    # other nets' tracks: TRK_MARG, except the LM5156 group
                     if net not in FINE and mt.any():
                         blk |= ndimage.distance_transform_edt(~mt) * G < lim + TRK_MARG
@@ -600,6 +606,9 @@ def main():
                 # neighbours' halo). Its own tracks stay subject to the halo: a 0.6 mm track centred on
                 # the edge of an earlier one would spill into the neighbours' clearance.
                 blk &= ~own_pads[L]
+                # ...but not where the track's own width would reach a neighbour pad: a 0.5 mm 5V_DISP
+                # start on the edge of U102 pin 3 came out 0.187 mm from GND pin 2
+                blk |= own_pads[L] & hard
                 res.append(blk)
                 vb |= vbl
             vb |= B.d_edge < (3.0 if mycls == "HV" else 0.5) + VIA_D / 2 + MARG

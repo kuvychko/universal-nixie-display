@@ -21,8 +21,11 @@ Unplated: 1.6 mm harness cable-tie holes, 3.2 mm mounting holes.
 
 At generation: DRC 0 unconnected, 0 clearance, 0 silkscreen, 0 schematic parity; two expected
 findings (U106 differs from its library footprint: added 0.3 mm thermal vias; R111 GND pad has a
-one-spoke thermal to the front pour, still connected). Regenerated 2026-10-08 for the WIMA MKS4
-film capacitors (18 × 8 mm footprint, C126 0.2 mm lower) and the 6.3 × 7.7 mm C101
-(EEE-FK1V101XP); earlier sets (2026-10-07, LM66100 CE fix) were not ordered. See
+one-spoke thermal to the front pour, still connected). Regenerated 2026-10-08 for the frozen
+BOM (Mouser order `hardware/dekatron/Cart_Oct08_0432PM.xls`): TPS54302 buck (pin-compatible with
+the TPS54202), IPD70R1K4P7S HV switch (same DPAK), F91 tantalum C301 (EIA 3216-18 polarised
+footprint), E24 feedback dividers (2 × 3.0k 0805 R130/R144, 6.2k R140), WIMA MKS4 film capacitors
+(18 × 8 mm footprint) and the 6.3 × 7.7 mm C101, then a full re-route. Earlier sets the same day
+and 2026-10-07 were not ordered. See
 `docs/development.md` for the regeneration commands. These files are committed byte-exact; do
 not edit them by hand — regenerate from the board.

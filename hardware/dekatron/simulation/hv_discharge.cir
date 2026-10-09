@@ -2,8 +2,8 @@
 *
 * Starts from the 450 V operating state with the converter stopped (switch off), so the
 * switch node rests at V_IN through the inductor. Paths (no dedicated HV bleeder since the 0207
-* rework): feedback divider HHV-25 2.7M + 5.97k and the shared monitor / OVP divider HHV-25 2.7M +
-* 7.87k + 6.19k at HV (2.7M tops since 2026-10-07; earlier runs 4.75M / 4.64M and 4.7M); at V_b the V_b bleeder 2.2M and the V_b OVP divider 2.2M + 13.7k; the tube
+* rework): feedback divider HHV-25 2.7M + 6k (2 x 3.0k) and the shared monitor / OVP divider HHV-25 2.7M +
+* 7.87k + 6.2k at HV (2.7M tops since 2026-10-07; earlier runs 4.75M / 4.64M and 4.7M); at V_b the V_b bleeder 2.2M and the V_b OVP divider 2.2M + 13.7k; the tube
 * until it extinguishes. Three cases: both HV dividers intact, feedback top open, monitor top open
 * (single-fault discharge). Same tripler as
 * hv_startup.cir. Diodes are a generic ES1J-like model; capacitor values are the draft 0.47 uF.
@@ -22,7 +22,7 @@ C1    vb 0 0.47u
 * Feedback divider from HV (HHV-25 4.75M / 10.5k) and a V_b bleeder (HHV-25 2.2M): V_b needs its own
 * path when link L3 separates the boost from the tripler during bring-up; V_b OVP divider 2.2M / 13.7k (2.4M, 2.0M / 12.4k until 2026-10-07)
 RFT   hv fb {RFTV}
-RFB   fb 0 5.97k
+RFB   fb 0 6k
 RBLB  vb 0 2.2Meg
 RVO1  vb vbs 2.2Meg
 RVO2  vbs 0 13.7k
@@ -40,7 +40,7 @@ D5    p2 hv DES1J
 * Shared monitor / OVP divider: HV - 4.64M - MON (ADC) - 14.0k - OVP tap - 10.5k - GND
 RMT   hv mon {RMTV}
 RMM   mon hvs 7.87k
-RMO   hvs 0 6.19k
+RMO   hvs 0 6.2k
 RA    hv anode 660k
 * Tube: behavioural, with no hard edges (a hysteretic SW element and a conditional latch both
 * stalled the solver). A strike latch sets when anode-cathode exceeds VSTRIKE and clears when it falls to VMAINT + 5 V; it is
