@@ -116,7 +116,7 @@ pass 8). What the pieces do:
   0.3 mm, not GND's 0.5 mm: a pocket around R116 was only reachable between two vias.
 * `silk.py` re-places the reference designators: around each courtyard, clear of pads, silk,
   other references and the board edge, preferring spots not under another part; 1.0 mm text,
-  0.8 mm (the board minimum) where it is tight. It only moves text, so it can be re-run on its own.
+  0.8 mm (the board minimum) where it is tight, never under a 0.15 mm stroke (PCBWay's minimum). It only moves text, so it can be re-run on its own.
   Mounting-hole references are hidden; on this board C108, C303, L101 and R214 have no legal
   spot and are labelled on the Fab layer only.
 
@@ -128,6 +128,14 @@ the nine fab files that README lists for upload (the zip is git-ignored):
 ```
 kicad-cli pcb export gerbers --check-zones --subtract-soldermask -l F.Cu,B.Cu,F.Mask,B.Mask,F.Silkscreen,B.Silkscreen,F.Paste,Edge.Cuts -o hardware/dekatron/fab/ hardware/dekatron/dekatron.kicad_pcb
 kicad-cli pcb export drill --format excellon --excellon-units mm --generate-report --report-path hardware/dekatron/fab/dekatron-drill_report.txt -o hardware/dekatron/fab/ hardware/dekatron/dekatron.kicad_pcb
+```
+
+The PCBWay set goes into `hardware/dekatron/fab/pcbway/`: the same layers as plain RS-274X
+(`--no-x2`) and separate plated / unplated drill files (zip the ten files its README lists):
+
+```
+kicad-cli pcb export gerbers --check-zones --subtract-soldermask --no-x2 -l F.Cu,B.Cu,F.Mask,B.Mask,F.Silkscreen,B.Silkscreen,F.Paste,Edge.Cuts -o hardware/dekatron/fab/pcbway/ hardware/dekatron/dekatron.kicad_pcb
+kicad-cli pcb export drill --format excellon --excellon-units mm --excellon-separate-th --generate-map --map-format pdf --generate-report --report-path hardware/dekatron/fab/pcbway/dekatron-drill_report.txt -o hardware/dekatron/fab/pcbway/ hardware/dekatron/dekatron.kicad_pcb
 ```
 
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.

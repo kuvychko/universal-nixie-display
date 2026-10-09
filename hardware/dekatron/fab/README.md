@@ -25,7 +25,9 @@ one-spoke thermal to the front pour, still connected). Regenerated 2026-10-08 fo
 BOM (Mouser order `hardware/dekatron/Cart_Oct08_0432PM.xls`): TPS54302 buck (pin-compatible with
 the TPS54202), IPD70R1K4P7S HV switch (same DPAK), F91 tantalum C301 (EIA 3216-18 polarised
 footprint), E24 feedback dividers (2 × 3.0k 0805 R130/R144, 6.2k R140), WIMA MKS4 film capacitors
-(18 × 8 mm footprint) and the 6.3 × 7.7 mm C101, then a full re-route. Earlier sets the same day
-and 2026-10-07 were not ordered. See
+(18 × 8 mm footprint) and the 6.3 × 7.7 mm C101, then a full re-route; regenerated again the same
+day with the 0.8 mm references at a 0.15 mm stroke (PCBWay's minimum), copper unchanged. Earlier
+sets the same day and 2026-10-07 were not ordered. The PCBWay set of the same board is in
+`pcbway/`. See
 `docs/development.md` for the regeneration commands. These files are committed byte-exact; do
 not edit them by hand — regenerate from the board.

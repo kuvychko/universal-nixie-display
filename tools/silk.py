@@ -104,7 +104,7 @@ def main(path):
     def place_at(ref, ang, pos, where, h):
         ref.SetTextAngle(pcbnew.EDA_ANGLE(ang, pcbnew.DEGREES_T))
         ref.SetTextSize(pcbnew.VECTOR2I(MM(h), MM(h)))
-        ref.SetTextThickness(MM(max(0.12, 0.15 * h)))
+        ref.SetTextThickness(MM(max(0.15, 0.15 * h)))   # 0.15 mm: PCBWay's minimum legend stroke
         ref.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_CENTER)
         ref.SetVertJustify(pcbnew.GR_TEXT_V_ALIGN_CENTER)
         ref.SetTextPos(pcbnew.VECTOR2I(int(pos[0]), int(pos[1])))
