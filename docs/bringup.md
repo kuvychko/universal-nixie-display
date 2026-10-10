@@ -12,7 +12,7 @@ bench-HV connection must not back-feed the onboard converter. Use rated probes f
 |---|---|---|---|
 | −1 | Before ordering boards | Print the PCB 1:1 and lay a real RP2040-Zero on the U301 footprint: castellations centred on their pads, USB toward the board edge | — |
 | 0 | All harnesses, unpowered, tube removed | Continuity from each board pad to its far end per [hardware.md Harness landings](hardware.md#harness-landings-d14); for `TUBE`, to the socket pins per [A101 pinout](hardware.md#a101-pinout): anode 8, index K1 13, G1 5, G2 10, and RTN to each of the nine cathodes tied at the socket (1-4, 6, 7, 9, 11, 12), none of them to K1. Socket numbering is easy to mirror (top vs. underside view). No pad-to-pad shorts, especially anode to anything | — |
-| 0b | Optional: A101 bench test on the harness, before the board ([below](#optional-a101-bench-test)) | Strikes at ≤ 450 V; steps both ways with ~−50 to −65 V guide pulses; glow reaches K1 once per 10 steps | — |
+| 0b | Optional: A101 bench test on the harness, before the board ([below](#optional-a101-bench-test)) | Strikes at ≤ 450 V; steps both ways with ~−50 to −65 V guide pulses; glow reaches K1 once per 10 steps | **Tube and harness work** (2026-10-09): strikes and steps reliably at 386 V, the bench supply's maximum; see results below |
 | 1 | 12 V input, 5 V and 3.3 V rails | Rails in tolerance, no back-feed from USB | — |
 | 2 | HV converter with the tripler connected, link LK4 open, HV dummy load (Yageo HHV-50 1M, off-board) soldered across TP108 and GND. **Never power the boost with LK3 open** (feedback and OVP sense HV) | Output, ripple, startup overshoot, load response, temperature, input power, discharge time recorded within limits defined in 1B; power-up inductor current; OVP trips (lift the feedback string's top resistor with HV inhibited, then release) | — |
 | 3 | Bias/guide drive and index sensing | Guide waveforms and index signal at 3.3 V as designed | — |
@@ -87,16 +87,25 @@ Safety: the anode wire and R_A are at up to 450 V, and every other wire sits at 
 ground. Switch off and let the supply's output discharge before touching anything; press the
 buttons by their insulated caps, one hand only.
 
-Results:
+Results (2026-10-09, user's bench supply, 386 V maximum):
 
 | Quantity | Measured |
 |---|---|
-| Strike voltage (supply) | — |
-| RTN / G+, glow on a main cathode | — |
-| Tube current | — |
+| Supply voltage | 386 V (supply maximum; the test was run there, not at 450 V) |
+| Strike voltage (supply) | — (strikes at or below 386 V) |
+| RTN / G+, glow on a main cathode | — (calculated below) |
+| Tube current | — (calculated below) |
+| Stepping | **Reliable.** S1 → S2 → release S1 → release S2 moves the glow one cathode. One button alone moves the glow onto that guide, and on release it returns to the cathode it came from, as expected for a two-guide tube |
 | Steps clockwise / counter-clockwise | — |
 | Glow on K1 once per 10 steps | — |
 | Notes (glow appearance, missed or double steps) | — |
+
+Calculated from the bench values at 386 V for V_m 130-170 V (not measured): RTN 54-56 V lit
+(44 V unlit), G+ 89-91 V, guide bias ≈ 35 V (datasheet +36 to +44 V), tube current ≈ 240-295 µA
+(datasheet 300-450 µA), guide pulse ≈ −44 to −56 V against the cathodes. **So the tube steps
+reliably with a guide pulse of about a third of the datasheet's −150 Vp, at a tube current and
+guide bias at or just below the datasheet minimums.** The board runs at 450 V with RTN ≈ 50 V and
+G+ ≈ 90 V: more current, more bias and about the same pulse, so it has margin on all three.
 
 ## Nixie subsystem (Phase 2)
 

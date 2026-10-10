@@ -916,6 +916,10 @@ G2 → K2 at 200 steps/s, generic MMBTA42/92, zener and BAT54S models from datas
 * **Fault, 51 V zener open:** RTN rises to ~107 V; the BAT54S clamps hold NDX at 3.43 V and
   RTN_SENSE at 3.48 V. Firmware reads RTN_SENSE over range and drops `HV_EN`.
 * Not modelled: whether the A101 transfers its glow at −50 V guide pulses (bring-up, plan §9).
+  **Bench result (2026-10-09, [bringup.md](bringup.md#optional-a101-bench-test)):** it does. The
+  user's A101 steps reliably with two-button guide pulses of about −44 to −56 V (calculated),
+  at a 386 V supply, ≈ 35 V guide bias and ≈ 240-295 µA (calculated). That is less margin than the
+  board's operating point, which keeps the same pulse depth.
 
 With the 51 V zener's tolerance (48.5-53.6 V) the index output spans **2.73-3.01 V** (D9 table used
 47.5-52.5 V): still ≥ 0.73 V above the RP2040's 2.0 V V_IH.
