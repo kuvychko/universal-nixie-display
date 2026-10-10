@@ -12,7 +12,7 @@ bench-HV connection must not back-feed the onboard converter. Use rated probes f
 |---|---|---|---|
 | −1 | Before ordering boards | Print the PCB 1:1 and lay a real RP2040-Zero on the U301 footprint: castellations centred on their pads, USB toward the board edge | — |
 | 0 | All harnesses, unpowered, tube removed | Continuity from each board pad to its far end per [hardware.md Harness landings](hardware.md#harness-landings-d14); for `TUBE`, to the socket pins per [A101 pinout](hardware.md#a101-pinout): anode 8, index K1 13, G1 5, G2 10, and RTN to each of the nine cathodes tied at the socket (1-4, 6, 7, 9, 11, 12), none of them to K1. Socket numbering is easy to mirror (top vs. underside view). No pad-to-pad shorts, especially anode to anything | — |
-| 0b | Optional: A101 bench test on the harness, before the board ([below](#optional-a101-bench-test)) | Strikes at ≤ 450 V; steps both ways with ~−50 to −65 V guide pulses; index reads once per 10 steps | — |
+| 0b | Optional: A101 bench test on the harness, before the board ([below](#optional-a101-bench-test)) | Strikes at ≤ 450 V; steps both ways with ~−50 to −65 V guide pulses; glow reaches K1 once per 10 steps | — |
 | 1 | 12 V input, 5 V and 3.3 V rails | Rails in tolerance, no back-feed from USB | — |
 | 2 | HV converter with the tripler connected, link LK4 open, HV dummy load (Yageo HHV-50 1M, off-board) soldered across TP108 and GND. **Never power the boost with LK3 open** (feedback and OVP sense HV) | Output, ripple, startup overshoot, load response, temperature, input power, discharge time recorded within limits defined in 1B; power-up inductor current; OVP trips (lift the feedback string's top resistor with HV inhibited, then release) | — |
 | 3 | Bias/guide drive and index sensing | Guide waveforms and index signal at 3.3 V as designed | — |
@@ -39,13 +39,14 @@ whether the tube transfers its glow with it (plan §9).
                R2 39k
                 │
                 ├── RTN (~51-65 V) ─────────────── RTN wire (K0, K2-K9)
-                │        └──R_K 33k─────────────── K1 wire (pin 13, index)
+                │                       └───────── K1 wire (pin 13, index)
                R3 47k
                 │
  HV− ───────────┴── GND
 ```
 
-S1 and S2 are normally-open pushbuttons.
+S1 and S2 are normally-open pushbuttons. K1 is tied to RTN: on the bench it is just another main
+cathode, and the glow is watched by eye.
 
 | Part | Value | Rating |
 |---|---|---|
@@ -53,7 +54,6 @@ S1 and S2 are normally-open pushbuttons.
 | R1 | 330k | ≥ 400 V, ≥ 0.5 W (0.39 W dissipated) |
 | R2 / R3 | 39k / 47k | 1/4 W |
 | R_G1, R_G2 | 470k | 1/4 W (the board's guide pull-ups) |
-| R_K | 33k | 1/4 W (the datasheet's index-output resistor) |
 
 Expected at 450 V, calculated from these values (the divider is deliberately not stiff, as in the
 AD01 reference: the tube current lifts RTN and G+ together):
@@ -74,8 +74,9 @@ Procedure:
    as a single spot. If it sits on a guide, press and release S1 or S2.
 3. **Step:** press S1, press S2 (S1 still held), release S1, release S2: one step. Starting with
    S2 steps the other way. Go round at least once in each direction.
-4. **Index:** a meter across R_K reads about 11-12 V with the glow on K1, about 0 V elsewhere,
-   once per 10 steps.
+4. **Index:** the glow lands on K1 (pin 13) once per 10 steps. For an electrical reading instead,
+   put 33k (the datasheet's index-output resistor) between K1 and RTN: a meter across it reads
+   about 11-12 V with the glow on K1 and about 0 V elsewhere.
 5. **Operating point:** measure RTN and G+, and the voltage across R_A (÷ 680k = tube current).
    Note the supply voltage at which the tube strikes.
 
@@ -94,7 +95,7 @@ Results:
 | RTN / G+, glow on a main cathode | — |
 | Tube current | — |
 | Steps clockwise / counter-clockwise | — |
-| Index reading on / off K1 | — |
+| Glow on K1 once per 10 steps | — |
 | Notes (glow appearance, missed or double steps) | — |
 
 ## Nixie subsystem (Phase 2)
