@@ -16,7 +16,7 @@ bench-HV connection must not back-feed the onboard converter. Use rated probes f
 | 1 | 12 V input, 5 V and 3.3 V rails | Rails in tolerance, no back-feed from USB | — |
 | 2 | HV converter with the tripler connected, link LK4 open, HV dummy load (Yageo HHV-50 1M, off-board) soldered across TP108 and GND. **Never power the boost with LK3 open** (feedback and OVP sense HV) | Output, ripple, startup overshoot, load response, temperature, input power, discharge time recorded within limits defined in 1B; power-up inductor current; OVP trips (lift the feedback string's top resistor with HV inhibited, then release) | — |
 | 3 | Bias/guide drive and index sensing | Guide waveforms and index signal at 3.3 V as designed | — |
-| 4 | Firmware motion | Homes, steps both ways, holds positions, reports faults | — |
+| 4 | Firmware motion | Homes, steps both ways, holds positions, reports faults. Power-up: note whether two cathodes glow at switch-on and that homing clears it. Strike time in a dark enclosure within 5 s. Static-glow protection (plan §5): a held position is exercised or the tube goes dark before the hold limit; idle drops HV | — |
 | 5 | Homing characterization | All 10 positions × both directions; ≥1000 home/reposition trials; latency distribution; timeout fault exercised; warm, supply-cycling and USB-attach cases | — |
 
 ### Optional: A101 bench test
@@ -24,7 +24,7 @@ bench-HV connection must not back-feed the onboard converter. Use rated probes f
 Checks the tube and the soldered `TUBE` harness with a bench HV supply (0-450 V) before the board
 exists. It copies the board's drive scheme: main cathodes raised to RTN ≈ 50 V, guides biased
 about +40 V above them, and a guide pulled to GND for a pulse of about −50 to −65 V against the
-cathodes. That pulse is a third of the datasheet's −150 Vp
+cathodes. That pulse is a third to a half of the original datasheet's 135-200 V control pulse
 ([A101 operating point](hardware.md#a101-operating-point-d1)), so this test also answers early
 whether the tube transfers its glow with it (plan §9).
 
@@ -107,7 +107,8 @@ usual 1/4 W rating; see the parts table.
 | Glow on K1 once per 10 steps | — |
 
 **So the tube strikes far below the board's supply and steps reliably with a guide pulse of about
-−63 V, under half the datasheet's −150 Vp, at a tube current just below the datasheet minimum.**
+−63 V, under half the original datasheet's 135-200 V control pulse, at a tube current just below
+the datasheet minimum.**
 The board runs at 450 V with RTN ≈ 50 V: more current (≈ 315-445 µA) and a pulse of about −50 V.
 The pulse is the one figure with less margin than on the bench; bring-up step 3 checks stepping
 on the board itself, and raising RTN (D8) deepens it if needed.

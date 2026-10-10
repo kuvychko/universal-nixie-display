@@ -46,6 +46,11 @@ revision as it is used.
 | `rp2040_zero_sch.pdf` | Waveshare RP2040-Zero schematic | https://www.waveshare.com/w/upload/4/4c/RP2040_Zero.pdf | — |
 | `cyd/ESP32-2432S028-MCU.jpg`, `-LCM.jpg` | ESP32-2432S028 schematic (vendor original V0.1, 2022-07-15) | https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display (OriginalDocumentation/5-Schematic) | V0.1 |
 | `ad01/*.gif` | AD01 dekatron shield schematic, BOM, hook-up | threeneurons (see above) | April 2017 |
+| `dekatrons/A106.pdf` | A106 dekatron, Soviet handbook page (companion site: 10⁴ Hz, blue glow, "смесь неона") | https://lampes-et-tubes.info/cd/A106.pdf | — |
+| `dekatrons/A-101_02.pdf` | A-101 dekatron, original Reflector (Sovtek) product sheet (этикетка): counting rate 0.01–1000 Hz, control pulse 135–200 V for 200–1000 µs, supply ≥ 420 V, guide bias 36–44 V, working current 0.3–0.45 mA; notes on two cathodes glowing at switch-on and on slow-rate limits | https://www.tube-tester.com/sites/nixie/dat_arch/A-101_02.pdf | Accepted Dec 1989 |
+| `dekatrons/7978.pdf` | Raytheon CK7978 decade counter, Technical Information (companion site: neon, 5 kc) | User-supplied scan; also linked from https://www.industrialalchemy.org/articleview.php?item=764 | 15 January 1961 |
+| `dekatrons/A107.pdf` | A107 dekatron, Soviet handbook page (companion site: 0.01–10⁶ Hz, light-blue glow, no fill given) | https://lampes-et-tubes.info/cd/A107.pdf | — |
+| `dekatrons/EZ10B.pdf` | Elesta EZ10B, *Technische Mitteilungen* No. 17 (companion site: 1 MHz, bluish glow, 580 V supply) | https://lampes-et-tubes.info/cd/EZ10B.pdf (transcription at https://www.radiomuseum.org/tubes/tube_ez10b.html) | Feb 1961 |
 
 Simulation models to fetch for Phase 1B (TI product pages; may need a TI login): **Unencrypted
 LM5156-Q1 PSpice Transient Model (rev. H)** from https://www.ti.com/product/LM5156H; for the

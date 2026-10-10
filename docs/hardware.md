@@ -58,6 +58,49 @@ pinout and sectional test provisions defined.
 | Max counting speed | 1 kHz |
 | Base / socket | RSH30 (РШ30) / PL30-2p (ПЛ30-2п), 13 pins |
 
+**Original datasheet** (Reflector (Sovtek) A-101 product sheet, "этикетка", accepted December
+1989; `docs/datasheets/dekatrons/A-101_02.pdf`, see [references.md](references.md)). It
+supersedes the summary above where they differ:
+
+| Parameter (limiting operating values) | Datasheet | Summary above |
+|---|---|---|
+| Supply voltage | ≥ 420 V | 425 V min, 450 V typ |
+| Guide bias (control electrodes vs. indicator cathodes) | 36-44 V, set with no control pulses applied | +36 to +44 V |
+| Control pulse amplitude | 135-200 V | −150 Vp |
+| Control pulse duration | 200-1000 µs | — |
+| Counting rate | 0.01-1000 Hz; maximum ≤ 1 / (3 × control pulse duration) | 1 kHz |
+| Working current | 0.3-0.45 mA, measured in the cathode circuit | 300-450 µA |
+| Overload current / time | ≤ 1.5 mA / ≤ 5 min | — |
+| Output pulse amplitude | ≤ 20 V | 20 V with 33 kΩ |
+| Readiness time in darkness | ≤ 5 s | — |
+| Maintaining voltage | not given | 130-170 V |
+
+Datasheet notes and application instructions, translated:
+
+* **Slow counting is limited.** Operation at counting rates below 0.01 Hz (one step per 100 s)
+  is allowed for **no more than 1 hour**.
+* **Exercise after slow running.** After operation at ≤ 1 Hz, the tube should be "trained" at
+  ≥ 100 Hz for at least 20 minutes.
+* **Two glows at switch-on.** When the anode voltage is applied, two indicator cathodes may glow
+  at once; this should clear after a reset pulse.
+* Operating position any, natural cooling. Its test circuit uses a 510 kΩ anode resistor mounted
+  at the tube socket, 33 kΩ cathode resistors and a stabilised 400-500 V supply.
+
+Consequences for this design:
+
+* **The control pulse is the largest deviation.** Our ~−50 V guide pulse (bench: −63 V, which
+  stepped reliably) is a third to a half of the datasheet's 135-200 V minimum. Known and accepted
+  (see the reference circuit below); bring-up step 3 confirms margin on the board.
+* **Phase durations.** Start the firmware's guide phases inside the datasheet's 200-1000 µs. By
+  its 1 / (3 × duration) rule, 200 steps/s allows phases up to 1.67 ms, so the homing target is
+  compatible with the whole 200-1000 µs range.
+* **Static glow is a tube-life limit, not just a display choice.** See plan §5: the controller
+  must not leave the discharge on one electrode for long; it exercises the tube or turns HV off.
+* **Strike timeout.** Allow at least 5 s for the first strike in a dark enclosure before
+  reporting a fault.
+* **Power-up state.** A double glow can follow switch-on. Homing must not trust the index or the
+  position until the tube has been stepped and one glow confirmed (plan §5).
+
 **Reference circuit** (AD01 Dekatron Shield, M. Moorrees 2017, schematic and BOM images):
 MC34063 driving paralleled 2N5551 from 5 V to 140 V, a BAV21 tripler to ~420 V (unloaded
 maximum), anode resistor 470 kΩ. A divider from 140 V (33k / 47k / 47k) makes **G+ ≈ 104 V**
@@ -68,9 +111,10 @@ of an MPSA92 PNP whose base sits at RTN; its collector feeds 220k / 22k to the l
 Consequences, computed from those values:
 
 * **Elevated cathodes are what let ground-referenced NPN switches drive the guides.** Guide rest =
-  G+ − RTN ≈ +52 V (datasheet +36-44 V); guide pulled to 0 V = −RTN ≈ −52 V. That is a third
-  of the datasheet's −150 Vp pulse; the reference demonstrates it transfers the glow. We keep
-  the scheme and treat the reduced pulse as a known deviation to confirm at bring-up.
+  G+ − RTN ≈ +52 V (datasheet +36-44 V); guide pulled to 0 V = −RTN ≈ −52 V. That is well
+  under the original datasheet's 135-200 V control pulse (the summary's −150 Vp); the reference
+  demonstrates it transfers the glow. We keep the scheme and treat the reduced pulse as a known
+  deviation to confirm at bring-up.
 * **The divider is not stiff.** The tube's ~0.4 mA flows *into* RTN, whose Thevenin resistance is
   29.6 kΩ, so lighting the tube moves RTN from 51.8 to 63.7 V and G+ from 103.6 to 108.5 V.
   Bias and pulse depend on whether the tube is lit. **Proposed:** derive RTN with a shunt element
@@ -91,11 +135,11 @@ Consequences, computed from those values:
 |---|---|---|
 | RTN (main-cathode return) | +50 V, regulated | Reference ≈ 52 V, made load-independent |
 | G+ (guide rest) | RTN + 40 V = +90 V | Centre of datasheet bias range |
-| Guide pulse | Guide switched to ~0 V: −50 V vs. cathodes | Reference practice; datasheet says −150 Vp |
+| Guide pulse | Guide switched to ~0 V: −50 V vs. cathodes | Reference practice; original datasheet says 135-200 V, 200-1000 µs |
 | Anode supply HV | **Option A:** 450 V to ground (400 V above RTN); **Option B:** 500 V to ground (450 V above RTN) | See below |
 | Anode resistor | A: 660 kΩ (2 × 330k HHV-50); B: 800 kΩ (330k + 470k) | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
 | Tube current | A: 314-443 µA (379 typ); B: ≈ 319-431 µA | Within datasheet 300-450 µA |
-| Step rate | ≤ 200 steps/s for homing (plan §5) | Datasheet limit 1 kHz |
+| Step rate | ≤ 200 steps/s for homing (plan §5) | Datasheet 0.01-1000 Hz; below 0.01 Hz for ≤ 1 h only (plan §5) |
 
 The datasheet supply figure (425 min / 450 typ) is referred to the cathodes. With cathodes at
 +50 V, Option A gives the tube 400 V, below the datasheet minimum but more than the reference's
@@ -265,7 +309,8 @@ G+ (90 V) ──[R_PU 470k]──┬──────────── guide p
   regulation with zero tube current (the 1 mA allowance in D3). Simulate this in 1B.
 * **Step sequence** (one main-cathode step clockwise; reverse the order for the other direction):
   G1 on → G2 on → G1 off → G2 off, all from rest. Phase durations are firmware parameters, set at
-  bring-up within the 200 steps/s budget; the datasheet limit is 1 kHz counting.
+  bring-up within the 200 steps/s budget, starting inside the datasheet's 200-1000 µs control
+  pulse; the datasheet limits counting to 1 kHz and to 1 / (3 × pulse duration).
 * **Resistor voltage ratings.** The 470 kΩ pull-up sees up to 90 V, within a 1206 part's rating
   (see [Component conventions](#component-conventions)).
 

@@ -64,6 +64,14 @@ Track position_valid, homing/busy state, expected versus observed index crossing
 
 Support ten main-cathode positions first. Guide-position effects can be added later. Provide accessible cathode links/test locations if easy, but do not populate ten sensing channels in Rev A.
 
+**Static glow: keep the dekatron exercised or dark.** The discharge must not rest on one electrode for long. The A101 datasheet (hardware.md, A101 operating point) allows counting below 0.01 Hz (one step per 100 s) for no more than 1 hour, and recommends at least 20 minutes at ≥ 100 Hz after running at ≤ 1 Hz; Ericsson's 1954 catalogue and the Harwell restoration report the same effect in other tubes (cathodes that hold the glow too long become "sticky" and slow the tube). Requirements:
+
+- The dekatron controller enforces this itself, whatever the display asks for: the RP2040 controllers own hardware state ([architecture.md](architecture.md)). It tracks the time the glow has spent at the current position and the recent step rate, and reports both in STATUS.
+- Before a static hold reaches the datasheet's 1 hour, the controller either exercises the tube (an animation at ≥ 100 steps/s, then a return to the commanded position) or turns HV off and reports the tube dark. The hold limit and the exercise schedule are firmware parameters, _open_, set inside the datasheet limits with margin.
+- Dark is the default whenever the dekatron has nothing to show: idle, screen-saver and error states drop `HV_EN` rather than hold a glow. Relighting requires a strike (allow ≥ 5 s in darkness, per the datasheet) and a re-home; the position is never carried across a dark period.
+- Slow modes count as slow running. A dekatron stepping once per second (for example a seconds display) is at the datasheet's ≤ 1 Hz threshold, after which it recommends the exercise period, so such modes schedule it. Displays slower than one step per 100 s are limited to the 1 hour hold.
+- After power-up, two cathodes may glow at once until reset. Homing steps the tube and confirms a single glow and a consistent index before setting position_valid.
+
 ## 6. Interfaces and software
 
 ### Internal I2C
