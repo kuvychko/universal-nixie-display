@@ -7,8 +7,8 @@ Raspberry Pi or experiment, driven over USB serial with a small SCPI-style comma
 
 ## Status
 
-**Phase 1C — dekatron controller/PSU board ready to order.** Schematics, simulations, PCB
-and fab files are done; nothing is built yet. The
+**Phase 1C — dekatron controller/PSU boards ordered** (PCBWay, 2026-10-09; parts ordered
+2026-10-08). Schematics, simulations, PCB and fab files are done; nothing is built yet. The
 planning baseline is [docs/project_plan.md](docs/project_plan.md); the design decisions and
 open items are tracked in [docs/hardware.md](docs/hardware.md#dekatron-controllerpsu).
 
@@ -16,7 +16,7 @@ open items are tracked in [docs/hardware.md](docs/hardware.md#dekatron-controlle
 |---|---|---|
 | 1A | Dekatron board architecture and power budget for 12 VDC input | Done |
 | 1B | Hierarchical schematics and simulation evidence | Done (open simulation items in `docs/hardware.md`) |
-| 1C | Dekatron controller/PSU PCB, BOM, fab files | **Fab files generated, not yet ordered** |
+| 1C | Dekatron controller/PSU PCB, BOM, fab files | **Boards and parts ordered** |
 | 1D | Sectional bring-up and standalone firmware | Not started |
 | 2 | Nixie PSU qualification and six-tube controller/mount | Not started |
 | 3 | ESP32 UI, encoder, I2C master, USB host commands | Not started |
@@ -75,6 +75,15 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 This project generates roughly 170-180 V (Nixies) and roughly 450 V (dekatron) DC from a 12 V
 adapter. Those voltages can injure. Discharge paths, clearances and probe ratings are design
 requirements here, not afterthoughts; see the project plan §4.
+
+## Acknowledgements
+
+The dekatron controller/PSU boards are made by [PCBWay](https://www.pcbway.com/), who sponsored
+the PCBs for this project. Placing the order was smooth: upload the Gerber zip from
+[`hardware/dekatron/fab/`](hardware/dekatron/fab/), pick the options and go. Their website makes
+it easy to see what you are ordering and how far along it is. Beyond bare boards they also make
+SMD stencils, which are handy for a fine-pitch build like this one, and offer assembly, CNC
+machining and 3D printing. Thank you, PCBWay, for supporting an open-source hardware project.
 
 ## Licence
 

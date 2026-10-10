@@ -78,7 +78,7 @@ WIDTH = {"+12V_RAW": 1.0, "/power/+12V_FUSED": 1.0, "VIN_PROT": 1.0, "+12V_NIX":
 
 # Nets on the LM5156's 0.65 mm-pitch pins: a 0.3 mm escape between 0.4 mm pads has 0.30 mm of real
 # clearance, but on the 0.1 mm raster the halo (0.2 + 0.15 + MARG) equals the measured distance and
-# the escape reads as blocked; 0.25 mm clears it (OSH Park minimum 0.152 mm)
+# the escape reads as blocked; 0.25 mm clears it (fab minimum 0.152 mm)
 FINE = {"/power/LM5156_GATE", "/power/LM5156_CS", "/power/LM5156_COMP", "/power/LM5156_FB", "/power/LM5156_SS",
         "/power/LM5156_RT", "/power/VDRV", "PGOOD", "/power/HV_EN_PIN"}
 

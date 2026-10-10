@@ -62,8 +62,9 @@ print it 1:1 against a real module before ordering boards (bring-up step 0).
 
 ### PCB (Phase 1C): placement and scripted routing
 
-100 × 85 mm, 2 layers, OSH Park rules (6 mil trace/space, 10 mil drill, 5 mil annular ring; the
-D13 class rules in `dekatron.kicad_dru`). The board is generated, so re-run the whole chain after
+100 × 85 mm, 2 layers, made by PCBWay (ordered at 6/6 mil trace/space; the board's minimum is
+0.2 mm track and clearance, 0.3 mm drill, 0.15 mm annular ring; the D13 class rules in
+`dekatron.kicad_dru`). The board is generated, so re-run the whole chain after
 a schematic change (the board script reads the exported netlist):
 
 ```
@@ -87,7 +88,7 @@ pass 8). What the pieces do:
   power parts) and constructively for the rest, inside per-group regions. `KEEPOUT` reserves
   fan-out room around the LM5156; the LM5156 is rotated 90° so its signal row faces the
   comparators and the HV divider and its drive row faces Q102. Its exposed pad gets six 0.3 mm
-  vias as extra pads (the library's thermal-via variant uses 0.2 mm, below OSH Park's minimum),
+  vias as extra pads (the library's thermal-via variant uses 0.2 mm; the board keeps every drill at 0.3 mm or more),
   which is why DRC reports U106 as differing from the library.
 * `route_pcb.py` is a two-layer A* router on a 0.1 mm grid with the D13 class clearances. It has
   no rip-up, so order is the lever: the LM5156's fine-pitch nets first, in an order that keeps
@@ -122,20 +123,13 @@ pass 8). What the pieces do:
 
 ### Fab outputs
 
-OSH Park Gerbers and drill into `hardware/dekatron/fab/` (its README lists the files), then zip
-the nine fab files that README lists for upload (the zip is git-ignored):
+PCBWay Gerbers (plain RS-274X, `--no-x2`) and separate plated / unplated drill files into
+`hardware/dekatron/fab/`, then zip the ten files its README lists for upload (the zip is
+git-ignored):
 
 ```
-kicad-cli pcb export gerbers --check-zones --subtract-soldermask -l F.Cu,B.Cu,F.Mask,B.Mask,F.Silkscreen,B.Silkscreen,F.Paste,Edge.Cuts -o hardware/dekatron/fab/ hardware/dekatron/dekatron.kicad_pcb
-kicad-cli pcb export drill --format excellon --excellon-units mm --generate-report --report-path hardware/dekatron/fab/dekatron-drill_report.txt -o hardware/dekatron/fab/ hardware/dekatron/dekatron.kicad_pcb
-```
-
-The PCBWay set goes into `hardware/dekatron/fab/pcbway/`: the same layers as plain RS-274X
-(`--no-x2`) and separate plated / unplated drill files (zip the ten files its README lists):
-
-```
-kicad-cli pcb export gerbers --check-zones --subtract-soldermask --no-x2 -l F.Cu,B.Cu,F.Mask,B.Mask,F.Silkscreen,B.Silkscreen,F.Paste,Edge.Cuts -o hardware/dekatron/fab/pcbway/ hardware/dekatron/dekatron.kicad_pcb
-kicad-cli pcb export drill --format excellon --excellon-units mm --excellon-separate-th --generate-map --map-format pdf --generate-report --report-path hardware/dekatron/fab/pcbway/dekatron-drill_report.txt -o hardware/dekatron/fab/pcbway/ hardware/dekatron/dekatron.kicad_pcb
+kicad-cli pcb export gerbers --check-zones --subtract-soldermask --no-x2 -l F.Cu,B.Cu,F.Mask,B.Mask,F.Silkscreen,B.Silkscreen,F.Paste,Edge.Cuts -o hardware/dekatron/fab/ hardware/dekatron/dekatron.kicad_pcb
+kicad-cli pcb export drill --format excellon --excellon-units mm --excellon-separate-th --generate-map --map-format pdf --generate-report --report-path hardware/dekatron/fab/dekatron-drill_report.txt -o hardware/dekatron/fab/ hardware/dekatron/dekatron.kicad_pcb
 ```
 
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.

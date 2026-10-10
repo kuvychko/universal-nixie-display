@@ -998,7 +998,7 @@ def build_power(lib: SymbolLib) -> Sheet:
     # ==== HV BOOST (D2) =============================================================================
     note("HV BOOST (D2, Phase 1B)", "LM5156H, ~150 kHz DCM, 10 V gate drive, feedback from HV (tripler sheet area), "
          "CS filter against the pump surge; kit 100 uH inductor", 15.24, 152.4)
-    # footprint without the library's 0.2 mm thermal vias (below OSH Park's 0.254 mm minimum drill);
+    # footprint without the library's 0.2 mm thermal vias (the board keeps every drill at 0.3 mm or more);
     # gen_pcb.py adds 0.3 mm vias in the exposed pad instead
     M = sh.place("Regulator_Switching:LM5156HPWP", "U106", "LM5156H", 165.1, 200.66, textpos=(-12.7, -17.0),
                  footprint="Package_SO:Texas_HTSSOP-14-1EP_4.4x5mm_P0.65mm_EP3.4x5mm_Mask3.155x3.255mm",

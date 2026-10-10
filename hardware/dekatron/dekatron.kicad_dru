@@ -20,7 +20,7 @@
 (rule "HV edge clearance"
   (condition "A.NetClass == 'HV'")
   (constraint edge_clearance (min 3.0mm)))
-(rule "OSH Park minimum"
+(rule "Fab minimum (PCBWay standard, ordered at 6/6 mil)"
   (constraint track_width (min 0.1524mm))
-  (constraint hole_size (min 0.254mm))
-  (constraint annular_width (min 0.127mm)))
+  (constraint hole_size (min 0.2mm))
+  (constraint annular_width (min 0.15mm)))

@@ -30,10 +30,7 @@ build/
 !hardware/*/fab/*.gbr
 !hardware/*/fab/*.gbrjob
 !hardware/*/fab/*.drl
-!hardware/*/fab/*/*.gbrjob
-!hardware/*/fab/*/*.drl
 hardware/*/fab/*.zip
-hardware/*/fab/*/*.zip
 
 # --- Simulation scratch (keep netlists, benches and summarised results) ---
 *.log

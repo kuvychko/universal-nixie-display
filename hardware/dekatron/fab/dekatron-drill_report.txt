@@ -1,5 +1,5 @@
 Drill report for dekatron.kicad_pcb
-Created on 2026-10-08T19:35:02
+Created on 2026-10-08T19:35:04
 
 Copper Layer Stackup:
     =============================================================
@@ -7,7 +7,7 @@ Copper Layer Stackup:
     L2 :  B.Cu                      back
 
 
-Drill file 'dekatron.drl' contains
+Drill file 'dekatron-PTH.drl' contains
     plated through holes:
     =============================================================
     T1  0.300mm  0.0118"  (6 holes))
@@ -21,10 +21,10 @@ Drill file 'dekatron.drl' contains
     Total plated holes count 463
 
 
-Not plated through holes are merged with plated holes
+Drill file 'dekatron-NPTH.drl' contains
     unplated through holes:
     =============================================================
-    T8  1.600mm  0.0630"  (12 holes))
-    T9  3.200mm  0.1260"  (4 holes))
+    T1  1.600mm  0.0630"  (12 holes))
+    T2  3.200mm  0.1260"  (4 holes))
 
     Total unplated holes count 16

@@ -13,7 +13,7 @@ Writes hardware/dekatron/dekatron.kicad_pcb (unrouted) and dekatron.kicad_dru:
     clearance so HV parts keep their distance;
   * GND pours on both layers over the low-voltage regions only; a no-via rule area under the
     RP2040-Zero (its underside carries pads);
-  * .kicad_dru clearance rules between the D13 net classes (OSH Park 2-layer, 6/6 mil base).
+  * .kicad_dru clearance rules between the D13 net classes (PCBWay 2-layer, 6/6 mil base).
 
 Like the nanovolt-divider generator this is a bootstrap: once the board is edited in KiCad the
 .kicad_pcb is the source of truth.
@@ -76,10 +76,10 @@ DRU = """(version 1)
 (rule "HV edge clearance"
   (condition "A.NetClass == 'HV'")
   (constraint edge_clearance (min 3.0mm)))
-(rule "OSH Park minimum"
+(rule "Fab minimum (PCBWay standard, ordered at 6/6 mil)"
   (constraint track_width (min 0.1524mm))
-  (constraint hole_size (min 0.254mm))
-  (constraint annular_width (min 0.127mm)))
+  (constraint hole_size (min 0.2mm))
+  (constraint annular_width (min 0.15mm)))
 """
 
 # --------------------------------------------------------------------------------------
