@@ -51,7 +51,7 @@ cathode, and the glow is watched by eye.
 | Part | Value | Rating |
 |---|---|---|
 | R_A (anode) | 680k, or 2 × 330k in series | ≥ 400 V total, ≥ 0.25 W |
-| R1 | 330k | ≥ 400 V, ≥ 0.5 W (0.39 W dissipated) |
+| R1 | 330k | Sees 320-360 V and 0.3-0.4 W at 400-450 V. Use two in series (e.g. 2 × 160k-180k): most 1/4 W leaded resistors are rated 250-350 V, so a single part (or a parallel pair) is over its voltage rating |
 | R2 / R3 | 39k / 47k | 1/4 W |
 | R_G1, R_G2 | 470k | 1/4 W (the board's guide pull-ups) |
 
@@ -88,15 +88,17 @@ ground. Switch off and let the supply's output discharge before touching anythin
 buttons by their insulated caps, one hand only.
 
 Results (2026-10-09, user's bench supply; stepping first at 386 V, measurements at 400 V; voltages
-measured from GND):
+measured from GND). Parts used, all 1/4 W: R_A 2 × 330k in series, R1 2 × 680k in parallel
+(340k), R2 33k + 5.1k in series (38.1k), R3 47k. R1's two parts each saw about 320 V, above the
+usual 1/4 W rating; see the parts table.
 
 | Quantity | Measured |
 |---|---|
 | Strike voltage (supply) | **289 V**; strikes reliably at 300 V. Before striking no current flows, so the anode sits at the supply and RTN at the divider's ≈ 33 V (calculated): ≈ 256 V across the tube |
-| RTN, glow on a main cathode, 400 V supply | **63 V** (calculated 57 V; G+ not measured) |
+| RTN, glow on a main cathode, 400 V supply | **63 V** (calculated 56 V with the parts used; G+ not measured) |
 | Anode (tube pin 8), 400 V supply | **210 V** |
 | Maintaining voltage (anode − RTN) | **147 V** (datasheet 130-170 V) |
-| Tube current, (400 − 210 V) / R_A | **≈ 280 µA** with R_A = 680k (288 µA with 2 × 330k); datasheet 300-450 µA |
+| Tube current, (400 − 210 V) / R_A | **288 µA** (R_A = 2 × 330k); datasheet 300-450 µA |
 | Guide pulse (guide at GND − RTN) | **≈ −63 V** against the cathodes |
 | Stepping | **Reliable in both directions, no missed steps seen** (manual stepping is fiddly). S1 → S2 → release S1 → release S2 moves the glow one cathode; starting with S2 steps the other way. One button alone moves the glow onto that guide, and on release it returns to the cathode it came from, as expected for a two-guide tube |
 | Glow on K1 once per 10 steps | — |

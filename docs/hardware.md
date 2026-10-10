@@ -919,7 +919,7 @@ G2 → K2 at 200 steps/s, generic MMBTA42/92, zener and BAT54S models from datas
 * Not modelled: whether the A101 transfers its glow at −50 V guide pulses (bring-up, plan §9).
   **Bench result (2026-10-09, [bringup.md](bringup.md#optional-a101-bench-test)):** it does. The
   user's A101 steps reliably both ways with two-button guide pulses of about −63 V (measured RTN
-  63 V at a 400 V supply), at ≈ 280 µA and a 147 V maintaining voltage. The board's pulse is about
+  63 V at a 400 V supply), at 288 µA and a 147 V maintaining voltage. The board's pulse is about
   −50 V (RTN 50 V); bring-up step 3 confirms stepping there.
 
 With the 51 V zener's tolerance (48.5-53.6 V) the index output spans **2.73-3.01 V** (D9 table used
