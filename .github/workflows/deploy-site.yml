@@ -1,0 +1,38 @@
+name: Deploy site
+
+# Publishes the companion site to GitHub Pages (the gh-pages branch). Manual only: deployment is
+# a release step, run when the repository goes public (docs/companion_site.md §7). Afterwards,
+# set Settings → Pages → Source to the gh-pages branch once.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: site-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and publish to GitHub Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # gh-deploy pushes to gh-pages and needs that branch's history.
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --locked --group docs
+      # Build and check strictly first. A site that cannot build cleanly must not replace a
+      # working one.
+      - run: uv run --no-sync mkdocs build --strict
+      - run: uv run --no-sync python tools/check_site.py
+      - name: Publish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          uv run --no-sync mkdocs gh-deploy --force --no-history

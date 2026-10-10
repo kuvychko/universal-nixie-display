@@ -52,6 +52,7 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | [docs/bringup.md](docs/bringup.md) | Module bring-up procedures and acceptance results |
 | [docs/development.md](docs/development.md) | Toolchains, KiCad workflow, generated-file policy |
 | [docs/references.md](docs/references.md) | Datasheets, source designs, attribution and reuse terms |
+| [docs/companion_site.md](docs/companion_site.md) | Plan for the public companion website (`website/`) |
 
 ## Repository layout
 
@@ -69,6 +70,7 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | `tools/` | Serial client, bring-up scripts |
 | `characterization/` | Dated measurements (supply, homing, thermal, reliability) |
 | `tests/` | Host protocol/formatting tests, hardware test scripts |
+| `website/` | Companion site source (MkDocs Material; `mkdocs.yml` at the root) |
 
 ## Safety
 

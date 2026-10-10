@@ -1,0 +1,81 @@
+# The companion site (docs/companion_site.md). Source in website/; the engineering documents in
+# docs/ are not part of it and are linked on GitHub instead. Built with `mkdocs build --strict`:
+# a missing nav page or a broken internal link fails the build.
+#
+# Deployment is a release step: the repository goes public and the manual deploy workflow
+# (.github/workflows/deploy-site.yml) runs. Until then the site is built and reviewed locally:
+#   uv run --group docs mkdocs serve
+site_name: Universal Nixie Display
+site_description: Six IN-14 Nixies and an A101 dekatron. How a glow in a gas-filled tube displays a number, and how one remembers it.
+site_url: https://kuvychko.github.io/universal-nixie-display/
+repo_url: https://github.com/kuvychko/universal-nixie-display
+repo_name: kuvychko/universal-nixie-display
+copyright: Text, diagrams and hardware CERN-OHL-P v2; code MIT. Igor Kuvychko, 2026.
+
+docs_dir: website
+
+theme:
+  name: material
+  # System fonts: the site makes no requests to Google Fonts (or any third party).
+  font: false
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: red
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: red
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+
+strict: true
+
+# Broken #anchor links fail the strict build too (MkDocs reports them only as INFO by default).
+validation:
+  anchors: warn
+
+markdown_extensions:
+  - admonition
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+      title: On this page
+  - attr_list
+  - md_in_html
+  - tables
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - path: javascripts/dekatron/ring.js
+    type: module
+  - path: javascripts/dekatron/strip.js
+    type: module
+
+nav:
+  - Home: index.md
+  - The display: display.md
+  - How the tubes work:
+      - How a dekatron counts: how-it-works/dekatron.md
+      - How a nixie shows a digit: how-it-works/nixie.md
+  - Build and investigate: build.md
+  - About: about.md

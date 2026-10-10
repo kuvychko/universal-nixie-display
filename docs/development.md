@@ -155,6 +155,23 @@ Each bench states its model sources and limitations in its header. Commit summar
 (tables, plots) rather than `.raw` data. A simplified tube model can support circuit analysis but
 cannot establish glow transfer, ignition or homing (plan §9).
 
+## Companion site
+
+MkDocs Material, source in `website/`, configuration in `mkdocs.yml`; plan in
+[companion_site.md](companion_site.md). Preview, then build and check as CI does:
+
+```
+uv run --group docs mkdocs serve
+uv run --group docs mkdocs build --strict
+uv run python tools/check_site.py
+```
+
+The strict build fails on a broken internal link or anchor. `tools/check_site.py` checks the built
+HTML for root-relative links (they break under the Pages subpath), missing alt text and missing
+images, and lists external links for a manual check. `.github/workflows/site.yml` runs both on
+every push; publishing (`deploy-site.yml`) is manual and waits until the repository is public.
+Engineering documents are linked on GitHub rather than copied into the site.
+
 ## Generated-file policy
 
 * `.gitattributes` pins text files to LF, matching KiCad. Released fab files under

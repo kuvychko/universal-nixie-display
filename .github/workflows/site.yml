@@ -1,0 +1,27 @@
+name: Site
+
+# Builds and checks the companion site (docs/companion_site.md) on every push and pull request.
+# It never publishes: deploy-site.yml does that, by hand, once the repository is public.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Site (mkdocs build --strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --locked --group docs
+      - run: uv run --no-sync mkdocs build --strict
+      # Subpath-safe links, alt text and local images in the built HTML.
+      - run: uv run --no-sync python tools/check_site.py
