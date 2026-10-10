@@ -65,7 +65,7 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | `firmware/dekatron/` | RP2040 dekatron controller and standalone diagnostics |
 | `firmware/nixie/` | RP2040 Nixie controller |
 | `firmware/common/` | Shared protocol definitions |
-| `enclosure/` | SOLIDWORKS source, STEP, 3MF |
+| `enclosure/` | Printed parts, one folder per assembly (SOLIDWORKS source, STEP, 3MF); index and print settings in its README |
 | `tools/` | Serial client, bring-up scripts |
 | `characterization/` | Dated measurements (supply, homing, thermal, reliability) |
 | `tests/` | Host protocol/formatting tests, hardware test scripts |

@@ -83,6 +83,9 @@ Procedure:
 If the glow does not step, a larger R3 (e.g. 68k) raises RTN and with it the pulse amplitude;
 that would mean raising RTN on the board too (D8).
 
+The user's build is on a 30 × 70 mm perf board in a printed clamshell
+([enclosure/dekatron-bench-test](../enclosure/README.md#dekatron-bench-test-a101-bench-test-fixture)).
+
 Safety: the anode wire and R_A are at up to 450 V, and every other wire sits at 50-106 V; none is
 ground. Switch off and let the supply's output discharge before touching anything; press the
 buttons by their insulated caps, one hand only.
