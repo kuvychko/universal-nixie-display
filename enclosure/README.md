@@ -12,8 +12,8 @@
 * **Each assembly's table** lists its parts, quantities, hardware, any print-setting exceptions
   and the status (designed, printed, fitted).
 
-Default print settings unless a table says otherwise: PLA, 0.4 mm nozzle, 0.20 mm QUALITY
-profile, 15 % gyroid infill.
+Default print settings unless a table says otherwise: PLA on the Prusa, 0.4 mm nozzle, 0.20 mm
+QUALITY profile, 15 % gyroid infill.
 
 Printed plastic is not HV insulation. Clearances live on the boards and in rated wire; a printed
 part only keeps fingers away (plan §4).
@@ -21,14 +21,14 @@ part only keeps fingers away (plan §4).
 ## `dekatron-bench-test/`: A101 bench test fixture
 
 A clamshell around the 30 × 70 mm perf board of the
-[optional A101 bench test](../docs/bringup.md#optional-a101-bench-test). The parts to hold the
-A101 socket and shroud the tube come next.
+[optional A101 bench test](../docs/bringup.md#optional-a101-bench-test), a housing for the A101
+socket and a shroud over the tube.
 
 | Part | Files | Qty | Status |
 |---|---|---|---|
 | Clamshell base | `clamshell-base-v0` | 1 | Printed and fitted (2026-10-10) |
 | Clamshell top | `clamshell-top-v0` | 1 | Printed and fitted (2026-10-10) |
-| A101 socket holder | — | 1 | Being designed |
-| Tube shroud | — | 1 | Being designed |
+| A101 socket housing | `socket-housing-v0` | 1 | Printed and fitted (2026-10-11), black matte PLA |
+| Tube shroud | `tube-shroud-v0` | 1 | Printed and fitted (2026-10-11), black matte PLA |
 
 Hardware: 2 × M2 × 6 mm machine screws and 2 × M2 × 4 × 3.2 mm knurled brass threaded inserts.
