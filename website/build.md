@@ -12,6 +12,15 @@ in the [project repository](https://github.com/kuvychko/universal-nixie-display)
 | [Dekatron board](https://github.com/kuvychko/universal-nixie-display/tree/main/hardware/dekatron) | KiCad project, simulations and fabrication files |
 | [Enclosure](https://github.com/kuvychko/universal-nixie-display/tree/main/enclosure) | Printed parts and print settings |
 
+!!! warning "The A101 socket is rare"
+    A101 dekatrons are easy to find, on eBay for reasonable money, but their original socket
+    (PL30-2p, ПЛ30-2п) is not: this build uses one already on hand, and none could be found for
+    sale. To reproduce the display, plan on a different or custom socket. It must keep the tube's
+    pinout and keep the anode wire well away from the others; the printed socket housing would
+    need redesigning to match. A promising route, not yet tried here, is a
+    [3D-printable PL30-2p socket](https://www.printables.com/model/1337925-dekatron-nixie-tube-socket-pl30-2p-for-a-101-a-102) on Printables; if it is printed, the anode pin's
+    clearance to its neighbours should come from air gap and rated wire, not from the plastic.
+
 !!! danger "High voltage"
     The display generates about 450 V for the dekatron and about 170-180 V for the Nixies. Those
     voltages can injure. The build documents give the precautions where they apply; read them before

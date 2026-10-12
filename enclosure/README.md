@@ -28,7 +28,16 @@ socket and a shroud over the tube.
 |---|---|---|---|
 | Clamshell base | `clamshell-base-v0` | 1 | Printed and fitted (2026-10-10) |
 | Clamshell top | `clamshell-top-v0` | 1 | Printed and fitted (2026-10-10) |
-| A101 socket housing | `socket-housing-v0` | 1 | Printed and fitted (2026-10-11), black matte PLA |
+| A101 socket housing | `socket-housing-v0` | 1 | Printed and fitted (2026-10-11), black matte PLA. Shaped for the original PL30-2p socket |
 | Tube shroud | `tube-shroud-v0` | 1 | Printed and fitted (2026-10-11), black matte PLA |
 
-Hardware: 2 × M2 × 6 mm machine screws and 2 × M2 × 4 × 3.2 mm knurled brass threaded inserts.
+Hardware: 2 × M2 × 6 mm machine screws and 2 × M2 × 4 × 3.2 mm knurled brass threaded inserts
+(clamshell). Hardware for the socket housing and shroud: to be added.
+
+**The socket is the hard part to source.** The housing is built around the original A101 socket
+(PL30-2p, ПЛ30-2п), which is very rare: A101 tubes sell on eBay at reasonable prices, but no
+sockets could be found (2026-10-11). To reproduce this fixture, plan on a different socket or a
+custom one, and redesign the housing to suit. A promising start, not yet tried here: a
+[3D-printable PL30-2p socket for the A-101 / A-102](https://www.printables.com/model/1337925-dekatron-nixie-tube-socket-pl30-2p-for-a-101-a-102) on Printables. As above, the plastic
+is not HV insulation: the anode pin's clearance to its neighbours must come from air gap and
+rated wire.
