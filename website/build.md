@@ -21,10 +21,11 @@ in the [project repository](https://github.com/kuvychko/universal-nixie-display)
     [3D-printable PL30-2p socket](https://www.printables.com/model/1337925-dekatron-nixie-tube-socket-pl30-2p-for-a-101-a-102) on Printables; if it is printed, the anode pin's
     clearance to its neighbours should come from air gap and rated wire, not from the plastic.
 
-!!! danger "High voltage"
-    The display generates about 450 V for the dekatron and about 170-180 V for the Nixies. Those
-    voltages can injure. The build documents give the precautions where they apply; read them before
-    building or probing anything.
+!!! danger "High voltage, at your own risk"
+    The display generates about 450 V for the dekatron and about 170-180 V for the Nixies, which
+    can cause serious injury or death. Anything you build from this project is at your own risk.
+    Read the [safety notes](safety.md), and the precautions in the build documents, before building
+    or probing anything.
 
 !!! info "Status"
     Phase 1 (dekatron controller and power supply) has its boards ordered and its tube

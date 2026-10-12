@@ -72,20 +72,47 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | `tests/` | Host protocol/formatting tests, hardware test scripts |
 | `website/` | Companion site source (MkDocs Material; `mkdocs.yml` at the root) |
 
-## Safety
+## Safety: read this first
 
-This project generates roughly 170-180 V (Nixies) and roughly 450 V (dekatron) DC from a 12 V
-adapter. Those voltages can injure. Discharge paths, clearances and probe ratings are design
-requirements here, not afterthoughts; see the project plan §4.
+> [!WARNING]
+> **This project uses dangerous voltages.** The dekatron runs from about 450 V DC and the Nixies
+> from about 170-180 V DC. A shock at these voltages can cause serious injury or death, and
+> capacitors can hold a charge after the power is off. If you build, test or copy anything here,
+> you do so **entirely at your own risk**. Work on it only if you understand high-voltage
+> circuits and know what you are doing. The designs and documents are provided as is, without
+> warranty of any kind (see [LICENSE](LICENSE)).
+
+The **A101 bench test** ([docs/bringup.md](docs/bringup.md#optional-a101-bench-test)) is the most
+exposed part of the project: open wiring on a perf board, the anode at up to 450 V and every other
+wire at 50-106 V, none of them at ground. If you try it:
+
+* **One hand.** While anything is powered, keep one hand away from the circuit, for example in a
+  pocket. Operate buttons by their insulated caps.
+* **Limit the current.** Use a bench supply with an adjustable current limit, set to a few
+  milliamps (2-3 mA for the bench test).
+* **Power off to touch.** Make and change connections only with the supply off and its output
+  discharged; measure before you touch anything.
+* **Rated equipment.** Use meters, probes and leads rated for the voltage. Clip leads on before
+  powering up rather than holding probes on live nodes.
+* **Not alone, not tired.** Work with someone nearby, and stop when you are not concentrating.
+
+On the boards, discharge paths, clearances and probe ratings are design requirements, not
+afterthoughts (project plan §4). Printed plastic parts keep fingers away; they are not
+high-voltage insulation.
 
 ## Acknowledgements
 
-The dekatron controller/PSU boards are made by [PCBWay](https://www.pcbway.com/), who sponsored
-the PCBs for this project. Placing the order was smooth: upload the Gerber zip from
-[`hardware/dekatron/fab/`](hardware/dekatron/fab/), pick the options and go. Their website makes
-it easy to see what you are ordering and how far along it is. Beyond bare boards they also make
-SMD stencils, which are handy for a fine-pitch build like this one, and offer assembly, CNC
-machining and 3D printing. Thank you, PCBWay, for supporting an open-source hardware project.
+The dekatron controller/PSU boards are being made by [PCBWay](https://www.pcbway.com/), who are
+sponsoring their fabrication. Ordering was easy and smooth: upload the Gerber zip from
+[`hardware/dekatron/fab/`](hardware/dekatron/fab/), pick the options and go. What stands out is
+how much information their website gives, from exactly what you are ordering to where your order
+is in production. There is even a full walk-through of how a board is made, step by step:
+[PCB manufacturing process](https://www.pcbway.com/pcb-service.html). Beyond bare boards they
+also make SMD stencils and offer assembly, CNC machining and 3D printing.
+
+The boards are in production as this is written (October 2026), so there is nothing to say yet
+about how they turn out; that will follow when they arrive and are brought up. Thank you, PCBWay,
+for supporting an open-source hardware project.
 
 ## Licence
 

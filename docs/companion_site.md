@@ -195,4 +195,54 @@ Add measured waveforms, a more detailed ignition/transfer view, or a 3D nixie cu
 - **Harwell Dekatron computer:** [The National Museum of Computing, “The Harwell Dekatron / WITCH”](https://www.tnmoc.org/witch). Dates (1949 design, 1951 first run, 1973 switch-off, 20 November 2012 reboot), the 720-dekatron store, and the Guinness recognitions.
 - **Still to verify during implementation:** A101 production history (manufacturer and years), primary A101 and IN-14 datasheets, exact electrode and numeral-stack geometry, and the final project's guide waveforms. Do not publish illustrative parameters as measured device specifications.
 
+## 10. Going public
+
+The repository goes public and the site goes live together, when the bench-test video is shared
+(decided 2026-10-11). The site must be ready before the link is.
+
+**Before flipping the repository** (status as of 2026-10-11):
+
+| Check | Status |
+|---|---|
+| History holds no datasheets, vendor models or other third-party files that may not be redistributed (`docs/datasheets/` and `hardware/*/simulation/models/vendor/` were never committed) | Done |
+| No secrets or large files in history | Done |
+| `hardware/dekatron/Cart_Oct08_0432PM.xls` (the frozen Mouser order, cited by `hardware.md` and `gen_schematics.py`) holds part numbers, quantities and prices only: no name, address or account | Done: keep |
+| Commits carry the author's e-mail address; it becomes public with the history | Accepted by the author (2026-10-11) |
+| Safety warning and at-your-own-risk disclaimer: README, bring-up bench test, site (home, dekatron page, build page, Safety page) | Done |
+| Licences present (`LICENSE`, `LICENSE-CERN-OHL-P-2.0`, `LICENSE-MIT`) | Done |
+| README acknowledgement of PCBWay's sponsorship, without claims about board quality until boards arrive | Done |
+| Bench-test video on YouTube, linked from the site (below) | Open: video not yet made |
+| Site read-through after the last content change; strict build and `tools/check_site.py` pass | Before release |
+
+**Release sequence:**
+
+1. Final local check: `uv run --group docs mkdocs build --strict` and `uv run python tools/check_site.py`; preview with `mkdocs serve`.
+2. Make the repository public (Settings → General → Danger Zone).
+3. Run **Deploy site** (Actions → Deploy site → Run workflow). It builds, checks and pushes `gh-pages`.
+4. Settings → Pages → Source: deploy from the `gh-pages` branch, root. Wait for the first Pages build.
+5. Check the live site at https://kuvychko.github.io/universal-nixie-display/: every page loads, figures work, the subpath is right, and the repository links listed by `check_site.py` now resolve.
+6. Share the video with links to the site and the repository.
+
+**The video** (decided 2026-10-11): the author uploads it to YouTube, and the site links to it rather than embedding it, so the site still makes no third-party requests. A still frame from the video, saved as a small image in `website/assets/`, can act as the link on the home page and the dekatron page. The caption says what is shown, the supply voltage and the date.
+
+## 11. Growing with the project
+
+The site follows the build, one phase at a time, and only ever describes what has been demonstrated. Each phase gate in the [project plan](project_plan.md) is also a site update:
+
+| Project phase | What the site gains |
+|---|---|
+| Now: A101 on the bench (Phase 1 bench test) | Dekatron explainer, bench circuit, bench-test video, history and speed survey |
+| 1D: dekatron controller board brought up | Board photos and a short build note; measured waveforms (guide drive, index) replacing calculated values where they exist; homing and the exercise-or-dark behaviour shown; a first note on PCB quality, now that the boards are in hand |
+| 2: Nixie supply and six-tube mount | The IN-14 explainer and its numeral-stack figure (§5), with the stack order checked against a tube; Nixie photos |
+| 3: ESP32 interface and host commands | "The display" page fills in: modes that work, the touchscreen, the encoder, and the USB command set (linked, not duplicated) |
+| 4: Enclosure | Photographs of the finished object; the home page hero becomes the instrument |
+| 5: Rev A release | Build and investigate becomes a real reproduction guide, pointing at the released files |
+
+Rules for every update:
+
+- **One status, three places.** A phase change updates the README Status table, the home page status box, and a dated entry on a short **Progress** page (newest first; to be added with the first update after go-live), so a visitor can see what changed and when.
+- **Demonstrated only.** A feature appears on the site once it works on real hardware, with a photo, video or measurement; plans are labelled as plans.
+- **Measured beats calculated.** When a measurement replaces a calculated value on a page, say so, and keep the calculation only if the comparison teaches something.
+- **Keep the strict build green.** Every content change passes `mkdocs build --strict` and `tools/check_site.py`; the Site workflow checks each push.
+
 The intended result is a small, durable explanation built around a real object: visitors can see the tubes working, manipulate a faithful conceptual model, and understand the engineering that connects the two.

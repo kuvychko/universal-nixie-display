@@ -23,6 +23,10 @@ Everything on this page is explained with the circuit the project's A101 was fir
 bench supply, a few resistors and two pushbuttons. **All voltages are measured from ground**, the
 supply's negative terminal, so a number always means the same thing.
 
+!!! danger "Not a casual experiment"
+    This circuit has 400 V on open wiring. If you build anything like it, it is at your own risk:
+    read the [safety notes](../safety.md) first, and keep one hand away while it is powered.
+
 [![The A101 bench test circuit: a 400 V supply feeds the anode through R_A; a divider R1, R2, R3 holds the main cathodes at RTN, about 57 V, and the guide supply G+ at about 91 V; each guide is pulled up to G+ through 470 kΩ, and a pushbutton grounds it](../assets/bench-circuit.svg){ .figure-plate }](../assets/bench-circuit.svg)
 
 *The bench circuit (open the drawing full size). The parts are the ones used on the bench.*
@@ -277,7 +281,8 @@ and switches it off when there is nothing to show.
   the century.
 
 The **A101** in this project is a Soviet two-guide dekatron with a ten-cathode ring and an index
-output. Its production history is still to be sourced for this page.
+output. Its product sheet comes from the Reflector plant and is stamped December 1989, late in the
+dekatron's life; a fuller production history is still to be sourced.
 
 ## This build
 

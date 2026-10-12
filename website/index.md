@@ -12,6 +12,10 @@ is stateful: a spot of glow sits on one of ten cathodes, and pulses move it one 
 ring, forwards or backwards. The position of the glow *is* the number, and the tube holds it by
 itself between pulses. One tube shows a number; the other remembers one.
 
+!!! danger "High voltage"
+    The tubes run at 170-450 V DC, which can cause serious injury or death. Anything you build or
+    try from this project is at your own risk: read the [safety notes](safety.md) first.
+
 ## Two ways in
 
 **[Explore the display](display.md).** What the finished instrument does, its controls and its

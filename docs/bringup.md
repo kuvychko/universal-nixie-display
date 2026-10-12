@@ -21,6 +21,10 @@ bench-HV connection must not back-feed the onboard converter. Use rated probes f
 
 ### Optional: A101 bench test
 
+> [!WARNING]
+> High voltage, at your own risk. Read the [README safety section](../README.md#safety-read-this-first)
+> before doing this test.
+
 Checks the tube and the soldered `TUBE` harness with a bench HV supply (0-450 V) before the board
 exists. It copies the board's drive scheme: main cathodes raised to RTN ≈ 50 V, guides biased
 about +40 V above them, and a guide pulled to GND for a pulse of about −50 to −65 V against the

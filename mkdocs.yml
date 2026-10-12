@@ -78,4 +78,5 @@ nav:
       - How a dekatron counts: how-it-works/dekatron.md
       - How a nixie shows a digit: how-it-works/nixie.md
   - Build and investigate: build.md
+  - Safety: safety.md
   - About: about.md

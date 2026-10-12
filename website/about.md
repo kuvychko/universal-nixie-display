@@ -19,8 +19,11 @@ instrument, and an excuse to understand two kinds of cold-cathode tube properly.
 
 ## Acknowledgements
 
-The dekatron controller and power-supply boards are made by [PCBWay](https://www.pcbway.com/),
-who sponsored the PCBs for this project.
+The dekatron controller and power-supply boards are being made by
+[PCBWay](https://www.pcbway.com/), who are sponsoring their fabrication. Ordering was easy and
+smooth, and their website gives a lot of information along the way, including a step-by-step
+[walk-through of how a board is made](https://www.pcbway.com/pcb-service.html). The boards are still in production, so
+a word on how they turn out will follow.
 
 ## Licences
 
