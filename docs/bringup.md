@@ -6,7 +6,9 @@ Section-by-section procedures and acceptance results. Raw measurements go in
 ## Dekatron controller/PSU (Phase 1D)
 
 One PCB, brought up in order. Keep MCU outputs in defined states during power tests. Any external
-bench-HV connection must not back-feed the onboard converter. Use rated probes for HV.
+bench-HV connection must not back-feed the onboard converter. Use rated probes for HV. The board
+is populated section by section, each followed by its bring-up step, using the
+[assembly and bring-up checklist](../hardware/dekatron/assembly.md).
 
 | Step | Section | Acceptance | Result |
 |---|---|---|---|
