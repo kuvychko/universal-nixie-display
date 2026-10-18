@@ -293,6 +293,12 @@ The tube on this page is not hypothetical. On the bench (2026-10-09) the project
 - stepped reliably in both directions with the guides grounded, about 63 V below the cathodes:
   less than half the 135–200 V control pulse its datasheet calls for.
 
+![The A101 bench fixture: the tube in its printed socket housing and shroud, wired to a white clamshell holding the bench circuit, with its two pushbuttons on top](../assets/dekatron-bench-test.jpg)
+
+*The bench fixture these results come from: the circuit above on a perf board in the white
+clamshell, the tube in a printed socket housing and shroud. Photographed 2026-10-18, tube unlit;
+more in [Build and investigate](../build.md#the-a101-bench-fixture).*
+
 The controller board uses the same scheme with the buttons replaced: RTN is regulated at about
 50 V, and transistor switches driven by an RP2040 ground the guides, about 50 V below the
 cathodes. It also gives the index cathode K1 a wire of its own, so the controller can sense it.

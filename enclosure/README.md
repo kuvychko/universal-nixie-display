@@ -31,8 +31,31 @@ socket and a shroud over the tube.
 | A101 socket housing | `socket-housing-v0` | 1 | Printed and fitted (2026-10-11), black matte PLA. Shaped for the original PL30-2p socket |
 | Tube shroud | `tube-shroud-v0` | 1 | Printed and fitted (2026-10-11), black matte PLA |
 
-Hardware: 2 × M2 × 6 mm machine screws and 2 × M2 × 4 × 3.2 mm knurled brass threaded inserts
-(clamshell). Hardware for the socket housing and shroud: to be added.
+<img src="../website/assets/dekatron-bench-test.jpg" alt="The assembled A101 bench fixture: the tube in its black socket housing and shroud, wired to the white clamshell with two pushbuttons on top, and the red and black HV leads" height="260"> <img src="../website/assets/dekatron-bench-test-exploded.jpg" alt="The fixture taken apart: socket housing with its brass inserts, the PL30-2p socket with its wiring, the A101 tube, the shroud, and the opened clamshell showing the perf board with its resistors and pushbuttons" height="260">
+
+<img src="../website/assets/dekatron-bench-test-no-shroud.jpg" alt="The tube seated in its socket on the housing, the socket's metal bracket held by two screws, with the shroud set beside it" height="260">
+
+*Assembled; taken apart (socket housing, socket, A101, shroud, clamshell base with the perf board
+and clamshell top); and with the shroud off, showing the socket bracket on the housing. Photographed
+2026-10-18, tube unlit.*
+
+Hardware, all knurled brass threaded inserts set into the printed parts and machine screws into
+them:
+
+| Where | Inserts | Screws |
+|---|---|---|
+| Clamshell top to base | 2 × M2 × 4 × 3.2 mm | 2 × M2 × 6 mm |
+| Shroud to socket housing (top face) | 4 × M2 × 6 × 3.2 mm | 4 × M2 × 12 mm |
+| Socket bracket to socket housing | 2 × M3 × 6 × 4.2 mm | 2 × M3 × 6 mm |
+| Socket housing side faces: mounting points for the display enclosure later, unused here | 4 × M3 × 6 × 4.2 mm | — |
+
+Assembly: set the inserts, screw the socket's bracket to the housing (M3 × 6), seat the tube, then
+fit the shroud over it (M2 × 12).
+
+The shroud is there so the pins stay covered even if the tube is partly pulled out of its socket,
+and for the look: one colour, smooth lines, no visible hardware. PLA is fine next to the tube
+because a dekatron dissipates very little: about 42 mW on the bench (147 V maintaining at 288 µA,
+[bench results](../docs/bringup.md#optional-a101-bench-test)).
 
 **The socket is the hard part to source.** The housing is built around the original A101 socket
 (PL30-2p, ПЛ30-2п), which is very rare: A101 tubes sell on eBay at reasonable prices, but no
