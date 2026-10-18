@@ -8,7 +8,7 @@ Raspberry Pi or experiment, driven over USB serial with a small SCPI-style comma
 ## Status
 
 **Phase 1D — dekatron controller/PSU bring-up** (boards from PCBWay received 2026-10-15; parts
-from Mouser received). Schematics, simulations, PCB and fab files are done; the board is now being
+from Mouser 2026-10-16). Schematics, simulations, PCB and fab files are done; the board is now being
 assembled and brought up section by section. The planning baseline is
 [docs/project_plan.md](docs/project_plan.md); the design decisions and open items are tracked in [docs/hardware.md](docs/hardware.md#dekatron-controllerpsu).
 
