@@ -198,9 +198,9 @@ Add measured waveforms, a more detailed ignition/transfer view, or a 3D nixie cu
 ## 10. Going public
 
 The repository goes public and the site goes live together, when the bench-test video is shared
-(decided 2026-10-11). The site must be ready before the link is.
+(decided 2026-10-11; confirmed 2026-10-18). The site must be ready before the link is.
 
-**Before flipping the repository** (status as of 2026-10-11):
+**Before flipping the repository** (status as of 2026-10-18):
 
 | Check | Status |
 |---|---|
@@ -209,10 +209,14 @@ The repository goes public and the site goes live together, when the bench-test 
 | `hardware/dekatron/Cart_Oct08_0432PM.xls` (the frozen Mouser order, cited by `hardware.md` and `gen_schematics.py`) holds part numbers, quantities and prices only: no name, address or account | Done: keep |
 | Commits carry the author's e-mail address; it becomes public with the history | Accepted by the author (2026-10-11) |
 | Safety warning and at-your-own-risk disclaimer: README, bring-up bench test, site (home, dekatron page, build page, Safety page) | Done |
-| Licences present (`LICENSE`, `LICENSE-CERN-OHL-P-2.0`, `LICENSE-MIT`) | Done |
+| Licences present (`LICENSE`, `LICENSE-CERN-OHL-P-2.0`, `LICENSE-MIT`), and `LICENSE` maps every directory including `website/` (content CERN-OHL-P, `website/javascripts/` MIT) | Done (`website/` added 2026-10-18) |
+| Photographs carry no EXIF or GPS data; on the PCBWay label only the QR code is blurred. The job number on the labels and the board silkscreen is released | Done; accepted by the author (2026-10-18) |
+| README repository layout marks the directories that are still empty as planned | Done (2026-10-18) |
 | README acknowledgement of PCBWay's sponsorship, without claims about board quality until boards arrive | Done; updated 2026-10-18 after the boards arrived (2026-10-15): packaging and edge finish noted with photos, electrical results left to bring-up |
 | Bench-test video on YouTube, linked from the site (below) | Open: video not yet made |
-| Site read-through after the last content change; strict build and `tools/check_site.py` pass | Before release |
+| Photograph of the A101 socket housing and tube shroud assembly (`enclosure/dekatron-bench-test/`) | Open: photo to come from the author |
+| Strict build and `tools/check_site.py` pass; external links resolve | Done (2026-10-18; the CCS and Printables pages answer scripted requests with 403: check them in a browser) |
+| Site read-through after the last content change | Before release |
 
 **Release sequence:**
 
@@ -221,7 +225,8 @@ The repository goes public and the site goes live together, when the bench-test 
 3. Run **Deploy site** (Actions → Deploy site → Run workflow). It builds, checks and pushes `gh-pages`.
 4. Settings → Pages → Source: deploy from the `gh-pages` branch, root. Wait for the first Pages build.
 5. Check the live site at https://kuvychko.github.io/universal-nixie-display/: every page loads, figures work, the subpath is right, and the repository links listed by `check_site.py` now resolve.
-6. Share the video with links to the site and the repository.
+6. Set the repository's About website to the site URL.
+7. Share the video with links to the site and the repository.
 
 **The video** (decided 2026-10-11): the author uploads it to YouTube, and the site links to it rather than embedding it, so the site still makes no third-party requests. A still frame from the video, saved as a small image in `website/assets/`, can act as the link on the home page and the dekatron page. The caption says what is shown, the supply voltage and the date.
 

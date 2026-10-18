@@ -29,8 +29,9 @@ import pcbnew
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HW = os.path.join(ROOT, "hardware", "dekatron")
 BOARD = os.path.join(HW, "dekatron.kicad_pcb")
-KICAD_CLI = r"C:\Program Files\KiCad\10.0\bin\kicad-cli.exe"
-SHARE = r"C:\Program Files\KiCad\10.0\share\kicad\footprints"
+# Windows install defaults; set KICAD_CLI / KICAD_FOOTPRINTS to run elsewhere.
+KICAD_CLI = os.environ.get("KICAD_CLI", r"C:\Program Files\KiCad\10.0\bin\kicad-cli.exe")
+SHARE = os.environ.get("KICAD_FOOTPRINTS", r"C:\Program Files\KiCad\10.0\share\kicad\footprints")
 PROJ_LIB = os.path.join(HW, "lib", "dekatron.pretty")
 
 OX, OY = 50.0, 50.0           # board origin on the KiCad sheet

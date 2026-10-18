@@ -28,7 +28,7 @@ clean milled edges (no break-away tab remnants to file).
 
 ![The dekatron boards as delivered: sealed in bubble wrap with a silica-gel desiccant pack and PCBWay's order labels](assets/dekatron-pcbs-packaged.jpg){ width="360" }
 
-*As delivered, October 2026 (order numbers blurred).*
+*As delivered, October 2026 (QR code blurred).*
 
 ## Licences
 

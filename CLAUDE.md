@@ -12,4 +12,5 @@ decision register in `docs/hardware.md`.
   while any MCU is in reset or being flashed.
 * ESP32 owns what is displayed; RP2040 controllers own timing and hardware state. Keep it that way.
 * Text files are LF (`.gitattributes`); fab outputs under `hardware/<module>/fab/` are byte-exact.
-* Licences: CERN-OHL-P v2 for hardware/docs/enclosure/characterization, MIT for firmware/tools/tests.
+* Licences: CERN-OHL-P v2 for hardware/docs/enclosure/characterization and site content (`website/`),
+  MIT for firmware/tools/tests and site code (`website/javascripts/`).

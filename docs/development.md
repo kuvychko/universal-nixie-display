@@ -80,6 +80,10 @@ cp build/placed.kicad_pcb hardware/dekatron/dekatron.kicad_pcb
 "C:/Program Files/KiCad/10.0/bin/python.exe" tools/silk.py hardware/dekatron/dekatron.kicad_pcb
 ```
 
+The paths are a Windows KiCad 10 install. Elsewhere, run the scripts with KiCad's own Python
+and set `KICAD_CLI` and `KICAD_FOOTPRINTS` for `gen_pcb.py` (or pass `--kicad-share` to
+`gen_schematics.py`).
+
 About 35 minutes on this machine (the routing loop is ~4 min per pass; this board converged on
 pass 8). What the pieces do:
 

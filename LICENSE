@@ -4,7 +4,8 @@ Copyright (c) 2026 Igor Kuvychko
 This repository is licensed under two licences, by directory.
 
 Hardware, enclosure and documentation
-  hardware/, enclosure/, docs/, characterization/, and the top-level README
+  hardware/, enclosure/, docs/, characterization/, the top-level README, and the companion
+  site's text, diagrams and photographs (website/, except website/javascripts/)
 
   This source describes Open Hardware and is licensed under the CERN-OHL-P v2.
 
@@ -18,7 +19,7 @@ Hardware, enclosure and documentation
   Source location: https://github.com/kuvychko/universal-nixie-display
 
 Firmware and tools
-  firmware/, tools/ and tests/
+  firmware/, tools/, tests/, and the companion site's code (website/javascripts/)
 
   Licensed under the MIT License. Full text: LICENSE-MIT.
 

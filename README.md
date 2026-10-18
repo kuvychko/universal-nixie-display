@@ -59,17 +59,17 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | Path | Contents |
 |---|---|
 | `hardware/dekatron/` | Dekatron controller/PSU KiCad project; `simulation/` holds supply and drive/sense models |
-| `hardware/nixie/` | Nixie controller/mount KiCad project |
-| `hardware/power/` | Purchased Nixie PSU specification and system power harness |
-| `hardware/lib/` | Shared symbols and footprints |
-| `firmware/display/` | ESP32 main application (PlatformIO) |
-| `firmware/dekatron/` | RP2040 dekatron controller and standalone diagnostics |
-| `firmware/nixie/` | RP2040 Nixie controller |
-| `firmware/common/` | Shared protocol definitions |
+| `hardware/nixie/` | Nixie controller/mount KiCad project (planned, Phase 2) |
+| `hardware/power/` | Purchased Nixie PSU specification and system power harness (planned, Phase 2) |
+| `hardware/lib/` | Shared symbols and footprints (planned; the dekatron board's own library is in `hardware/dekatron/lib/`) |
+| `firmware/display/` | ESP32 main application, PlatformIO (planned, Phase 3) |
+| `firmware/dekatron/` | RP2040 dekatron controller and standalone diagnostics (planned, Phase 1D) |
+| `firmware/nixie/` | RP2040 Nixie controller (planned, Phase 2) |
+| `firmware/common/` | Shared protocol definitions (planned) |
 | `enclosure/` | Printed parts, one folder per assembly (SOLIDWORKS source, STEP, 3MF); index and print settings in its README |
-| `tools/` | Serial client, bring-up scripts |
-| `characterization/` | Dated measurements (supply, homing, thermal, reliability) |
-| `tests/` | Host protocol/formatting tests, hardware test scripts |
+| `tools/` | KiCad generators (schematic, placement, routing, silkscreen) and the site checker; serial client and bring-up scripts to come |
+| `characterization/` | Dated measurements: supply, homing, thermal, reliability (none yet) |
+| `tests/` | Host protocol/formatting tests, hardware test scripts (planned) |
 | `website/` | Companion site source (MkDocs Material; `mkdocs.yml` at the root) |
 
 ## Safety: read this first
@@ -117,9 +117,9 @@ clean: no break-away tab remnants to file, so the boards were ready to use strai
 
 Thank you, PCBWay, for supporting an open-source hardware project.
 
-<img src="website/assets/dekatron-pcbs-packaged.jpg" alt="The dekatron boards as delivered: sealed in bubble wrap with a silica-gel desiccant pack and PCBWay's order labels (order numbers blurred)" height="380"> <img src="website/assets/dekatron-pcbs.jpg" alt="The five bare dekatron controller/PSU boards: four top side up and one bottom side up, with clean milled edges" height="380">
+<img src="website/assets/dekatron-pcbs-packaged.jpg" alt="The dekatron boards as delivered: sealed in bubble wrap with a silica-gel desiccant pack and PCBWay's order labels (QR code blurred)" height="380"> <img src="website/assets/dekatron-pcbs.jpg" alt="The five bare dekatron controller/PSU boards: four top side up and one bottom side up, with clean milled edges" height="380">
 
 ## Licence
 
-Hardware, enclosure and documentation: CERN-OHL-P v2. Firmware, tools and tests: MIT. See
-[LICENSE](LICENSE).
+Hardware, enclosure, documentation and the companion site's content: CERN-OHL-P v2. Firmware,
+tools, tests and the site's JavaScript: MIT. See [LICENSE](LICENSE).
