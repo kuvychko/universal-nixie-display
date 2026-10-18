@@ -7,8 +7,9 @@ Raspberry Pi or experiment, driven over USB serial with a small SCPI-style comma
 
 ## Status
 
-**Phase 1C — dekatron controller/PSU boards ordered** (PCBWay, 2026-10-09; parts ordered
-2026-10-08). Schematics, simulations, PCB and fab files are done; nothing is built yet. The
+**Phase 1C — dekatron controller/PSU boards received** (PCBWay: ordered 2026-10-09, received
+2026-10-15; parts ordered 2026-10-08). Schematics, simulations, PCB and fab files are done; nothing
+is built yet. The
 planning baseline is [docs/project_plan.md](docs/project_plan.md); the design decisions and
 open items are tracked in [docs/hardware.md](docs/hardware.md#dekatron-controllerpsu).
 
@@ -16,7 +17,7 @@ open items are tracked in [docs/hardware.md](docs/hardware.md#dekatron-controlle
 |---|---|---|
 | 1A | Dekatron board architecture and power budget for 12 VDC input | Done |
 | 1B | Hierarchical schematics and simulation evidence | Done (open simulation items in `docs/hardware.md`) |
-| 1C | Dekatron controller/PSU PCB, BOM, fab files | **Boards and parts ordered** |
+| 1C | Dekatron controller/PSU PCB, BOM, fab files | **Boards received; parts ordered** |
 | 1D | Sectional bring-up and standalone firmware | Not started |
 | 2 | Nixie PSU qualification and six-tube controller/mount | Not started |
 | 3 | ESP32 UI, encoder, I2C master, USB host commands | Not started |
@@ -102,17 +103,23 @@ high-voltage insulation.
 
 ## Acknowledgements
 
-The dekatron controller/PSU boards are being made by [PCBWay](https://www.pcbway.com/), who are
-sponsoring their fabrication. Ordering was easy and smooth: upload the Gerber zip from
+The dekatron controller/PSU boards were made by [PCBWay](https://www.pcbway.com/), who
+sponsored their fabrication. Ordering was easy and smooth: upload the Gerber zip from
 [`hardware/dekatron/fab/`](hardware/dekatron/fab/), pick the options and go. What stands out is
 how much information their website gives, from exactly what you are ordering to where your order
 is in production. There is even a full walk-through of how a board is made, step by step:
 [PCB manufacturing process](https://www.pcbway.com/pcb-service.html). Beyond bare boards they
 also make SMD stencils and offer assembly, CNC machining and 3D printing.
 
-The boards are in production as this is written (October 2026), so there is nothing to say yet
-about how they turn out; that will follow when they arrive and are brought up. Thank you, PCBWay,
-for supporting an open-source hardware project.
+The Gerbers went up on the evening of 2026-10-08 and the five boards were on the bench on
+2026-10-15. They came sealed in bubble wrap with a silica-gel desiccant pack, and the label lists
+the order, the uploaded file, size, layer count, thickness and quantity. The edges are milled
+clean: no break-away tab remnants to file, so the boards were ready to use straight out of the bag.
+
+<img src="website/assets/dekatron-pcbs-packaged.jpg" alt="The dekatron boards as delivered: sealed in bubble wrap with a silica-gel desiccant pack and PCBWay's order labels (order numbers blurred)" width="360"> <img src="website/assets/dekatron-pcbs.jpg" alt="The five bare dekatron controller/PSU boards: four top side up and one bottom side up, with clean milled edges" width="400">
+
+None of this says anything yet about how the boards work. That comes with assembly and bring-up
+(Phase 1D). Thank you, PCBWay, for supporting an open-source hardware project.
 
 ## Licence
 

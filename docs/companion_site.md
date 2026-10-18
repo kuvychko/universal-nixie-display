@@ -210,7 +210,7 @@ The repository goes public and the site goes live together, when the bench-test 
 | Commits carry the author's e-mail address; it becomes public with the history | Accepted by the author (2026-10-11) |
 | Safety warning and at-your-own-risk disclaimer: README, bring-up bench test, site (home, dekatron page, build page, Safety page) | Done |
 | Licences present (`LICENSE`, `LICENSE-CERN-OHL-P-2.0`, `LICENSE-MIT`) | Done |
-| README acknowledgement of PCBWay's sponsorship, without claims about board quality until boards arrive | Done |
+| README acknowledgement of PCBWay's sponsorship, without claims about board quality until boards arrive | Done; updated 2026-10-18 after the boards arrived (2026-10-15): packaging and edge finish noted with photos, electrical results left to bring-up |
 | Bench-test video on YouTube, linked from the site (below) | Open: video not yet made |
 | Site read-through after the last content change; strict build and `tools/check_site.py` pass | Before release |
 

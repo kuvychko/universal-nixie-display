@@ -19,11 +19,16 @@ instrument, and an excuse to understand two kinds of cold-cathode tube properly.
 
 ## Acknowledgements
 
-The dekatron controller and power-supply boards are being made by
-[PCBWay](https://www.pcbway.com/), who are sponsoring their fabrication. Ordering was easy and
+The dekatron controller and power-supply boards were made by
+[PCBWay](https://www.pcbway.com/), who sponsored their fabrication. Ordering was easy and
 smooth, and their website gives a lot of information along the way, including a step-by-step
-[walk-through of how a board is made](https://www.pcbway.com/pcb-service.html). The boards are still in production, so
-a word on how they turn out will follow.
+[walk-through of how a board is made](https://www.pcbway.com/pcb-service.html). The boards
+arrived a week after the order, sealed with a desiccant pack and clearly labelled, with
+clean milled edges (no break-away tab remnants to file). How they work is for bring-up to show.
+
+![The dekatron boards as delivered: sealed in bubble wrap with a silica-gel desiccant pack and PCBWay's order labels](assets/dekatron-pcbs-packaged.jpg){ width="360" }
+
+*As delivered, October 2026 (order numbers blurred).*
 
 ## Licences
 
