@@ -7,18 +7,17 @@ Raspberry Pi or experiment, driven over USB serial with a small SCPI-style comma
 
 ## Status
 
-**Phase 1C — dekatron controller/PSU boards received** (PCBWay: ordered 2026-10-09, received
-2026-10-15; parts ordered 2026-10-08). Schematics, simulations, PCB and fab files are done; nothing
-is built yet. The
-planning baseline is [docs/project_plan.md](docs/project_plan.md); the design decisions and
-open items are tracked in [docs/hardware.md](docs/hardware.md#dekatron-controllerpsu).
+**Phase 1D — dekatron controller/PSU bring-up** (boards from PCBWay received 2026-10-15; parts
+from Mouser received). Schematics, simulations, PCB and fab files are done; the board is now being
+assembled and brought up section by section. The planning baseline is
+[docs/project_plan.md](docs/project_plan.md); the design decisions and open items are tracked in [docs/hardware.md](docs/hardware.md#dekatron-controllerpsu).
 
 | Phase | Deliverable | State |
 |---|---|---|
 | 1A | Dekatron board architecture and power budget for 12 VDC input | Done |
 | 1B | Hierarchical schematics and simulation evidence | Done (open simulation items in `docs/hardware.md`) |
-| 1C | Dekatron controller/PSU PCB, BOM, fab files | **Boards received; parts ordered** |
-| 1D | Sectional bring-up and standalone firmware | Not started |
+| 1C | Dekatron controller/PSU PCB, BOM, fab files | Done: boards and parts received |
+| 1D | Sectional bring-up and standalone firmware | **In progress** |
 | 2 | Nixie PSU qualification and six-tube controller/mount | Not started |
 | 3 | ESP32 UI, encoder, I2C master, USB host commands | Not started |
 | 4 | Enclosure | Not started |
@@ -116,10 +115,9 @@ The Gerbers went up on the evening of 2026-10-08 and the five boards were on the
 the order, the uploaded file, size, layer count, thickness and quantity. The edges are milled
 clean: no break-away tab remnants to file, so the boards were ready to use straight out of the bag.
 
-<img src="website/assets/dekatron-pcbs-packaged.jpg" alt="The dekatron boards as delivered: sealed in bubble wrap with a silica-gel desiccant pack and PCBWay's order labels (order numbers blurred)" width="360"> <img src="website/assets/dekatron-pcbs.jpg" alt="The five bare dekatron controller/PSU boards: four top side up and one bottom side up, with clean milled edges" width="400">
+Thank you, PCBWay, for supporting an open-source hardware project.
 
-None of this says anything yet about how the boards work. That comes with assembly and bring-up
-(Phase 1D). Thank you, PCBWay, for supporting an open-source hardware project.
+<img src="website/assets/dekatron-pcbs-packaged.jpg" alt="The dekatron boards as delivered: sealed in bubble wrap with a silica-gel desiccant pack and PCBWay's order labels (order numbers blurred)" height="380"> <img src="website/assets/dekatron-pcbs.jpg" alt="The five bare dekatron controller/PSU boards: four top side up and one bottom side up, with clean milled edges" height="380">
 
 ## Licence
 

@@ -28,8 +28,9 @@ in the [project repository](https://github.com/kuvychko/universal-nixie-display)
     or probing anything.
 
 !!! info "Status"
-    Phase 1 (dekatron controller and power supply) has its boards in hand and its tube
-    bench-tested. A full build guide will follow a working, tested instrument.
+    Phase 1 (dekatron controller and power supply) is in bring-up: boards and parts are
+    in hand, and the tube is bench-tested. A full build guide will follow a working, tested
+    instrument.
 
 ![The five bare dekatron controller/PSU boards: four top side up and one bottom side up](assets/dekatron-pcbs.jpg)
 
