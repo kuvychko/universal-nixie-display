@@ -70,3 +70,7 @@ hardware/*/simulation/*.txt
 
 # --- Companion site build output (mkdocs build) ---
 /site/
+
+# --- Printable checklists (pandoc output from the .md) ---
+hardware/*/assembly.pdf
+hardware/*/assembly.docx
