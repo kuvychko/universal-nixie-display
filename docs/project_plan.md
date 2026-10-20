@@ -111,8 +111,13 @@ Rev A needs a small useful set, not an application platform:
 2. Timer/stopwatch controlled by touch and encoder.
 3. Demonstration/self-test: digits, decimal points, rotation, pendulum, and homing.
 4. Universal remote numeric display with label, units, and optional small history plot.
+5. Built-in mathematical demonstrations, starting value or rate set by the encoder (added 2026-10-20):
+   - Collatz trajectories: value on the Nixies, the dekatron stepping one way on n/2 and the other on 3n+1, the trajectory plotted on the touchscreen; starting values whose trajectory exceeds six digits are skipped or flagged.
+   - Kaprekar's routine: digits sorted descending minus ascending until the fixed point (6174 for four digits) or a cycle, one dekatron step per iteration.
+   - Monte Carlo π: random points drawn on the touchscreen, the running estimate on the Nixies, the dekatron random-walking one step per point.
+   - Primes: the Nixies counting up, the dekatron stepping on each prime, gaps or an Ulam spiral on the touchscreen.
 
-Mathematical sequences, mains-frequency observatory, Geiger-event display, and solver progress are later presets or host examples. Measurements originate in external instruments; this device initially displays data rather than measuring HV, frequency, or radiation itself.
+Other mathematical sequences, mains-frequency observatory, Geiger-event display, and solver progress are later presets or host examples. Measurements originate in external instruments; this device initially displays data rather than measuring HV, frequency, or radiation itself.
 
 ## 8. Repository structure
 
