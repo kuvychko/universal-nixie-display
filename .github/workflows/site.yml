@@ -1,7 +1,7 @@
 name: Site
 
 # Builds and checks the companion site (docs/companion_site.md) on every push and pull request.
-# It never publishes: deploy-site.yml does that, by hand, once the repository is public.
+# It never publishes: deploy-site.yml does that, on pushes to main.
 on:
   push:
     branches: ["**"]

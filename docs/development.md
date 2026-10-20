@@ -184,7 +184,8 @@ uv run python tools/check_site.py
 The strict build fails on a broken internal link or anchor. `tools/check_site.py` checks the built
 HTML for root-relative links (they break under the Pages subpath), missing alt text and missing
 images, and lists external links for a manual check. `.github/workflows/site.yml` runs both on
-every push; publishing (`deploy-site.yml`) is manual and waits until the repository is public.
+every push; `deploy-site.yml` publishes the site to GitHub Pages on every push to `main` that
+touches it (`website/`, `mkdocs.yml`, the lock file or the checker), and can be run by hand.
 Engineering documents are linked on GitHub rather than copied into the site.
 
 ## Generated-file policy

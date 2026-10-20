@@ -162,11 +162,11 @@ Layout as built (2026-10-10). `docs/` keeps the engineering documents; the site 
 | `website/stylesheets/` | Site CSS |
 | `website/assets/` | Optimized photos, diagrams, video posters, and selected measurements |
 | `tools/check_site.py` | Post-build checks: subpath-safe links, alt text, local images |
-| `.github/workflows/site.yml`, `deploy-site.yml` | Strict build on every push; manual-only deploy to GitHub Pages |
+| `.github/workflows/site.yml`, `deploy-site.yml` | Strict build on every push; deploy to GitHub Pages on pushes to `main` that touch the site, or by hand |
 
 Keep the site static: no backend or connection to the physical instrument is required. Use local assets and system fonts where practical. Preserve readable text and static diagrams when JavaScript is unavailable. Provide keyboard controls, visible focus, reduced-motion behavior, and explicit pause. Avoid relying on orange glow alone to communicate the active electrode.
 
-Follow the reference deployment pattern: strict site build and link checks in CI; preview and review before the initial public release; subsequent publication from a successfully checked commit. Check GitHub Pages subpath handling explicitly. The site URL is set to `https://kuvychko.github.io/universal-nixie-display/`; deployment is a release step, run by hand when the repository goes public.
+Follow the reference deployment pattern: strict site build and link checks in CI; preview and review before the initial public release; subsequent publication from a successfully checked commit. Check GitHub Pages subpath handling explicitly. The site URL is set to `https://kuvychko.github.io/universal-nixie-display/`; the first deployment was a release step, run by hand when the repository went public; since then every push to `main` that touches the site redeploys it.
 
 Licences follow the repository (decided 2026-10-10): site text, diagrams and photographs under CERN-OHL-P v2, JavaScript and tools under MIT. Third-party datasheets and historical images retain their own rights; link to them rather than assuming they inherit the project license.
 

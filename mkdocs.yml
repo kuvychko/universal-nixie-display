@@ -2,8 +2,8 @@
 # docs/ are not part of it and are linked on GitHub instead. Built with `mkdocs build --strict`:
 # a missing nav page or a broken internal link fails the build.
 #
-# Deployment is a release step: the repository goes public and the manual deploy workflow
-# (.github/workflows/deploy-site.yml) runs. Until then the site is built and reviewed locally:
+# Every push to main that changes the site is published by .github/workflows/deploy-site.yml.
+# Preview locally before pushing:
 #   uv run --group docs mkdocs serve
 site_name: Universal Nixie Display
 site_description: Six IN-14 Nixies and an A101 dekatron. How a glow in a gas-filled tube displays a number, and how one remembers it.

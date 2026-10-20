@@ -1,9 +1,17 @@
 name: Deploy site
 
-# Publishes the companion site to GitHub Pages (the gh-pages branch). Manual only: deployment is
-# a release step, run when the repository goes public (docs/companion_site.md §10). Afterwards,
-# set Settings → Pages → Source to the gh-pages branch once.
+# Publishes the companion site to GitHub Pages (the gh-pages branch) on every push to main that
+# touches the site's inputs, and on demand. Pages serves the gh-pages branch (Settings → Pages).
 on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "mkdocs.yml"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "tools/check_site.py"
+      - ".github/workflows/deploy-site.yml"
   workflow_dispatch:
 
 permissions:
