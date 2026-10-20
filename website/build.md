@@ -43,6 +43,14 @@ stays on the bench.
 
 *The assembled bench fixture, photographed 2026-10-18 (tube unlit).*
 
+![The bench fixture running: the A101 lit in its socket housing, orange glow inside the glass, in front of the high-voltage bench supply that powers it, with the white clamshell and its two pushbuttons in the foreground](assets/dekatron-bench-lit-overview.jpg)
+
+*Running, in front of the high-voltage bench supply that feeds it. Photographed 2026-10-20.*
+
+![The lit A101 from above: the orange glow near the edge of the ring, the tube in its black socket housing, and the colour-coded wires running to the white clamshell](assets/dekatron-bench-lit-closeup.jpg){ width="480" }
+
+*The same, from above.*
+
 ![The fixture taken apart: socket housing with its brass inserts, the PL30-2p socket with its wiring, the A101 tube, the shroud, and the opened clamshell showing the perf board with its resistors and pushbuttons](assets/dekatron-bench-test-exploded.jpg)
 
 *Taken apart, left to right: socket housing, PL30-2p socket, A101, shroud, and the clamshell

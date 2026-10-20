@@ -1,3 +1,8 @@
+---
+description: How a glow in a gas-filled tube counts, steps both ways and remembers a digit, with an interactive A101 dekatron you can step yourself.
+image: assets/og-dekatron.jpg
+---
+
 # How a dekatron counts
 
 A dekatron is a gas-filled glass tube with a ring of ten cathodes around a central anode. One
@@ -162,9 +167,13 @@ supply's negative terminal, so a number always means the same thing.
     This circuit has 400 V on open wiring. If you build anything like it, it is at your own risk:
     read the [safety notes](../safety.md) first, and keep one hand away while it is powered.
 
-[![The A101 bench test circuit: a 400 V supply feeds the anode through R_A; a divider R1, R2, R3 holds the main cathodes at RTN, about 57 V, and the guide supply G+ at about 91 V; each guide is pulled up to G+ through 470 kΩ, and a pushbutton grounds it](../assets/bench-circuit.svg){ .figure-plate }](../assets/bench-circuit.svg)
+[![The A101 bench test circuit, as built: a 400 V supply feeds the anode through R_A; a divider R1, R2, R3 holds the main cathodes at RTN, about 57 V, and the guide supply G+ at about 91 V; each guide is pulled up to G+ through 470 kΩ, and a pushbutton grounds it. R1 was two resistors in parallel, each above its voltage rating](../assets/bench-circuit.svg){ .figure-plate }](../assets/bench-circuit.svg)
 
-*The bench circuit (open the drawing full size). The parts are the ones used on the bench.*
+*The bench circuit (open the drawing full size), with the parts as built: the record of an
+experiment, not a recommendation. R1 was two 1/4 W 680k resistors in parallel, and each saw about
+320 V, above the usual rating for that size. To build it, make R1 from two resistors in series
+(2 × 160k–180k), as in the
+[bench test's parts table](https://github.com/kuvychko/universal-nixie-display/blob/main/docs/bringup.md#optional-a101-bench-test).*
 
 - The **anode** is fed from the 400 V supply through one resistor, R_A.
 - All ten **main cathodes** return to **RTN**, which the divider R1-R2-R3 holds at about 57 V
@@ -306,13 +315,14 @@ The tube on this page is not hypothetical. On the bench (2026-10-09) the project
 
 - struck at a 289 V supply, with an estimated 256 V across the tube;
 - held its glow at a maintaining voltage of 147 V, at 288 µA;
-- stepped reliably in both directions with the guides grounded, about 63 V below the cathodes:
-  less than half the 135–200 V control pulse its datasheet calls for.
+- stepped reliably in both directions, judged by eye, with the guides grounded: a swing of about
+  90 V, to about 63 V below the cathodes. The datasheet's control pulse is a 135–200 V swing (as
+  its test circuit applies it), so the bench used roughly half to two-thirds of it.
 
-![The A101 bench fixture: the tube in its printed socket housing and shroud, wired to a white clamshell holding the bench circuit, with its two pushbuttons on top](../assets/dekatron-bench-test.jpg)
+![The A101 bench fixture running: the tube lit in its printed socket housing, orange glow inside the glass, in front of the high-voltage bench supply, with the white clamshell holding the bench circuit and its two pushbuttons in the foreground](../assets/dekatron-bench-lit-overview.jpg)
 
 *The bench fixture these results come from: the circuit above on a perf board in the white
-clamshell, the tube in a printed socket housing and shroud. Photographed 2026-10-18, tube unlit;
+clamshell, the tube in a printed socket housing, the bench supply behind. Photographed 2026-10-20;
 more in [Build and investigate](../build.md#the-a101-bench-fixture). The video at the
 [top of the page](#how-a-dekatron-counts) shows it running.*
 

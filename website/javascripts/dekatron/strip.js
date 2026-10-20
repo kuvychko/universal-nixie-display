@@ -3,8 +3,9 @@
 // ions around it, and a chart of voltages from ground in the bench circuit.
 //
 // In the chart each electrode has a bar from its own voltage up to the anode's: the bar's length is
-// the voltage across its gap. A tick 147 V above the electrode marks what keeps a glow going; a
-// dashed outline up to 256 V above it marks what fresh gas needs to strike. A primed gap strikes
+// the voltage across its gap. A tick 147 V above the electrode marks the model's maintaining
+// voltage (measured at the bench's operating point); a dashed outline up to 256 V above it marks
+// the striking voltage of fresh gas, estimated from the first strike. A primed gap strikes
 // lower by an amount that was not measured, so that is drawn as an arrow with no number.
 //
 // Each <div class="dekatron-strip"> becomes the figure; its .ring__fallback is removed. Every
@@ -18,9 +19,9 @@ const PITCH = 64;
 const WIDE = 640; // viewBox width; narrower on small screens, so the text stays readable
 const NARROW = 420;
 const GUTTER = 50; // left margin for the chart's limit labels
-const HEIGHT = 390;
+const HEIGHT = 405;
 const EY = 112; // electrode row
-const BASE = 372; // 0 V on the chart
+const BASE = 387; // 0 V on the chart
 const TOP_V = 320; // chart range, volts from ground
 const SCALE = 140 / TOP_V; // px per volt
 const SPAN = 7; // electrodes drawn either side of the centre
@@ -91,7 +92,8 @@ function setup(container) {
       svg("rect", { class: "ring__anode", x: 8, y: 26, width: width - 16, height: 10, rx: 2 }),
       svg("text", { class: "strip__label", x: 8, y: 18 }, ["anode (the ring's centre, unrolled)"]),
       svg("text", { class: "strip__label", x: 8, y: 194 }, ["Volts from ground; bars run from electrode to anode."]),
-      svg("text", { class: "strip__label", x: 8, y: 209 }, [`Tick: ${V.maintaining} V keeps a glow. Dashed: ≈${V.strikeUnprimed} V starts one.`]),
+      svg("text", { class: "strip__label", x: 8, y: 209 }, [`Tick: the model's maintaining voltage, ${V.maintaining} V.`]),
+      svg("text", { class: "strip__label", x: 8, y: 224 }, [`Dashed: its estimated striking voltage, ≈${V.strikeUnprimed} V.`]),
       ...grid,
     );
   }
@@ -132,7 +134,7 @@ function setup(container) {
         svg("text", { class: "strip__name", x, y: EY + 46, "text-anchor": "middle" }, [shortName(p)]),
         svg("text", { class: "strip__label", x, y: EY + 62, "text-anchor": "middle" }, [`${v} V${rising ? " ↑" : ""}`]),
       );
-      // What fresh gas needs to strike: the part above the anode, dashed.
+      // The model's estimated striking voltage for fresh gas: the part above the anode, dashed.
       const need = v + V.strikeUnprimed;
       if (need > anode) {
         items.push(svg("rect", { class: "strip__need", x: x - 7, y: fmt(yOf(need)), width: 14, height: fmt((need - anode) * SCALE) }));

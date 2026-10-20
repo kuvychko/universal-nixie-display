@@ -10,8 +10,9 @@ export const PHASES = 4;
 export const STAGES = CATHODES * PHASES;
 export const ELECTRODES = CATHODES * 3; // K_n, G1_n, G2_n in counting order
 
-// The tube's two measured limits (docs/bringup.md bench test): the maintaining voltage, and the
-// strike voltage of fresh gas (struck at a 289 V supply with ~256 V across the tube). How much
+// The model's two thresholds, held fixed (docs/bringup.md bench test): the maintaining voltage,
+// measured at the bench's operating point, and the striking voltage of fresh gas, estimated from
+// the first strike (289 V supply, ~256 V across the tube with a calculated RTN). How much
 // lower a primed gap strikes was not measured, so no figure is given for it.
 export const V = {
   maintaining: 147,
@@ -146,14 +147,14 @@ export function physicsCaption(state, dir) {
   const { rest, grounding, oneLow } = BENCH;
   const strike = V.strikeUnprimed;
   if (dir === 0) {
-    return `The glow sits on ${K(n)}. The cathodes are at about ${rest.rtn} V and the anode at about ${rest.anode} V: ${vm} V across the glow. Every other main cathode has the same ${vm} V across its gap: enough to keep a glow going, not to start one (about ${strike} V unprimed). The guides, at about ${rest.gplus} V, have only ${rest.anode - rest.gplus} V.`;
+    return `The glow sits on ${K(n)}. The cathodes are at about ${rest.rtn} V and the anode at about ${rest.anode} V: ${vm} V across the glow. Every other main cathode has the same ${vm} V across its gap: the model's maintaining voltage, enough to keep a glow going but below the estimated ${strike} V needed to start one unprimed. The guides, at about ${rest.gplus} V, have only ${rest.anode - rest.gplus} V.`;
   }
   const fall = (g, beside) =>
-    `${g} is grounded: 0 V. The anode is still about ${grounding.anode} V, ${vm} V above the glowing ${beside}, so every ${g} suddenly has ${grounding.anode} V across its gap. A distant ${g} would need about ${strike} V and stays dark; the ${g} beside the glow is primed by its ions and strikes. With the glow at 0 V the anode drops to ${oneLow.anode} V, and ${beside}, at about ${oneLow.rtn} V, is left with ${oneLow.anode - oneLow.rtn} V: below the ${vm} V it needs, so it goes out.`;
+    `${g} is grounded: 0 V. The anode is still about ${grounding.anode} V, ${vm} V above the glowing ${beside}, so every ${g} suddenly has ${grounding.anode} V across its gap. A distant ${g} would need about ${strike} V, the estimated striking voltage, and stays dark; the ${g} beside the glow is primed by its ions and strikes. With the glow at 0 V the anode drops to ${oneLow.anode} V, and ${beside}, at about ${oneLow.rtn} V, is left with ${oneLow.anode - oneLow.rtn} V: below the model's ${vm} V maintaining voltage, so it goes out.`;
   const spread = (g, from) =>
     `${g} is grounded as well. With the glow on ${from}, also at 0 V, the anode is at ${vm} V, so ${g} has ${vm} V across it: the maintaining voltage. Only the ${g} next to the glow is primed enough to strike at that, so the glow spreads onto it.`;
   const release = (g, left) =>
-    `${g} is released and rises towards G+, about ${oneLow.gplus} V. The glow on ${left}, still at 0 V, holds the anode at ${vm} V, so ${g}'s gap shrinks to ${vm - oneLow.gplus} V, far below the ${vm} V a glow needs: its share goes out.`;
+    `${g} is released and rises towards G+, about ${oneLow.gplus} V. The glow on ${left}, still at 0 V, holds the anode at ${vm} V, so ${g}'s gap shrinks to ${vm - oneLow.gplus} V, far below the model's ${vm} V maintaining voltage: its share goes out.`;
   const land = (g, next, old) =>
     `${g} is released and rises, carrying the glow, with the anode ${vm} V above it. As ${g} passes the cathodes' level, about ${rest.rtn} V, the anode reaches about ${rest.anode} V and both nearby main cathodes have ${vm} V across them. ${next} is next to the glow and primed; ${old} is two electrodes away. The glow drops onto ${next}, and ${g}, back at about ${rest.gplus} V, is left with ${rest.anode - rest.gplus} V.`;
   if (dir > 0) {

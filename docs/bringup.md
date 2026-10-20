@@ -30,8 +30,9 @@ is populated section by section, each followed by its bring-up step, using the
 Checks the tube and the soldered `TUBE` harness with a bench HV supply (0-450 V) before the board
 exists. It copies the board's drive scheme: main cathodes raised to RTN ≈ 50 V, guides biased
 about +40 V above them, and a guide pulled to GND for a pulse of about −50 to −65 V against the
-cathodes. That pulse is a third to a half of the original datasheet's 135-200 V control pulse
-([A101 operating point](hardware.md#a101-operating-point-d1)), so this test also answers early
+cathodes. The guides swing about 90 V, from their bias to GND: about half to two-thirds of the
+original datasheet's 135-200 V control pulse, which is a swing from the bias
+([A101 operating point](hardware.md#a101-operating-point-d1)). So this test also answers early
 whether the tube transfers its glow with it (plan §9).
 
 ```
@@ -111,12 +112,13 @@ usual 1/4 W rating; see the parts table.
 | Maintaining voltage (anode − RTN) | **147 V** (datasheet 130-170 V) |
 | Tube current, (400 − 210 V) / R_A | **288 µA** (R_A = 2 × 330k); datasheet 300-450 µA |
 | Guide pulse (guide at GND − RTN) | **≈ −63 V** against the cathodes |
-| Stepping | **Reliable in both directions, no missed steps seen** (manual stepping is fiddly). S1 → S2 → release S1 → release S2 moves the glow one cathode; starting with S2 steps the other way. One button alone moves the glow onto that guide, and on release it returns to the cathode it came from, as expected for a two-guide tube |
-| Glow on K1 once per 10 steps | — |
+| Stepping | **Reliable in both directions, no missed steps seen by eye** (manual stepping is fiddly; no step count or index check recorded). S1 → S2 → release S1 → release S2 moves the glow one cathode; starting with S2 steps the other way. One button alone moves the glow onto that guide, and on release it returns to the cathode it came from, as expected for a two-guide tube |
+| Glow on K1 once per 10 steps | **Not recorded** (step 4): the bench test is partially complete |
 
-**So the tube strikes far below the board's supply and steps reliably with a guide pulse of about
-−63 V, under half the original datasheet's 135-200 V control pulse, at a tube current just below
-the datasheet minimum.**
+**So the tube strikes far below the board's supply and steps reliably, by eye, with the guides
+swinging about 91 V (calculated) to about −63 V against the cathodes: about half to two-thirds of
+the original datasheet's 135-200 V control pulse swing, at a tube current just below the datasheet
+minimum.**
 The board runs at 450 V with RTN ≈ 50 V: more current (≈ 315-445 µA) and a pulse of about −50 V.
 The pulse is the one figure with less margin than on the bench; bring-up step 3 checks stepping
 on the board itself, and raising RTN (D8) deepens it if needed.

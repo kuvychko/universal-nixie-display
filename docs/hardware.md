@@ -66,7 +66,7 @@ supersedes the summary above where they differ:
 |---|---|---|
 | Supply voltage | ≥ 420 V | 425 V min, 450 V typ |
 | Guide bias (control electrodes vs. indicator cathodes) | 36-44 V, set with no control pulses applied | +36 to +44 V |
-| Control pulse amplitude | 135-200 V | −150 Vp |
+| Control pulse amplitude | 135-200 V: the swing of the pulse at the test circuit's input (see note) | −150 Vp |
 | Control pulse duration | 200-1000 µs | — |
 | Counting rate | 0.01-1000 Hz; maximum ≤ 1 / (3 × control pulse duration) | 1 kHz |
 | Working current | 0.3-0.45 mA, measured in the cathode circuit | 300-450 µA |
@@ -85,12 +85,20 @@ Datasheet notes and application instructions, translated:
   at once; this should clear after a reset pulse.
 * Operating position any, natural cooling. Its test circuit uses a 510 kΩ anode resistor mounted
   at the tube socket, 33 kΩ cathode resistors and a stabilised 400-500 V supply.
+* **What the control pulse amplitude measures** (read from the test circuit, not stated in the
+  sheet). The voltmeter reads the "управляющий импульс" at its source; C2 couples it onto a node
+  that VD1 clamps to the bias +U_см, and it reaches guide 1 through R3 ∥ C1 and guide 2 through
+  R4 / C3. So 135-200 V is the guides' **swing** from their bias, not their voltage against the
+  cathodes. Applied in full from a +40 V bias it would take a guide to about −95 to −160 V
+  against the cathodes; the coupling network delivers somewhat less.
 
 Consequences for this design:
 
-* **The control pulse is the largest deviation.** Our ~−50 V guide pulse (bench: −63 V, which
-  stepped reliably) is a third to a half of the datasheet's 135-200 V minimum. Known and accepted
-  (see the reference circuit below); bring-up step 3 confirms margin on the board.
+* **The control pulse is the largest deviation.** Our guides swing about 90 V, from +40 V to
+  about −50 V against the cathodes (bench: about 91 V calculated, to −63 V; it stepped reliably by
+  eye). That swing is about half to two-thirds of the datasheet's 135-200 V, and the depth below
+  the cathodes a third to a half of what the full swing would reach. Known and accepted (see the
+  reference circuit below); bring-up step 3 confirms margin on the board.
 * **Phase durations.** Start the firmware's guide phases inside the datasheet's 200-1000 µs. By
   its 1 / (3 × duration) rule, 200 steps/s allows phases up to 1.67 ms, so the homing target is
   compatible with the whole 200-1000 µs range.
@@ -111,8 +119,9 @@ of an MPSA92 PNP whose base sits at RTN; its collector feeds 220k / 22k to the l
 Consequences, computed from those values:
 
 * **Elevated cathodes are what let ground-referenced NPN switches drive the guides.** Guide rest =
-  G+ − RTN ≈ +52 V (datasheet +36-44 V); guide pulled to 0 V = −RTN ≈ −52 V. That is well
-  under the original datasheet's 135-200 V control pulse (the summary's −150 Vp); the reference
+  G+ − RTN ≈ +52 V (datasheet +36-44 V); guide pulled to 0 V = −RTN ≈ −52 V, a swing of
+  ≈ 104 V. That is under the original datasheet's 135-200 V control pulse swing (the summary's
+  −150 Vp); the reference
   demonstrates it transfers the glow. We keep the scheme and treat the reduced pulse as a known
   deviation to confirm at bring-up.
 * **The divider is not stiff.** The tube's ~0.4 mA flows *into* RTN, whose Thevenin resistance is
@@ -135,7 +144,7 @@ Consequences, computed from those values:
 |---|---|---|
 | RTN (main-cathode return) | +50 V, regulated | Reference ≈ 52 V, made load-independent |
 | G+ (guide rest) | RTN + 40 V = +90 V | Centre of datasheet bias range |
-| Guide pulse | Guide switched to ~0 V: −50 V vs. cathodes | Reference practice; original datasheet says 135-200 V, 200-1000 µs |
+| Guide pulse | Guide switched to ~0 V: −50 V vs. cathodes, a 90 V swing | Reference practice; original datasheet says a 135-200 V swing, 200-1000 µs |
 | Anode supply HV | **Option A:** 450 V to ground (400 V above RTN); **Option B:** 500 V to ground (450 V above RTN) | See below |
 | Anode resistor | A: 660 kΩ (2 × 330k HHV-50); B: 800 kΩ (330k + 470k) | Keeps 300-450 µA across V_m 130-170 V and HV ±5 % |
 | Tube current | A: 314-443 µA (379 typ); B: ≈ 319-431 µA | Within datasheet 300-450 µA |
@@ -821,7 +830,7 @@ pump current is ~1.2 mA. 100 Ω also works but charges the stack about half as f
 
 | Bench | Case | Result |
 |---|---|---|
-| `hv_discharge.cir` | Stop from 450 V, passive paths only | **Every node < 50 V in 1.47 s** (D12 target 10 s). Settles near 11 V while 12 V is present (input reaches the stack through the inductor and boost diode) |
+| `hv_discharge.cir` | Stop from 450 V, passive paths only (current design, 2026-10-08) | **HV < 50 V in 1.10 s** with both HV dividers; 2.23 s with the feedback divider open, 2.03 s with the monitor divider open; V_b in 0.22-0.30 s (D12 target 10 s; see [Discharge](#discharge-d12)). Settles near 11 V while 12 V is present (input reaches the stack through the inductor and boost diode). *Superseded:* every tripler node < 50 V in 1.47 s (2026-10-06, with the 4.8 MΩ bleeder and the 1.51 MΩ V_b divider since removed) |
 | `hv_warm.cir` | Steady state, HV feedback, tube lit (stack precharged to 435 V) | **HV 449.2 V, 2.8 V p-p ripple, tube 378 µA** (D1 predicts 379 µA), V_b 156.8 V, PGOOD high |
 | `hv_warm.cir`, tube held dark | Steady state with no tube current | **HV 453.3 V, 1.7 V p-p**, V_b 157.9 V, PGOOD high. Load regulation dark → lit 0.9 % |
 | `hv_warm.cir`, V_b feedback (superseded) | Same, regulating V_b = 150 V | HV only 442 V with the tube dark: the reason feedback moved to HV |
@@ -963,7 +972,8 @@ G2 → K2 at 200 steps/s, generic MMBTA42/92, zener and BAT54S models from datas
   RTN_SENSE at 3.48 V. Firmware reads RTN_SENSE over range and drops `HV_EN`.
 * Not modelled: whether the A101 transfers its glow at −50 V guide pulses (bring-up, plan §9).
   **Bench result (2026-10-09, [bringup.md](bringup.md#optional-a101-bench-test)):** it does. The
-  user's A101 steps reliably both ways with two-button guide pulses of about −63 V (measured RTN
+  user's A101 steps reliably both ways, judged by eye (the index check is not recorded yet), with
+  two-button guide pulses of about −63 V (measured RTN
   63 V at a 400 V supply), at 288 µA and a 147 V maintaining voltage. The board's pulse is about
   −50 V (RTN 50 V); bring-up step 3 confirms stepping there.
 

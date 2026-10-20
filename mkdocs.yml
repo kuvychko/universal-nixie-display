@@ -16,6 +16,8 @@ docs_dir: website
 
 theme:
   name: material
+  # Link-preview tags (Open Graph) for every page: overrides/main.html.
+  custom_dir: overrides
   # System fonts: no requests to Google Fonts. The only third-party request is the theme's
   # fetch of the repository's star and fork counts from api.github.com (from repo_url).
   font: false

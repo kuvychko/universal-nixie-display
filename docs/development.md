@@ -160,10 +160,13 @@ starved thermal can change after a re-route.
 ## Simulation
 
 Benches are plain ngspice netlists (`.cir`) in `hardware/dekatron/simulation/`, so they run in
-batch without a GUI and diff cleanly; Qucs-S is used for interactive exploration. Run a bench:
+batch without a GUI and diff cleanly; Qucs-S is used for interactive exploration. Run a bench
+from its directory, so ngspice picks up `.spiceinit` (PSpice compatibility for the vendor models;
+see the [simulation README](../hardware/dekatron/simulation/README.md#running)):
 
 ```
-"C:/Simulators/Qucs-S/bin/ngspice_con.exe" -b hardware/dekatron/simulation/<bench>.cir
+cd hardware/dekatron/simulation
+"C:/Simulators/Qucs-S/bin/ngspice_con.exe" -b <bench>.cir
 ```
 
 Each bench states its model sources and limitations in its header. Commit summarised results

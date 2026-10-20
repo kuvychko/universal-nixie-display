@@ -15,9 +15,9 @@ over the tube, and a white clamshell around a perf board with a resistor divider
 buttons ([bench test](docs/bringup.md#optional-a101-bench-test)). It strikes, holds its glow and
 steps reliably in both directions; the video shows it stepping from a 400 V supply.
 
-<img src="website/assets/dekatron-bench-test.jpg" alt="The assembled A101 bench fixture: the tube in its black socket housing and shroud, wired to the white clamshell with two pushbuttons on top, and the red and black HV leads" height="300"> <a href="https://youtube.com/shorts/yVVf5zhSL-M"><img src="website/assets/dekatron-video-still.jpg" alt="Still from the video: the A101 in its shroud, lit, the orange glow on one cathode at the left of the ring" height="300"></a>
+<img src="website/assets/dekatron-bench-lit-closeup.jpg" alt="The lit A101 from above: the orange glow near the edge of the ring, the tube in its black socket housing, and the colour-coded wires running to the white clamshell" height="300"> <a href="https://youtube.com/shorts/yVVf5zhSL-M"><img src="website/assets/dekatron-video-still.jpg" alt="Still from the video: the A101 in its shroud, lit, the orange glow on one cathode at the left of the ring" height="300"></a>
 
-*The bench fixture (tube unlit, 2026-10-18), and a still from the
+*The bench fixture running (2026-10-20), and a still from the
 [video](https://youtube.com/shorts/yVVf5zhSL-M) of the tube stepping (2026-10-19).*
 
 The socket housing and shroud are not just for the bench: they go into the finished display as

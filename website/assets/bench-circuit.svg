@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 400" width="680" height="400" font-family="system-ui, sans-serif" font-size="13">
-<title>The A101 bench test circuit: a 400 V supply feeds the anode through R_A; a divider R1, R2, R3 holds the main cathodes at RTN, about 57 V, and the guide supply G+ at about 91 V; each guide is pulled up to G+ through 470 kΩ, and a pushbutton grounds it</title>
+<title>The A101 bench test circuit, as built on the bench: a 400 V supply feeds the anode through R_A; a divider R1, R2, R3 holds the main cathodes at RTN, about 57 V, and the guide supply G+ at about 91 V; each guide is pulled up to G+ through 470 kΩ, and a pushbutton grounds it</title>
 <rect width="680" height="400" fill="#fff"/>
 <g stroke="#333" stroke-width="2" fill="none">
   <!-- rails -->
@@ -50,6 +50,7 @@
   <text x="84" y="197">supply</text>
   <text x="566" y="374" font-weight="600">GND 0 V</text>
   <text x="184" y="88">R1 340k</text>
+  <text x="184" y="103" font-size="11.5" fill="#555">2 × 680k ∥, over-rated: see text</text>
   <text x="184" y="170">R2 38k</text>
   <text x="184" y="330">R3 47k</text>
   <text x="272" y="170">R_G1</text>

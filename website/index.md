@@ -1,3 +1,8 @@
+---
+description: Six IN-14 Nixies and an A101 dekatron. How a glow in a gas-filled tube displays a number, and how one remembers it.
+image: assets/og-dekatron.jpg
+---
+
 # Universal Nixie Display
 
 Six IN-14 Nixie tubes in a row, one A101 dekatron and a small touchscreen, in a desktop
