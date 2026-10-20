@@ -8,7 +8,7 @@ computer to send numbers to it.
     This page describes the plan. Features move here from the plan as they are demonstrated on
     the real hardware, with photographs; nothing below is claimed to work yet.
 
-![Proposed front view, not to scale: six IN-14 Nixies in a row on top of the enclosure; on the front, the touchscreen at the left and, at the right, the A101 dekatron end-on above the rotary encoder; the enclosure on a tilt base](assets/display-layout.svg){ .figure-plate }
+![Proposed front view, not to scale: on top of the enclosure, six IN-14 Nixies in a row and, at the right end of the row, the A101 dekatron held horizontally, end-on; on the front, the touchscreen at the left and the rotary encoder to its right; the enclosure on a tilt base](assets/display-layout.svg){ .figure-plate }
 
 *The proposed arrangement, not to scale. The enclosure is not designed yet, so positions and
 proportions will change.*
