@@ -82,7 +82,8 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 > circuits and know what you are doing. The designs and documents are provided as is, without
 > warranty of any kind (see [LICENSE](LICENSE)).
 
-The **A101 bench test** ([docs/bringup.md](docs/bringup.md#optional-a101-bench-test)) is the most
+The **A101 bench test** ([docs/bringup.md](docs/bringup.md#optional-a101-bench-test);
+[video](https://youtube.com/shorts/yVVf5zhSL-M)) is the most
 exposed part of the project: open wiring on a perf board, the anode at up to 450 V and every other
 wire at 50-106 V, none of them at ground. If you try it:
 

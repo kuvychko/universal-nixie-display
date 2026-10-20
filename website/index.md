@@ -29,5 +29,10 @@ moves and how fast, why the tube is a memory, and a short history. Then
 !!! info "Status"
     The display is under construction. The dekatron controller and power-supply boards are
     made and now being brought up, and the A101 dekatron has been bench-tested: it strikes,
-    holds its glow and steps reliably in both directions. Photographs and video of the working
-    tube will appear here. The Nixie side comes next. See [Build and investigate](build.md).
+    holds its glow and steps reliably in both directions:
+    [watch it step on YouTube](https://youtube.com/shorts/yVVf5zhSL-M). The Nixie side comes
+    next. See [Build and investigate](build.md).
+
+[![Still from the video: the A101 in its shroud, lit, the orange glow on one cathode at the left of the ring](assets/dekatron-video-still.jpg){ width="300" }](https://youtube.com/shorts/yVVf5zhSL-M)
+
+*Watch it on YouTube: the A101 stepping in the bench fixture from a 400 V supply, recorded 2026-10-19.*

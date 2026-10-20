@@ -213,7 +213,7 @@ The repository goes public and the site goes live together, when the bench-test 
 | Photographs carry no EXIF or GPS data; on the PCBWay label only the QR code is blurred. The job number on the labels and the board silkscreen is released | Done; accepted by the author (2026-10-18) |
 | README repository layout marks the directories that are still empty as planned | Done (2026-10-18) |
 | README acknowledgement of PCBWay's sponsorship, without claims about board quality until boards arrive | Done; updated 2026-10-18 after the boards arrived (2026-10-15): packaging and edge finish noted with photos, electrical results left to bring-up |
-| Bench-test video on YouTube, linked from the site (below) | Open: video not yet made |
+| Bench-test video on YouTube, linked from the site (below) | Done (2026-10-19): [https://youtube.com/shorts/yVVf5zhSL-M](https://youtube.com/shorts/yVVf5zhSL-M), linked from the home page, the dekatron page and the README, with a still frame (`website/assets/dekatron-video-still.jpg`) as the link; recorded 2026-10-19 at a 400 V supply |
 | Photograph of the A101 socket housing and tube shroud assembly (`enclosure/dekatron-bench-test/`) | Open: photo to come from the author |
 | Strict build and `tools/check_site.py` pass; external links resolve | Done (2026-10-18; the CCS and Printables pages answer scripted requests with 403: check them in a browser) |
 | Site read-through after the last content change | Before release |

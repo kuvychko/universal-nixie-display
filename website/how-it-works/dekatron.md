@@ -299,6 +299,10 @@ The tube on this page is not hypothetical. On the bench (2026-10-09) the project
 clamshell, the tube in a printed socket housing and shroud. Photographed 2026-10-18, tube unlit;
 more in [Build and investigate](../build.md#the-a101-bench-fixture).*
 
+[![Still from the video: the A101 in its shroud, lit, the orange glow on one cathode at the left of the ring](../assets/dekatron-video-still.jpg){ width="300" }](https://youtube.com/shorts/yVVf5zhSL-M)
+
+*Video (youtube.com/shorts/yVVf5zhSL-M, opens on YouTube): the A101 stepping in the bench fixture from a 400 V supply, recorded 2026-10-19.*
+
 The controller board uses the same scheme with the buttons replaced: RTN is regulated at about
 50 V, and transistor switches driven by an RP2040 ground the guides, about 50 V below the
 cathodes. It also gives the index cathode K1 a wire of its own, so the controller can sense it.
