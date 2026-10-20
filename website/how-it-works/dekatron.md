@@ -322,7 +322,7 @@ The tube on this page is not hypothetical. On the bench (2026-10-09) the project
 ![The A101 bench fixture running: the tube lit in its printed socket housing, orange glow inside the glass, in front of the high-voltage bench supply, with the white clamshell holding the bench circuit and its two pushbuttons in the foreground](../assets/dekatron-bench-lit-overview.jpg)
 
 *The bench fixture these results come from: the circuit above on a perf board in the white
-clamshell, the tube in a printed socket housing, the bench supply behind. Photographed 2026-10-20;
+clamshell, the tube in a printed socket housing, the bench supply behind, at 400 V. Photographed 2026-10-20;
 more in [Build and investigate](../build.md#the-a101-bench-fixture). The video at the
 [top of the page](#how-a-dekatron-counts) shows it running.*
 

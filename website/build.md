@@ -45,7 +45,7 @@ stays on the bench.
 
 ![The bench fixture running: the A101 lit in its socket housing, orange glow inside the glass, in front of the high-voltage bench supply that powers it, with the white clamshell and its two pushbuttons in the foreground](assets/dekatron-bench-lit-overview.jpg)
 
-*Running, in front of the high-voltage bench supply that feeds it. Photographed 2026-10-20.*
+*Running, in front of the high-voltage bench supply that feeds it 400 V. Photographed 2026-10-20.*
 
 ![The lit A101 from above: the orange glow near the edge of the ring, the tube in its black socket housing, and the colour-coded wires running to the white clamshell](assets/dekatron-bench-lit-closeup.jpg){ width="480" }
 
