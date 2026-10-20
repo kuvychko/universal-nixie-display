@@ -22,7 +22,9 @@ part only keeps fingers away (plan §4).
 
 A clamshell around the 30 × 70 mm perf board of the
 [optional A101 bench test](../docs/bringup.md#optional-a101-bench-test), a housing for the A101
-socket and a shroud over the tube.
+socket and a shroud over the tube. The socket housing and shroud are also the dekatron's mount in
+the finished display: they go into the enclosure as they are, with the tube held horizontally,
+its end facing the viewer (decided 2026-10-20). Only the clamshell is bench-only.
 
 | Part | Files | Qty | Status |
 |---|---|---|---|

@@ -13,7 +13,7 @@ Terminology: interpret “12DAC” as 12 VDC. “CYS” refers here to the user'
 ## 2. Agreed baseline
 
 - Six IN-14 tubes in one equally spaced row above the enclosure; two spare tubes retained.
-- One A101 mounted horizontally at the right, its end facing the viewer; an existing socket is available.
+- One A101 mounted horizontally at the right, its end facing the viewer; an existing socket is available. The bench-test socket housing and shroud (`enclosure/dekatron-bench-test/`) are the tube's mount in the enclosure (decided 2026-10-20).
 - Landscape TFT on the front left, rotary encoder with push action on the right.
 - External isolated 12 VDC adapter powers the instrument. USB-C provides the host data/programming connection; USB-only operation need not power the tubes.
 - Main application, touchscreen, encoder behavior, presets, and host protocol live on the ESP32 display board.

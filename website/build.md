@@ -33,6 +33,10 @@ colour, smooth lines and no visible hardware. The tube itself dissipates very li
 brass threaded inserts and M2/M3 machine screws; the print files and hardware list are in the
 [enclosure folder](https://github.com/kuvychko/universal-nixie-display/tree/main/enclosure#dekatron-bench-test-a101-bench-test-fixture).
 
+The socket housing and shroud are not just for the bench: they go into the finished display as
+they are, with the dekatron held horizontally, its end facing the viewer. Only the clamshell
+stays on the bench.
+
 ![The assembled A101 bench fixture: the tube in its black socket housing and shroud, wired to the white clamshell with two pushbuttons on top, and the red and black HV leads](assets/dekatron-bench-test.jpg)
 
 *The assembled bench fixture, photographed 2026-10-18 (tube unlit).*

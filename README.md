@@ -5,6 +5,23 @@ touchscreen and a rotary encoder, in a matte PLA enclosure on a tilt base. It is
 enjoyable object on its own (clock, timer, demo) and a numeric output device for a computer,
 Raspberry Pi or experiment, driven over USB serial with a small SCPI-style command set.
 
+## The dekatron on the bench
+
+The first tube to run is the A101, on a bench fixture: a printed housing for its socket, a shroud
+over the tube, and a white clamshell around a perf board with a resistor divider and two step
+buttons ([bench test](docs/bringup.md#optional-a101-bench-test)). It strikes, holds its glow and
+steps reliably in both directions; the video shows it stepping from a 400 V supply.
+
+<img src="website/assets/dekatron-bench-test.jpg" alt="The assembled A101 bench fixture: the tube in its black socket housing and shroud, wired to the white clamshell with two pushbuttons on top, and the red and black HV leads" height="300"> <a href="https://youtube.com/shorts/yVVf5zhSL-M"><img src="website/assets/dekatron-video-still.jpg" alt="Still from the video: the A101 in its shroud, lit, the orange glow on one cathode at the left of the ring" height="300"></a>
+
+*The bench fixture (tube unlit, 2026-10-18), and a still from the
+[video](https://youtube.com/shorts/yVVf5zhSL-M) of the tube stepping (2026-10-19).*
+
+The socket housing and shroud are not just for the bench: they go into the finished display as
+they are, with the dekatron held horizontally, its end facing the viewer. The M3 inserts in the
+housing's side faces are its mounting points in the enclosure. Print files and hardware are in
+[enclosure/](enclosure/README.md#dekatron-bench-test-a101-bench-test-fixture).
+
 ## Status
 
 **Phase 1D — dekatron controller/PSU bring-up** (boards from PCBWay received 2026-10-15; parts
@@ -116,7 +133,7 @@ The Gerbers went up on the evening of 2026-10-08 and the five boards were on the
 the order, the uploaded file, size, layer count, thickness and quantity. The edges are milled
 clean: no break-away tab remnants to file, so the boards were ready to use straight out of the bag.
 
-Thank you, PCBWay, for supporting an open-source hardware project.
+Thank you, PCBWay, for supporting an open-source hardware project!
 
 <img src="website/assets/dekatron-pcbs-packaged.jpg" alt="The dekatron boards as delivered: sealed in bubble wrap with a silica-gel desiccant pack and PCBWay's order labels (QR code blurred)" height="380"> <img src="website/assets/dekatron-pcbs.jpg" alt="The five bare dekatron controller/PSU boards: four top side up and one bottom side up, with clean milled edges" height="380">
 
