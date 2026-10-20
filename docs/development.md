@@ -138,6 +138,17 @@ kicad-cli pcb export drill --format excellon --excellon-units mm --excellon-sepa
 
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.
 
+### Readable exports
+
+A schematic PDF and top/bottom 3D renders in `hardware/dekatron/docs/`, linked from the README so
+the design can be read without KiCad. Regenerate them whenever the fab outputs are regenerated:
+
+```
+kicad-cli sch export pdf -o hardware/dekatron/docs/dekatron-schematic.pdf hardware/dekatron/dekatron.kicad_sch
+kicad-cli pcb render --side top --quality high -w 1600 -h 1200 --background opaque -o hardware/dekatron/docs/dekatron-pcb-top.png hardware/dekatron/dekatron.kicad_pcb
+kicad-cli pcb render --side bottom --quality high -w 1600 -h 1200 --background opaque -o hardware/dekatron/docs/dekatron-pcb-bottom.png hardware/dekatron/dekatron.kicad_pcb
+```
+
 ### DRC baseline (2026-10-08, frozen BOM: TPS54302, IPD70R1K4P7S, tantalum C301, 0805 feedback pair; routing converged on pass 5)
 
 `kicad-cli pcb drc --severity-all --schematic-parity hardware/dekatron/dekatron.kicad_pcb`:

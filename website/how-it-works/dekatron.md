@@ -9,6 +9,12 @@ That makes the dekatron unusual among display tubes: it does not just **show** a
 **holds** one. It is a counter, a one-digit memory and a display in one envelope. This page
 explains how a glow can do that, using the A101, the two-guide dekatron in this project.
 
+[![Still from the video: the A101 in its shroud, lit, the orange glow on one cathode at the left of the ring](../assets/dekatron-video-still.jpg){ width="300" }](https://youtube.com/shorts/yVVf5zhSL-M)
+
+*This project's A101 stepping on the bench, from a 400 V supply ([watch on YouTube](https://youtube.com/shorts/yVVf5zhSL-M), recorded 2026-10-19).*
+
+**[Step through it yourself ↓](#step-through-it)** in the interactive ring below.
+
 The page answers five questions:
 
 1. Why does only one main cathode glow, when all of them are connected to the circuit?
@@ -17,55 +23,19 @@ The page answers five questions:
 4. Why does reversing the pulse order reverse the count?
 5. What keeps the count between pulses?
 
-## The circuit on the bench
-
-Everything on this page is explained with the circuit the project's A101 was first tested on: a
-bench supply, a few resistors and two pushbuttons. **All voltages are measured from ground**, the
-supply's negative terminal, so a number always means the same thing.
-
-!!! danger "Not a casual experiment"
-    This circuit has 400 V on open wiring. If you build anything like it, it is at your own risk:
-    read the [safety notes](../safety.md) first, and keep one hand away while it is powered.
-
-[![The A101 bench test circuit: a 400 V supply feeds the anode through R_A; a divider R1, R2, R3 holds the main cathodes at RTN, about 57 V, and the guide supply G+ at about 91 V; each guide is pulled up to G+ through 470 kΩ, and a pushbutton grounds it](../assets/bench-circuit.svg){ .figure-plate }](../assets/bench-circuit.svg)
-
-*The bench circuit (open the drawing full size). The parts are the ones used on the bench.*
-
-- The **anode** is fed from the 400 V supply through one resistor, R_A.
-- All ten **main cathodes** return to **RTN**, which the divider R1-R2-R3 holds at about 57 V
-  rather than at ground. That is the trick that lets a plain switch to ground pull a guide
-  *below* the cathodes.
-- All ten **G1** guides are joined, and so are all ten **G2** guides. Each set is pulled up through
-  470 kΩ to **G+**, about 91 V, which keeps the guides above the cathodes at rest. Pressing **S1**
-  grounds every G1 at once; **S2** grounds every G2.
-
-The node voltages in each state, calculated from the resistor values:
-
-| Buttons | Glow on | Cathodes (RTN) | G+ | Pressed guide | Anode |
-|---|---|---|---|---|---|
-| None | a main cathode | 57 V (63 V measured) | 91 V | — | 204 V (210 V measured) |
-| S1 | a G1 | 39 V | 70 V | 0 V | 147 V |
-| S1 and S2 | a G1 and a G2 | 34 V | 62 V | 0 V | 147 V |
-| S2 | a G2 | 39 V | 70 V | 0 V | 147 V |
-
-The calculation treats the tube simply: the anode sits 147 V, the tube's measured maintaining
-voltage, above whichever electrode glows. Where the bench was measured, it comes out about 6 V
-low. Notice that the cathodes move too. The divider is not stiff, and while the glow sits on a
-grounded guide the tube current no longer flows into RTN, so RTN falls. The controller board
-uses the same scheme with transistors in place of the buttons, but regulates RTN, so there the
-cathodes stay put.
-
 ## Step through it
 
 The ring below is drawn from above. Between each pair of main cathodes (circles, K0-K9) sit two
 **guides**: a G1 (triangle) and a G2 (square). All ten G1 guides are wired together, and so are
-all ten G2 guides: the circuit has only two guide wires, one per button.
+all ten G2 guides: the circuit has only two guide wires. The figure drives them the way the
+bench test did, with two pushbuttons that ground one set of guides each while held
+([the circuit](#the-circuit-on-the-bench) is further down).
 
 Use **Stage ▶** to follow one handoff at a time, or **Count +1** to complete a whole step. With
 the ring focused, the left and right arrow keys move one stage and the up and down keys one count.
-Under the ring, a voltage record of the bench circuit builds up like a scope trace, in volts from
-ground, with the cathodes dashed underneath each trace. Count up a few times, then down, and
-compare the order in which G1 and G2 fall.
+Under the controls, an expandable voltage record of the bench circuit builds up like a scope
+trace, in volts from ground, with the cathodes dashed underneath each trace. Count up a few times,
+then down, and compare the order in which G1 and G2 fall.
 
 <div class="dekatron-ring" markdown>
 <div class="ring__fallback" markdown>
@@ -104,24 +74,25 @@ anode, and the anode is fed through one resistor.
 
 Before anything conducts, no current flows through the resistor, so the anode sits at the full
 supply voltage. On the bench the tube struck as the supply reached 289 V, with the cathodes at
-about 33 V (calculated): about 256 V across the tube. From then on the current through R_A drops the anode
-until only the **maintaining voltage** is left across the glow: at a 400 V supply the anode
-measured 210 V and the cathodes 63 V, so 147 V. That is plenty to keep the existing glow alive, and
-far below the roughly 256 V a fresh gap needs. No second glow can start, and the tube settles
-into one lit cathode by itself. Almost always: the A101's datasheet warns that just after
+about 33 V (calculated): an estimated 256 V across the tube. From then on the current through the anode
+resistor, R_A, drops the anode until only the **maintaining voltage** is left across the glow: at a
+400 V supply the anode measured 210 V and the cathodes 63 V, so 147 V at a tube current of 288 µA.
+That is plenty to keep the existing glow alive, and far below the roughly 256 V that started the
+first one. No second glow can start, and the tube settles into one lit cathode by itself. Almost always: the A101's datasheet warns that just after
 switch-on two cathodes may glow at once, until a reset pulse clears one.
 
 ## How the glow moves
 
-At rest the guides sit at G+, about 91 V, above the main cathodes at about 57 V, so the glow has
+On the bench, at rest, the guides sit at G+, about 91 V from ground, above the main cathodes at
+about 57 V ([the circuit](#the-circuit-on-the-bench) is below), so the glow has
 no reason to visit them. To move it, a button grounds one set of guides: 0 V, well below the
 cathodes.
 
 All ten G1 guides fall together, but they are not all equal. The one beside the glow sits in a
 cloud of ions and excited atoms left by the discharge, and a discharge starts there far more easily
 than at a guide across the ring. So the glow hands over to the **adjacent** guide only. This is
-a local handoff: the glow grows on the new electrode as it fades on the old one. Nothing travels
-round the tube.
+a local handoff: the glow grows on the new electrode as it fades on the old one. The discharge
+transfers between neighbouring electrodes; it is not a glowing spot circling the ring.
 
 The presses overlap. While S1 is still held, S2 grounds G2 too, and the glow spreads to the G2
 beside it. That G2 is on the far side of the G1 from the old cathode: the G2 on the old cathode's
@@ -136,11 +107,13 @@ the count goes down. The same two buttons drive the count in both directions.
 ### Unrolled: the voltages that decide it
 
 Cut the ring open and lay a few electrodes out in a row under the anode. The chart below them is
-in volts from ground, the same numbers as the table above. Each electrode's bar runs from its own
+in volts from ground, from the bench circuit ([below](#the-circuit-on-the-bench)). Each electrode's bar runs from its own
 voltage (the dot) up to the anode's (the solid line), so **the bar's length is the voltage across
-its gap**. Two marks on each bar give this tube's measured limits: the tick, 147 V above the
-electrode, is what **keeps a glow going**; the dashed outline, about 256 V above it, is what fresh
-gas needs to **start one**. A gap next to the glow is **primed** by its ions and starts at a lower
+its gap**. Two marks on each bar stand for the two thresholds of a simplified model: the tick, 147 V above
+the electrode, is what **keeps a glow going**; the dashed outline, about 256 V above it, is what
+fresh gas needs to **start one**. The 147 V is the maintaining voltage measured at the bench's
+operating point, and the 256 V the striking voltage estimated from the first strike; real
+thresholds shift with current and differ from gap to gap, but the model holds them fixed. A gap next to the glow is **primed** by its ions and starts at a lower
 voltage (the arrow); by how much was not measured, so the figure gives no number for it.
 
 Because the anode sits 147 V above whichever electrode glows, it follows the glow. When the glow
@@ -170,12 +143,52 @@ minus electrode):*
 </div>
 
 !!! note "A first-order picture"
-    The two limits are measured; the node voltages are calculated from the bench circuit with the
-    simple anode rule, and come out about 6 V below the two points that were measured. While a
+    The two thresholds come from the bench: 147 V measured at one operating point, 256 V estimated
+    from the first strike, both held fixed here. The node voltages are calculated from the bench
+    circuit with the simple anode rule, and come out about 6 V below the two points that were
+    measured. While a
     released guide carries the glow, it rises only as fast as its 470 kΩ pull-up allows; the
     figure shows it at the moment it passes the cathodes. Real gaps also differ in geometry, and
     the ions' influence fades with distance rather than stopping at the neighbouring electrode.
     The figure shows why the handoff is selective, not how fast it happens.
+
+## The circuit on the bench
+
+The voltages on this page come from the circuit the project's A101 was first tested on: a
+bench supply, a few resistors and two pushbuttons. **All voltages are measured from ground**, the
+supply's negative terminal, so a number always means the same thing.
+
+!!! danger "Not a casual experiment"
+    This circuit has 400 V on open wiring. If you build anything like it, it is at your own risk:
+    read the [safety notes](../safety.md) first, and keep one hand away while it is powered.
+
+[![The A101 bench test circuit: a 400 V supply feeds the anode through R_A; a divider R1, R2, R3 holds the main cathodes at RTN, about 57 V, and the guide supply G+ at about 91 V; each guide is pulled up to G+ through 470 kΩ, and a pushbutton grounds it](../assets/bench-circuit.svg){ .figure-plate }](../assets/bench-circuit.svg)
+
+*The bench circuit (open the drawing full size). The parts are the ones used on the bench.*
+
+- The **anode** is fed from the 400 V supply through one resistor, R_A.
+- All ten **main cathodes** return to **RTN**, which the divider R1-R2-R3 holds at about 57 V
+  rather than at ground. That is the trick that lets a plain switch to ground pull a guide
+  *below* the cathodes.
+- All ten **G1** guides are joined, and so are all ten **G2** guides. Each set is pulled up through
+  470 kΩ to **G+**, about 91 V, which keeps the guides above the cathodes at rest. Pressing **S1**
+  grounds every G1 at once; **S2** grounds every G2.
+
+The node voltages in each state, calculated from the resistor values:
+
+| Buttons | Glow on | Cathodes (RTN) | G+ | Pressed guide | Anode |
+|---|---|---|---|---|---|
+| None | a main cathode | 57 V (63 V measured) | 91 V | — | 204 V (210 V measured) |
+| S1 | a G1 | 39 V | 70 V | 0 V | 147 V |
+| S1 and S2 | a G1 and a G2 | 34 V | 62 V | 0 V | 147 V |
+| S2 | a G2 | 39 V | 70 V | 0 V | 147 V |
+
+The calculation treats the tube simply: the anode sits 147 V, the tube's measured maintaining
+voltage, above whichever electrode glows. Where the bench was measured, it comes out about 6 V
+low. Notice that the cathodes move too. The divider is not stiff, and while the glow sits on a
+grounded guide the tube current no longer flows into RTN, so RTN falls. The controller board
+uses the same scheme with transistors in place of the buttons, but regulates RTN, so there the
+cathodes stay put.
 
 ## How fast it can count
 
@@ -209,7 +222,7 @@ Elesta concedes the price in light: the EZ10B's glow is weaker. Reaching 1 MHz t
 tube, too: the bulletin gives a dedicated input stage for it, more critical to build and set up
 than its 500 kHz trigger.
 
-!!! warning "Ten times too fast: one tube, three sources"
+??? warning "Ten times too fast: one tube, three sources"
     The A106's handbook page gives its speed as 10⁴ Hz: 10 kHz. The collectors' site Lampes et
     tubes transcribes this as "104 Hz", the exponent lost. A third source, Industrial Alchemy,
     rates the tube at 100 kHz, ten times the handbook. The fill is no clearer: the handbook says "a neon
@@ -227,7 +240,7 @@ per second. Transistor counters later made the whole arrangement obsolete.
 
 ## A tube that remembers
 
-Between steps, nothing in the drive circuit records the count. Both guide wires sit at rest,
+Between steps, nothing in the bench circuit records the count. Both guide wires sit at rest,
 identical for every digit. **The count exists only as the position of the glow**, and the
 discharge keeps itself there: the anode-resistor balance above holds it on whichever cathode it
 occupies. The pulses carry no number, only "one more" or "one fewer".
@@ -235,8 +248,11 @@ occupies. The pulses carry no number, only "one more" or "one fewer".
 In the finished display the point is literal. On the controller board, nine of the ten main
 cathodes are joined together at the socket and return on one wire; only K1, the **index** cathode, has a wire of its own (turn on
 *Show connections* in the figure). The controller cannot ask the tube which digit it holds. It can
-only see the index light once per revolution and count the pulses it has sent since. The tube is
-the only place where the count actually lives.
+only see the index light once per revolution and count the pulses it has sent since, so what the
+controller holds is an *estimate* of the count; the count itself is the glow's position in the
+tube. Normally the two agree. After a missed step they differ, and the controller can only notice
+at an index visit, if then: one index cathode cannot catch every missed step. The controller's firmware is planned to re-home the tube
+whenever the index disagrees, and after any power interruption.
 
 The memory is volatile. It lasts exactly as long as the discharge: switch off and the count is
 gone, and at the next power-up the glow strikes wherever it strikes. That is why a dekatron circuit
@@ -288,7 +304,7 @@ dekatron's life; a fuller production history is still to be sourced.
 
 The tube on this page is not hypothetical. On the bench (2026-10-09) the project's A101:
 
-- struck at a 289 V supply, with about 256 V across the tube;
+- struck at a 289 V supply, with an estimated 256 V across the tube;
 - held its glow at a maintaining voltage of 147 V, at 288 µA;
 - stepped reliably in both directions with the guides grounded, about 63 V below the cathodes:
   less than half the 135–200 V control pulse its datasheet calls for.
@@ -297,11 +313,8 @@ The tube on this page is not hypothetical. On the bench (2026-10-09) the project
 
 *The bench fixture these results come from: the circuit above on a perf board in the white
 clamshell, the tube in a printed socket housing and shroud. Photographed 2026-10-18, tube unlit;
-more in [Build and investigate](../build.md#the-a101-bench-fixture).*
-
-[![Still from the video: the A101 in its shroud, lit, the orange glow on one cathode at the left of the ring](../assets/dekatron-video-still.jpg){ width="300" }](https://youtube.com/shorts/yVVf5zhSL-M)
-
-*Video (youtube.com/shorts/yVVf5zhSL-M, opens on YouTube): the A101 stepping in the bench fixture from a 400 V supply, recorded 2026-10-19.*
+more in [Build and investigate](../build.md#the-a101-bench-fixture). The video at the
+[top of the page](#how-a-dekatron-counts) shows it running.*
 
 The controller board uses the same scheme with the buttons replaced: RTN is regulated at about
 50 V, and transistor switches driven by an RP2040 ground the guides, about 50 V below the

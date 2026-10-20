@@ -1,6 +1,6 @@
 # About
 
-A project by Igor Kuvychko: a desktop display that is enjoyable as an object and useful as an
+A project by [Igor Kuvychko](https://igorkuvychko.com/) ([LinkedIn](https://www.linkedin.com/in/igor-kuvychko)): a desktop display that is enjoyable as an object and useful as an
 instrument, and an excuse to understand two kinds of cold-cathode tube properly.
 
 ## Sources

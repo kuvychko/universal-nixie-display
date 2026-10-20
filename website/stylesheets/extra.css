@@ -193,7 +193,11 @@
   color: var(--md-default-fg-color);
 }
 
-/* The drive record under the ring (javascripts/dekatron/scope.js). */
+/* The drive record under the ring's controls (javascripts/dekatron/scope.js), collapsed by default. */
+
+.md-typeset details.scope__details {
+  margin-top: 1rem;
+}
 
 .md-typeset figure.scope {
   margin: 1rem 0 0;

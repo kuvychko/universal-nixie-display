@@ -80,7 +80,7 @@ Begin paused. One interaction should immediately produce a meaningful change. Th
 Make the memory point explicit, not incidental:
 
 - The glow position is a one-digit decimal register; the ring of ten main cathodes is a ten-state counter. The drive circuit changes the state but does not hold it.
-- In this build the controller cannot read the count at all. Nine of the ten main cathodes are tied together at the socket; only the index cathode K1 is sensed. Firmware infers the count from pulses since the last index; the tube is the only place the count actually lives.
+- In this build the controller cannot read the count at all. Nine of the ten main cathodes are tied together at the socket; only the index cathode K1 is sensed. Firmware estimates the count from pulses since the last index; the count itself is the glow's position in the tube, and the estimate can diverge after a missed step until the controller re-homes.
 - The memory is volatile: it lasts while the discharge is powered. Switch off and the count is gone; on the next strike the glow settles wherever it settles.
 - Historical illustration: the Harwell Dekatron computer (below) used dekatrons as its main store.
 - Interactive hook: pause the drive and let the visitor notice that nothing changes. The count stays.

@@ -5,6 +5,9 @@ touchscreen and a rotary encoder, in a matte PLA enclosure on a tilt base. It is
 enjoyable object on its own (clock, timer, demo) and a numeric output device for a computer,
 Raspberry Pi or experiment, driven over USB serial with a small SCPI-style command set.
 
+**Companion site:** [kuvychko.github.io/universal-nixie-display](https://kuvychko.github.io/universal-nixie-display/)
+· **Interactive explainer:** [How a dekatron counts](https://kuvychko.github.io/universal-nixie-display/how-it-works/dekatron/)
+
 ## The dekatron on the bench
 
 The first tube to run is the A101, on a bench fixture: a printed housing for its socket, a shroud
@@ -40,6 +43,23 @@ assembled and brought up section by section. The planning baseline is
 | 4 | Enclosure | Not started |
 | 5 | Rev A release | Not started |
 
+### Dekatron controller/PSU at a glance
+
+Readable without KiCad. Board as fabricated (commit f4fd414, ordered 2026-10-09); the schematic
+title block still reads "Rev A draft". **Fabrication-ready, not yet electrically validated:**
+bring-up is in progress (Phase 1D).
+
+| What | File |
+|---|---|
+| Schematic (PDF, 4 sheets) | [hardware/dekatron/docs/dekatron-schematic.pdf](hardware/dekatron/docs/dekatron-schematic.pdf) |
+| Board renders | [top](hardware/dekatron/docs/dekatron-pcb-top.png), [bottom](hardware/dekatron/docs/dekatron-pcb-bottom.png) |
+| Bill of materials | [hardware/dekatron/bom.csv](hardware/dekatron/bom.csv) |
+| Assembly checklist | [hardware/dekatron/assembly.md](hardware/dekatron/assembly.md) |
+| Gerbers and drill files | [hardware/dekatron/fab/](hardware/dekatron/fab/README.md) |
+| Bring-up results | [docs/bringup.md](docs/bringup.md) |
+
+<img src="hardware/dekatron/docs/dekatron-pcb-top.png" alt="3D render of the dekatron controller/PSU board, top side" height="300">
+
 ## Architecture
 
 ```
@@ -69,7 +89,7 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | [docs/bringup.md](docs/bringup.md) | Module bring-up procedures and acceptance results |
 | [docs/development.md](docs/development.md) | Toolchains, KiCad workflow, generated-file policy |
 | [docs/references.md](docs/references.md) | Datasheets, source designs, attribution and reuse terms |
-| [docs/companion_site.md](docs/companion_site.md) | Plan for the public companion website (`website/`) |
+| [docs/companion_site.md](docs/companion_site.md) | Plan for the companion website (`website/`); the published site is [here](https://kuvychko.github.io/universal-nixie-display/) |
 
 ## Repository layout
 

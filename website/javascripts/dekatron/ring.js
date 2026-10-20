@@ -195,15 +195,20 @@ function setup(container) {
 
   container.querySelector(".ring__fallback")?.remove();
   container.classList.add("ring--live");
+  // Controls sit right under the ring, so a press and its effect stay on screen together; the
+  // voltage record is optional detail, collapsed below them.
   container.append(
     html("div", { class: "ring__body" }, [html("div", { class: "ring__figure" }, [ring.root]), panel]),
-    html("figure", { class: "scope" }, [
-      scope.root,
-      html("figcaption", {
-        text: `Voltage record of the bench circuit, in volts from ground (calculated from its resistor values). Dashed: the main cathodes. A grounded guide drops below them; at rest it sits above. Count up and then down to compare the two sequences.`,
-      }),
-    ]),
     stepper.controls,
+    html("details", { class: "scope__details" }, [
+      html("summary", { text: "Voltage record of the bench circuit" }),
+      html("figure", { class: "scope" }, [
+        scope.root,
+        html("figcaption", {
+          text: `In volts from ground, calculated from the bench circuit's resistor values. Dashed: the main cathodes. A grounded guide drops below them; at rest it sits above. Count up and then down to compare the two sequences.`,
+        }),
+      ]),
+    ]),
   );
   stepper.start();
   new ResizeObserver(() => scope.fit(container.clientWidth)).observe(container);

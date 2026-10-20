@@ -10,6 +10,8 @@ in the [project repository](https://github.com/kuvychko/universal-nixie-display)
 | [Hardware design](https://github.com/kuvychko/universal-nixie-display/blob/main/docs/hardware.md) | Electrical design, decisions and their sources |
 | [Bring-up and bench results](https://github.com/kuvychko/universal-nixie-display/blob/main/docs/bringup.md) | Test procedures and measurements, including the A101 bench test |
 | [Dekatron board](https://github.com/kuvychko/universal-nixie-display/tree/main/hardware/dekatron) | KiCad project, simulations and fabrication files |
+| [Dekatron schematic (PDF)](https://github.com/kuvychko/universal-nixie-display/blob/main/hardware/dekatron/docs/dekatron-schematic.pdf) and board renders ([top](https://github.com/kuvychko/universal-nixie-display/blob/main/hardware/dekatron/docs/dekatron-pcb-top.png), [bottom](https://github.com/kuvychko/universal-nixie-display/blob/main/hardware/dekatron/docs/dekatron-pcb-bottom.png)) | The board as fabricated, readable without KiCad. Fabrication-ready, not yet electrically validated: bring-up is in progress |
+| [Bill of materials](https://github.com/kuvychko/universal-nixie-display/blob/main/hardware/dekatron/bom.csv) and [assembly checklist](https://github.com/kuvychko/universal-nixie-display/blob/main/hardware/dekatron/assembly.md) | Parts, and the order the board is built and tested in, section by section |
 | [Enclosure](https://github.com/kuvychko/universal-nixie-display/tree/main/enclosure) | Printed parts and print settings |
 
 !!! warning "The A101 socket is rare"
