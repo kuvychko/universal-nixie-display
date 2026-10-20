@@ -16,7 +16,8 @@ docs_dir: website
 
 theme:
   name: material
-  # System fonts: the site makes no requests to Google Fonts (or any third party).
+  # System fonts: no requests to Google Fonts. The only third-party request is the theme's
+  # fetch of the repository's star and fork counts from api.github.com (from repo_url).
   font: false
   palette:
     - scheme: default

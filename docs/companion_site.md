@@ -228,7 +228,7 @@ The repository goes public and the site goes live together, when the bench-test 
 6. Set the repository's About website to the site URL.
 7. Share the video with links to the site and the repository.
 
-**The video** (decided 2026-10-11): the author uploads it to YouTube, and the site links to it rather than embedding it, so the site still makes no third-party requests. A still frame from the video, saved as a small image in `website/assets/`, can act as the link on the home page and the dekatron page. The caption says what is shown, the supply voltage and the date.
+**The video** (decided 2026-10-11): the author uploads it to YouTube, and the site links to it rather than embedding it, so the site adds no third-party requests (its only one is the theme's fetch of the repository's star and fork counts from api.github.com, accepted 2026-10-19). A still frame from the video, saved as a small image in `website/assets/`, can act as the link on the home page and the dekatron page. The caption says what is shown, the supply voltage and the date.
 
 ## 11. Growing with the project
 
