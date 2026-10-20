@@ -200,7 +200,7 @@ Add measured waveforms, a more detailed ignition/transfer view, or a 3D nixie cu
 The repository goes public and the site goes live together, when the bench-test video is shared
 (decided 2026-10-11; confirmed 2026-10-18). The site must be ready before the link is.
 
-**Before flipping the repository** (status as of 2026-10-18):
+**Before flipping the repository** (status as of 2026-10-19: all done):
 
 | Check | Status |
 |---|---|
@@ -214,9 +214,9 @@ The repository goes public and the site goes live together, when the bench-test 
 | README repository layout marks the directories that are still empty as planned | Done (2026-10-18) |
 | README acknowledgement of PCBWay's sponsorship, without claims about board quality until boards arrive | Done; updated 2026-10-18 after the boards arrived (2026-10-15): packaging and edge finish noted with photos, electrical results left to bring-up |
 | Bench-test video on YouTube, linked from the site (below) | Done (2026-10-19): [https://youtube.com/shorts/yVVf5zhSL-M](https://youtube.com/shorts/yVVf5zhSL-M), linked from the home page, the dekatron page and the README, with a still frame (`website/assets/dekatron-video-still.jpg`) as the link; recorded 2026-10-19 at a 400 V supply |
-| Photograph of the A101 socket housing and tube shroud assembly (`enclosure/dekatron-bench-test/`) | Open: photo to come from the author |
+| Photograph of the A101 socket housing and tube shroud assembly (`enclosure/dekatron-bench-test/`) | Done: shown in the exploded fixture photo (`website/assets/dekatron-bench-test-exploded.jpg`, Build and investigate); accepted by the author (2026-10-19) |
 | Strict build and `tools/check_site.py` pass; external links resolve | Done (2026-10-18; the CCS and Printables pages answer scripted requests with 403: check them in a browser) |
-| Site read-through after the last content change | Before release |
+| Site read-through after the last content change | Done (author, 2026-10-19) |
 
 **Release sequence:**
 
