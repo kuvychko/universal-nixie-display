@@ -48,7 +48,8 @@ fitted around it, and on the bare board it can be re-flowed from the back throug
 **Gate 0**
 
 - [ ] No bridges between pins (microscope)
-- [ ] Exposed pad (pin 15) to GND: continuity
+- [ ] Exposed pad (pin 15): reflowed from the back until the paste melted at the leads. It can't be
+  checked with a meter: pins 5, 6 and the pad all sit on GND
 - [ ] No pin shorted to its neighbours (meter, pin to pin)
 - [ ] Flux cleaned
 
