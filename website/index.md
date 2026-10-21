@@ -39,6 +39,7 @@ drives it, how fast it can count, why the tube is a memory, and a short history.
 
 !!! info "Status"
     The display is under construction. The dekatron controller and power-supply boards are
-    made and now being brought up, and the A101 dekatron has been bench-tested: it strikes,
+    made (fabrication sponsored by [PCBWay](about.md#acknowledgements)) and now being brought up,
+    and the A101 dekatron has been bench-tested: it strikes,
     holds its glow and steps reliably in both directions (the video above). The Nixie side comes
     next. See [Build and investigate](build.md).
