@@ -74,7 +74,7 @@ Resistors, 1206
 - [ ] 10k (kit): R101, R109, R114 (3)
 - [ ] 100k (kit): R105, R110, R301 (3)
 - [ ] 4.7k (kit): R303, R304 (2)
-- [ ] 0 Ω (kit): R112 — **not LK2 yet**
+- [ ] 0 Ω (kit): R112 — **leave LK2 open**: same 0 Ω part, fitted at Gate 1 after the buck check
 - [ ] 511k, `RT1206FRE07511KL`: R102
 - [ ] 105k, `CR1206-FX-1053ELF`: R103
 - [ ] 49.9 Ω, `RCC120649R9FKEA`: R104
