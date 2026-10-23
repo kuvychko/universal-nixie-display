@@ -114,7 +114,8 @@ Harness
 **Gate 1 — bring-up step 1** (acceptance: rails in tolerance, no back-feed from USB)
 
 - [ ] Flux cleaned
-- [ ] LK1 open, LK2 open, JP101 shunt fitted
+- [ ] Links: LK1 open (no 12 V to the HV converter until Gate 2), LK2 open (fitted below, after the
+  buck check); R112 fitted (a 0 Ω resistor, not a link); JP101 shunt fitted
 - [ ] Unpowered, to GND (not a short): VIN_PROT (TP101) ___ Ω, +5V (TP103) ___ Ω, 5V_MCU (TP310) ___ Ω, +3V3 (TP309) ___ Ω
 - [ ] Bench 12 V, current limit set low: ___ mA
 - [ ] VIN_PROT (TP101) ___ V; input current ___ mA
