@@ -204,31 +204,46 @@ Through-hole
 
 Safety first:
 
-- [ ] Rated HV probes; one hand; nothing touched while powered
-- [ ] Discharge check before every touch: V_B (TP106) and HV_STACK (TP108) below 50 V (design target: below 50 V within 10 s, [D12](../../docs/hardware.md#discharge-d12)); discharge time ___ s
-- [ ] A way to drive HV_EN (GP6) high and low on purpose: the [bring-up firmware](../../firmware/dekatron-bringup/README.md) flashed, driven with `tools/hv_bringup.py`. Without it, GP6's reset pull-down keeps HV off
+- [x] Rated HV probes; one hand; nothing touched while powered
+- [ ] Discharge check before every touch: V_B (TP106) and HV_STACK (TP108) below 50 V (design target: below 50 V within 10 s, [D12](../../docs/hardware.md#discharge-d12)); discharge time 0.67 s
+  (HV_STACK from 452.6 V, 1M load fitted, 100 Hz log `2026-10-24_gate2_discharge.csv`; < 300 V
+  70 ms, < 100 V 0.43 s, < 20 V 1.0 s). V_B discharge not measured: **deferred**
+- [x] A way to drive HV_EN (GP6) high and low on purpose: the [bring-up firmware](../../firmware/dekatron-bringup/README.md) flashed, driven with `tools/hv_bringup.py`. Without it, GP6's reset pull-down keeps HV off
 
 Setup:
 
-- [ ] Flux cleaned, HV side especially
-- [ ] LK3 fitted, LK4 open, LK5 open
-- [ ] Dummy load HHV-50 1M soldered across TP108 (HV_STACK) and TP107 (GND), off-board
-- [ ] **Fit LK1**: 0 Ω (kit), 1206
-- [ ] Unpowered, to GND (not a short): VDRV (TP104) ___ Ω, V_B (TP106) ___ Ω, HV_STACK (TP108) ___ Ω
+- [x] Flux cleaned, HV side especially
+- [x] LK3 fitted, LK4 open, LK5 open
+- [x] Dummy load HHV-50 1M soldered across TP108 (HV_STACK) and TP107 (GND), off-board
+- [x] **Fit LK1**: 0 Ω (kit), 1206
+- [x] Unpowered, to GND (not a short): VDRV (TP104) 0.16 MΩ, V_B (TP106) 1.8 MΩ, HV_STACK (TP108) 0.84 MΩ.
+  TP108 was expected at 0.58 MΩ (1M load ‖ 2.706M feedback string ‖ 2.714M sense string), so both
+  strings were checked by injecting 12 V into TP108 (board unpowered, USB only): HV_SENSE read
+  13.1 V on the RP2040 (≈ 11.9 V less its 1.2 V zero offset), FB at R130 pad 1 26.6 mV (calculated
+  26.6 mV). Both strings intact; the 0.84 MΩ was the meter
 
 HV inhibited (JP101 shunt fitted):
 
-- [ ] VDRV (TP104) ___ V (design 10.07 V, R107 / R108); input current ___ mA
-- [ ] SW (TP105): no switching
+- [x] VDRV (TP104) 10.05 V (design 10.07 V, R107 / R108); input current 1 mA (USB also connected)
+- [x] SW (TP105): no switching, 12.00 V DC (VIN through L102). HV_STACK on HV_SENSE 11.4 V, the
+  same pass-through; PGOOD low. `on 5` with the shunt fitted: firmware latched `en_low`, peak HV
+  12.0 V, so the inhibit holds
 
 HV on (shunt removed for the run only, refitted after):
 
-- [ ] HV_STACK ___ V (design 451.0 V with R130 + R144 = 2 × 3.0k); V_B ___ V
-- [ ] Ripple ___; startup overshoot ___; power-up inductor current ___
-- [ ] Load response ___; temperature ___; input power ___
-- [ ] OVP: with HV inhibited, lift R126 (the feedback string's top), release the inhibit, record the trip ___ V (design 543.7 V); restore R126
-- [ ] Power off, discharge checked, dummy load removed
-- [ ] Result copied into bringup.md step 2
+- [x] HV_STACK 449 V on the meter (design 451.0 V with R130 + R144 = 2 × 3.0k); V_B 152 V. Board
+  HV_SENSE read 452.4-452.7 V (≈ 3-4 V high); PGOOD high; VIN 11.94 V. Raw:
+  `2026-10-24_gate2_run1.csv` (10 s, 20 Hz). One 600.8 V peak sample on the 120 s run, most
+  likely probe pickup on HV_SENSE: the OVP (543.7 V) did not trip and the EN node stayed high
+- [ ] **Deferred** (user, 2026-10-24): ripple, startup overshoot (board ADC peak 458-459 V, scope
+  not used), power-up inductor current
+- [ ] **Deferred** (user, 2026-10-24): load response, temperature. Done: input power 0.45 W (11.94 V × 38 mA, USB also
+  connected; 1 mA of it with HV off). Load ≈ 0.35 W (449 V into 1M ‖ 2.706M ‖ 2.714M):
+  ≈ 79 % including the VDRV LDO
+- [ ] **Deferred** (user, 2026-10-24); do it at the start of Gate 3, before LK5 is fitted, so the
+  trip voltage stays off the Stage 3 parts. OVP: with HV inhibited, lift R126 (the feedback string's top), release the inhibit, record the trip ___ V (design 543.7 V); restore R126
+- [ ] Power off, discharge checked, JP101 shunt refitted; dummy load **kept** until the OVP test
+- [x] Result copied into bringup.md step 2 (partial)
 
 ## Stage 3 — tube drive
 

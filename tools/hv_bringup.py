@@ -81,7 +81,10 @@ def main():
                     break
                 if raw.startswith("ERR"):
                     sys.exit(raw)
-                if raw:
+                if raw.startswith(("OK", "FAULT")):
+                    # Messages from the HV loop (timeout, trip) interleave with the data.
+                    print(raw, file=sys.stderr)
+                elif raw:
                     rows.append(raw)
             text = "\n".join(rows) + "\n"
             if args.out:
