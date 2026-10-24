@@ -260,6 +260,15 @@ upward, unseen by the HV OVP. A second TLV3011 trips at **200.7 V** (HHV-25 2.2M
 at 450 V and ≈ 175 V at 500 V), wired-OR on the same EN/UVLO node. The RP2040 also measures HV and can drop `HV_EN`,
 but that does not replace a hardware limit.
 
+**R112 (0 Ω) joins the EN/UVLO node to GP8 (`OVP_TRIP`).** It is fitted from Stage 1, but as a
+part rather than a trace so the RP2040 can be taken off the HV-safety node without cutting
+copper. The pull-down, `HV_EN` drive, both comparators and the LM5156 EN pin all meet on EN/UVLO,
+and the MCU is the one thing on it that can load it unexpectedly (review item 4: GP8's default
+pull-down). Lifting R112 separates that from the converter when EN reads low or HV will not start.
+The pad can also take a series resistor if GP8 ever needs current limiting into EN/UVLO (the same
+hazard as `HV_EN` under [USB power paths](#usb-power-paths-d6)); value _open_, none planned.
+(Rationale recorded 2026-10-23 from the design, not a measurement.)
+
 **Variant choice (LM5156H vs LM51561H):** hiccup mode limits stress during a sustained HV short
 (a probe slip or arc), but may also trip while the tripler capacitors charge at startup. Simulate
 startup in 1B with the slowest soft-start that is acceptable; decide the population option from
