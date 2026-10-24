@@ -242,7 +242,7 @@ HV on (shunt removed for the run only, refitted after):
   ≈ 79 % including the VDRV LDO
 - [ ] **Deferred** (user, 2026-10-24); do it at the start of Gate 3, before LK5 is fitted, so the
   trip voltage stays off the Stage 3 parts. OVP: with HV inhibited, lift R126 (the feedback string's top), release the inhibit, record the trip ___ V (design 543.7 V); restore R126
-- [ ] Power off, discharge checked, JP101 shunt refitted; dummy load **kept** until the OVP test
+- [x] Power off, discharge checked, JP101 shunt refitted; dummy load **kept** until the OVP test
 - [x] Result copied into bringup.md step 2 (partial)
 
 ## Stage 3 — tube drive
