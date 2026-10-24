@@ -1,5 +1,5 @@
-# Python tooling for the repository. Today it only pins the companion site's build
-# (docs/companion_site.md): uv run --group docs mkdocs serve
+# Python tooling for the repository: the companion site's build (docs/companion_site.md):
+# uv run --group docs mkdocs serve, and the bench tools (uv run --group bench ...)
 [project]
 name = "universal-nixie-display"
 version = "0.0.1"
@@ -12,6 +12,10 @@ dependencies = []
 [dependency-groups]
 docs = [
     "mkdocs-material>=9.5,<10",
+]
+# Bench tools: tools/hv_bringup.py
+bench = [
+    "pyserial>=3.5,<4",
 ]
 
 [tool.uv]

@@ -123,7 +123,7 @@ Tall SMD and through-hole
 Harness
 
 - [x] PWR_IN: J101 (harness or bench leads)
-- [ ] Optional now, needed by step 4: DISP, J301
+- [x] Optional now, needed by step 4: DISP, J301
 
 **Gate 1 — bring-up step 1** (acceptance: rails in tolerance, no back-feed from USB)
 
@@ -149,52 +149,56 @@ OVP comparators. Leave LK1, LK4 and LK5 open.
 
 ICs
 
-- [ ] TLV3011, `TLV3011AIDBVR`, SOT-23-6: U107, U108 (2)
-- [ ] LP2951, `LP2951ACDR2G`, SOIC-8: U105
+- [x] TLV3011, `TLV3011AIDBVR`, SOT-23-6: U107, U108 (2)
+- [x] LP2951, `LP2951ACDR2G`, SOIC-8: U105
 
 Capacitors, 1206
 
-- [ ] 0.1 µF 50 V X7R, `CC1206JPX7R9BB104`: C115, C121, C128, C130 (4)
-- [ ] 1 µF X7R, `1206DC105MAT2A`: C112, C114 (2)
-- [ ] 2.2 µF X7R, `CS1206KKX7R8BB225`: C113
-- [ ] 47 nF X7R, `CC1206KRX7R8BB473`: C116
-- [ ] 10 nF X7R, `12063C103JAT2A`: C117
-- [ ] 100 pF C0G, `C1206C101K5GAC7210`: C118
-- [ ] 470 pF C0G, `1206B471K500CT`: C119
-- [ ] 1 nF C0G, `1206N102K501CT`: C127, C129 (2)
+- [x] 0.1 µF 50 V X7R, `CC1206JPX7R9BB104`: C115, C121, C128, C130 (4)
+- [x] 1 µF X7R, `1206DC105MAT2A`: C112, C114 (2)
+- [x] 2.2 µF X7R, `CS1206KKX7R8BB225`: C113
+- [x] 47 nF X7R, `CC1206KRX7R8BB473`: C116
+- [x] 10 nF X7R, `12063C103JAT2A`: C117
+- [x] 100 pF C0G, `C1206C101K5GAC7210`: C118
+- [x] 470 pF C0G, `1206B471K500CT`: C119
+- [x] 1 nF C0G, `1206N102K501CT`: C127, C129 (2)
 
 Resistors, 1206 and 0805
 
-- [ ] 10k (kit): R113
-- [ ] 100k (kit): R116
-- [ ] 100 Ω (kit): R118
-- [ ] 47 Ω (kit): R121
-- [ ] 2.2 Ω (kit): R115
-- [ ] 0.22 Ω, `RNCL1206FTR220`: R117
-- [ ] 143k, `CR1206-FX-1433ELF`: R107
-- [ ] 20.0k, `RK73H2BLTD2002F`: R108
-- [ ] 147k, `CRCW1206147KFKTA`: R111
-- [ ] 7.87k, `ERJ-8ENF7871V`: R135
-- [ ] 6.2k, `CRCW12066K20FKEAC`: R140
-- [ ] 13.7k, `CR1206-FX-1372ELF`: R143
-- [ ] 3.0k, `292-3.0K-RC`, **0805**: R130, R144 (2)
+- [x] 10k (kit): R113
+- [x] 100k (kit): R116
+- [x] 100 Ω (kit): R118
+- [x] 47 Ω (kit): R121
+- [x] 2.2 Ω (kit): R115
+- [x] 0.22 Ω, `RNCL1206FTR220`: R117
+- [x] 143k, `CR1206-FX-1433ELF`: R107
+- [x] 20.0k, `RK73H2BLTD2002F`: R108
+- [x] 147k, `CRCW1206147KFKTA`: R111
+- [x] 7.87k, `ERJ-8ENF7871V`: R135
+- [x] 6.2k, `CRCW12066K20FKEAC`: R140
+- [x] 13.7k, `CR1206-FX-1372ELF`: R143
+- [x] 3.0k, `292-3.0K-RC`, **0805**: R130, R144 (2)
 
 Discretes
 
-- [ ] ES1J, SMA: D103, D104, D105, D106, D107 (5, cathode band)
-- [ ] IPD70R1K4P7S, `IPD70R1K4P7SAUMA1`, TO-252: Q102
+- [x] ES1J, SMA: D103, D104, D105, D106, D107 (5, cathode band)
+- [x] IPD70R1K4P7S, `IPD70R1K4P7SAUMA1`, TO-252: Q102 (applied paste and reflowed with hot air)
 
 Large SMD
 
-- [ ] 10 µF 35 V, `CC1210KKX7RGBB106`, 1210: C120
+- [x] 10 µF 35 V, `CC1210KKX7RGBB106`, 1210: C120
 
 Through-hole
 
-- [ ] Wire link: LK3 (**fitted now and never powered open**)
-- [ ] 2.2M HHV-25, `HHV-25FT-52-2M2`: R119, R141 (2)
-- [ ] 2.7M HHV-25, `HHV-25FR-52-2M7`: R126, R131 (2)
-- [ ] 100 µH radial (kit): L102
-- [ ] 0.47 µF 400 V film, `MKS4G034704F00MSSD`: C122, C123, C124, C125, C126 (5)
+- [x] Wire link: LK3 (**fitted now and never powered open**)
+- [x] 2.2M HHV-25, `HHV-25FT-52-2M2`: R119, R141 (2)
+- [x] 2.7M HHV-25, `HHV-25FR-52-2M7`: R126, R131 (2)
+- [x] 100 µH radial (kit): L102
+- [x] 0.47 µF 400 V film, `MKS4G034704F00MSSD`: C122, C123, C124, C125, C126 (5)
+- [x] LK1 0R link (1206 kit)
+- [x] LK3 wire link (through hole) 
+- [x] 1M resistor between TP107 and TP108 (temporary load)
+
 
 **Gate 2 — bring-up step 2** (acceptance and limits: [bringup.md step 2](../../docs/bringup.md#dekatron-controllerpsu-phase-1d))
 
@@ -202,7 +206,7 @@ Safety first:
 
 - [ ] Rated HV probes; one hand; nothing touched while powered
 - [ ] Discharge check before every touch: V_B (TP106) and HV_STACK (TP108) below 50 V (design target: below 50 V within 10 s, [D12](../../docs/hardware.md#discharge-d12)); discharge time ___ s
-- [ ] A way to drive HV_EN (GP6) high and low on purpose: no dekatron firmware exists yet, so a minimal bring-up firmware or a REPL. Without it, GP6's reset pull-down keeps HV off
+- [ ] A way to drive HV_EN (GP6) high and low on purpose: the [bring-up firmware](../../firmware/dekatron-bringup/README.md) flashed, driven with `tools/hv_bringup.py`. Without it, GP6's reset pull-down keeps HV off
 
 Setup:
 

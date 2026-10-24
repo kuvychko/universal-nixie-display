@@ -9,8 +9,8 @@ Toolchains, workflow and generated-file policy. Commands run from the repository
 | Schematics/PCB | KiCad 10 | One project per board under `hardware/<module>/`; shared library in `hardware/lib/` |
 | Simulation | ngspice-45 (shipped with Qucs-S in `C:/Simulators/Qucs-S/bin`); KiCad 10's built-in ngspice for schematic-level checks | Benches and summarised results in `hardware/dekatron/simulation/` |
 | ESP32 firmware | PlatformIO, Arduino framework | `firmware/display/`; pin platform and library versions |
-| RP2040 firmware | _open_ (PlatformIO arduino-pico or Pico SDK) | `firmware/dekatron/`, `firmware/nixie/` |
-| Tools/tests | Python via `uv` | `tools/`, `tests/` |
+| RP2040 firmware | _open_ (PlatformIO arduino-pico or Pico SDK) | `firmware/dekatron/`, `firmware/nixie/`. The Gate 2 bring-up tool `firmware/dekatron-bringup/` uses arduino-pico on PlatformIO; it does not settle this |
+| Tools/tests | Python via `uv` | `tools/`, `tests/`; bench tools need `uv run --group bench` |
 | Enclosure | SOLIDWORKS | Commit source plus STEP and 3MF exports |
 
 ## KiCad

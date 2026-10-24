@@ -192,7 +192,7 @@ Safety first:
 
 - [ ] Rated HV probes; one hand; nothing touched while powered
 - [ ] Discharge check before every touch: V_B (TP106) and HV_STACK (TP108) below 50 V (design target: below 50 V within 10 s, [D12](../../docs/hardware.md#discharge-d12)); discharge time ___ s
-- [ ] A way to drive HV_EN (GP6) high and low on purpose: no dekatron firmware exists yet, so a minimal bring-up firmware or a REPL. Without it, GP6's reset pull-down keeps HV off
+- [ ] A way to drive HV_EN (GP6) high and low on purpose: the [bring-up firmware](../../firmware/dekatron-bringup/README.md) flashed, driven with `tools/hv_bringup.py`. Without it, GP6's reset pull-down keeps HV off
 
 Setup:
 
