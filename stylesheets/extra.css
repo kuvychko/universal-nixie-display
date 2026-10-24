@@ -1,0 +1,404 @@
+/* The dekatron figures (javascripts/dekatron/) and the static figures. The theme is the
+   polyhedra companion site's (indigo, red accent); colors come from Material's own variables, so
+   both themes work. The one fixed color is the glow: neon orange, what a neon dekatron looks
+   like. Static SVG figures sit on white plates in both themes: they are drawn on white. */
+
+:root {
+  --ring-glow: #ff6a00;
+}
+
+.md-typeset .figure-plate img,
+.md-typeset img.figure-plate {
+  background: #fff;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.2rem;
+  padding: 0.4rem;
+}
+
+.dekatron-ring {
+  margin: 1.2rem 0 1.6rem;
+}
+
+.ring__body {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media screen and (min-width: 48em) {
+  .ring__body {
+    align-items: start;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+}
+
+.ring__figure {
+  margin: 0 auto;
+  max-width: 26rem;
+  width: 100%;
+}
+
+.ring__svg {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.ring__svg:focus-visible {
+  outline: 2px solid var(--md-accent-fg-color);
+  outline-offset: 2px;
+}
+
+.ring__anode {
+  fill: var(--md-default-fg-color--lightest);
+  stroke: var(--md-default-fg-color--lighter);
+}
+
+.ring__anode-label,
+.ring__labels text,
+.ring__bus-label,
+.ring__guide-label {
+  fill: var(--md-default-fg-color--light);
+  font-size: 11px;
+}
+
+.ring__labels text {
+  fill: var(--md-default-fg-color);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ring__guide-label {
+  fill: var(--md-default-fg-color);
+  font-weight: 600;
+}
+
+.ring__el > * {
+  fill: var(--md-default-bg-color);
+  stroke: var(--md-default-fg-color--light);
+  stroke-width: 1.5;
+  transition: fill 0.25s, stroke 0.25s;
+}
+
+/* The lit electrode is marked by a heavy outline as well as the glow color. */
+.ring__el--lit > * {
+  fill: var(--ring-glow);
+  stroke: var(--md-default-fg-color);
+  stroke-width: 3;
+}
+
+.ring__halo-stop {
+  stop-color: var(--ring-glow);
+}
+
+.ring__halos circle {
+  transition: opacity 0.25s;
+}
+
+.ring__connections {
+  display: none;
+}
+
+.ring--connections .ring__connections {
+  display: inline;
+}
+
+.ring__bus,
+.ring__wire {
+  fill: none;
+  stroke: var(--md-default-fg-color--lighter);
+  stroke-width: 1.2;
+}
+
+.ring__wire--index {
+  stroke: var(--md-default-fg-color--light);
+  stroke-dasharray: 3 2;
+}
+
+.ring__node {
+  fill: var(--md-default-fg-color--light);
+}
+
+.ring__panel {
+  font-size: 0.75rem;
+}
+
+.md-typeset .ring__badge {
+  border-left: 0.2rem solid var(--md-default-fg-color--lighter);
+  font-weight: 600;
+  margin: 0 0 0.6rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.md-typeset .ring__badge--transfer {
+  background: var(--md-accent-fg-color--transparent);
+  border-left-color: var(--md-accent-fg-color);
+}
+
+.md-typeset .ring__state {
+  display: grid;
+  gap: 0.2rem 0.8rem;
+  grid-template-columns: max-content minmax(0, 1fr);
+  margin: 0 0 0.6rem;
+}
+
+.md-typeset .ring__state dt {
+  color: var(--md-default-fg-color--light);
+  font-style: normal;
+}
+
+.md-typeset .ring__state dd {
+  margin: 0;
+}
+
+.md-typeset .ring__volts {
+  color: var(--md-default-fg-color--light);
+  margin: 0 0 0.6rem;
+}
+
+.md-typeset .ring__caption {
+  margin: 0;
+  min-height: 6.5em;
+}
+
+.ring__controls {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.7rem;
+  gap: 0.5rem 1.2rem;
+  margin-top: 0.8rem;
+}
+
+.ring__group {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+}
+
+.md-typeset .ring__button {
+  margin: 0;
+  padding: 0.3em 0.9em;
+}
+
+.ring__controls select,
+.ring__controls input[type="range"] {
+  font: inherit;
+  vertical-align: middle;
+}
+
+.ring__controls select {
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lighter);
+  color: var(--md-default-fg-color);
+}
+
+/* The drive record under the ring's controls (javascripts/dekatron/scope.js), collapsed by default. */
+
+.md-typeset details.scope__details {
+  margin-top: 1rem;
+}
+
+.md-typeset figure.scope {
+  margin: 1rem 0 0;
+  max-width: none;
+}
+
+.scope__svg {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.md-typeset figure.scope figcaption {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.7rem;
+  max-width: none;
+}
+
+.scope__lane {
+  fill: var(--md-default-fg-color);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.scope__tick {
+  fill: var(--md-default-fg-color--light);
+  font-size: 10px;
+}
+
+.scope__ref {
+  stroke: var(--md-default-fg-color--lighter);
+  stroke-dasharray: 3 3;
+}
+
+.scope__now {
+  fill: color-mix(in srgb, var(--md-primary-fg-color) 12%, transparent);
+}
+
+.scope__trace {
+  fill: none;
+  stroke: var(--md-default-fg-color);
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.scope__trace--rtn {
+  stroke: var(--md-default-fg-color--light);
+  stroke-dasharray: 5 3;
+  stroke-width: 1.5;
+}
+
+.scope__grid {
+  stroke: var(--md-default-fg-color--lightest);
+}
+
+.scope__value {
+  fill: var(--md-default-fg-color);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.scope__glow {
+  fill: var(--md-default-fg-color--light);
+  font-size: 10px;
+}
+
+.scope__glow--guide {
+  fill: var(--md-default-fg-color);
+}
+
+.scope__glow--now {
+  font-weight: 700;
+}
+
+/* The unrolled electrodes (javascripts/dekatron/strip.js). */
+
+.dekatron-strip {
+  margin: 1.2rem 0 1.6rem;
+}
+
+.strip__figure {
+  margin: 0 auto 0.6rem;
+  max-width: 40rem;
+}
+
+.strip__svg {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.strip__svg:focus-visible {
+  outline: 2px solid var(--md-accent-fg-color);
+  outline-offset: 2px;
+}
+
+.strip__world--animate {
+  transition: transform 0.5s ease-in-out;
+}
+
+.strip__cloud-stop {
+  stop-color: var(--ring-glow);
+}
+
+.strip__lead,
+.strip__axis {
+  stroke: var(--md-default-fg-color--light);
+  stroke-width: 1.5;
+}
+
+.strip__name {
+  fill: var(--md-default-fg-color);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.strip__label,
+.strip__limit-label {
+  fill: var(--md-default-fg-color--light);
+  font-size: 11px;
+}
+
+.strip__limit-label {
+  paint-order: stroke;
+  stroke: var(--md-default-bg-color);
+  stroke-width: 3px;
+}
+
+.strip__grid {
+  stroke: var(--md-default-fg-color--lightest);
+}
+
+.strip__anode-line {
+  stroke: var(--md-default-fg-color);
+  stroke-width: 1.5;
+}
+
+.strip__need {
+  fill: none;
+  stroke: var(--md-default-fg-color--light);
+  stroke-dasharray: 3 2;
+}
+
+.strip__tick {
+  stroke: var(--md-default-fg-color);
+  stroke-width: 2;
+}
+
+.strip__dot {
+  fill: var(--md-default-fg-color);
+}
+
+.strip__bar {
+  fill: var(--md-default-fg-color--lighter);
+}
+
+.strip__bar--lit {
+  fill: var(--ring-glow);
+}
+
+.strip__value {
+  fill: var(--md-default-fg-color);
+  font-size: 11px;
+}
+
+.strip__primed {
+  fill: var(--md-default-fg-color);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.strip__arrow {
+  fill: none;
+  stroke: var(--md-default-fg-color);
+  stroke-width: 1.5;
+}
+
+/* Narrow layouts are scaled down further on a phone: larger text keeps them readable. */
+.scope__svg--narrow .scope__tick,
+.scope__svg--narrow .scope__glow,
+.scope__svg--narrow .scope__value,
+.strip__svg--narrow .strip__label,
+.strip__svg--narrow .strip__limit-label,
+.strip__svg--narrow .strip__value,
+.strip__svg--narrow .strip__primed {
+  font-size: 13px;
+}
+
+.scope__svg--narrow .scope__lane,
+.strip__svg--narrow .strip__name {
+  font-size: 15px;
+}
+
+.md-typeset .strip__caption {
+  min-height: 7.5em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strip__world--animate,
+  .ring__el > *,
+  .ring__halos circle {
+    transition: none;
+  }
+}
