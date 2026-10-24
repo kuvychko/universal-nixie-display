@@ -37,10 +37,12 @@ Record readings in the blanks, then copy the verdict into the Result column of
 
 ## Before starting
 
-- [ ] Bring-up step 0 done: harness continuity, tube removed ([bringup.md](../../docs/bringup.md#dekatron-controllerpsu-phase-1d))
-- [ ] Tools: microscope, solder paste, hot air or hot plate, flux, IPA, ESD mat and strap
-- [ ] All parts on hand and checked against `bom.csv`, including the off-board HHV-50 1M dummy load (`HHV-50FT-52-1M`) and a shunt for JP101
-- [ ] Bare board inspected: no visible shorts or damage, silkscreen legible
+- [x] Bring-up step 0 done: harness continuity, tube removed ([bringup.md](../../docs/bringup.md#dekatron-controllerpsu-phase-1d))
+- [x] Tools: microscope, solder paste, hot air or hot plate, flux, IPA, ESD mat and strap
+- [x] All parts on hand and checked against `bom.csv`, including the off-board HHV-50 1M dummy load (`HHV-50FT-52-1M`) and a shunt for JP101
+- [x] Bare board inspected: no visible shorts or damage, silkscreen legible
+- [x] Assembly map: front silkscreen and solder mask printed at 2:1, each part marked with a
+  highlighter as it is fitted. Very helpful for finding parts and seeing what is left in a stage
 
 ## Stage 0 — U106 on the bare board
 
@@ -59,7 +61,7 @@ fitted around it, and on the bare board it can be re-flowed from the back throug
 - [x] No pin shorted to its neighbours (meter, pin to pin). Bare board, flux not yet removed:
   3-4 0.5 MΩ, 4-5 1.5 MΩ, 5-6 0 Ω (both GND, expected), 6-7 20 MΩ, 11-12 1.3 MΩ, 7-8 9 MΩ
   (not neighbours); 1-2, 2-3, 8-9, 9-10, 10-11, 12-13, 13-14 open. Pin 6 to GND: continuity
-- [ ] Flux cleaned
+- [x] Flux cleaned
 
 ## Stage 1 — input, 5 V buck, ideal diodes, MCU
 
@@ -68,45 +70,45 @@ the HV-off default is in place as soon as the MCU is fitted) and the whole MCU s
 
 ICs
 
-- [ ] TPS54302, `TPS54302DDCR`, SOT-23-6: U101
-- [ ] LM66100, `LM66100DCKR`, SC-70-6: U102, U103, U104
+- [x] TPS54302, `TPS54302DDCR`, SOT-23-6: U101
+- [x] LM66100, `LM66100DCKR`, SC-70-6: U102, U103, U104
 
 Capacitors, 1206
 
-- [ ] 0.1 µF 50 V X7R, `CC1206JPX7R9BB104`: C102, C104, C105, C109, C110, C111, C302, C303, C305 (9)
-- [ ] 10 nF X7R, `12063C103JAT2A`: C304
-- [ ] 75 pF C0G, `12065A750JAT2A`: C108
+- [x] 0.1 µF 50 V X7R, `CC1206JPX7R9BB104`: C102, C104, C105, C109, C110, C111, C302, C303, C305 (9)
+- [x] 10 nF X7R, `12063C103JAT2A`: C304
+- [x] 75 pF C0G, `12065A750JAT2A`: C108
 
 Resistors, 1206
 
-- [ ] 10k (kit): R101, R109, R114 (3)
-- [ ] 100k (kit): R105, R110, R301 (3)
-- [ ] 4.7k (kit): R303, R304 (2)
-- [ ] 0 Ω (kit): R112 — **leave LK2 open**: same 0 Ω part, fitted at Gate 1 after the buck check
-- [ ] 511k, `RT1206FRE07511KL`: R102
-- [ ] 105k, `CR1206-FX-1053ELF`: R103
-- [ ] 49.9 Ω, `RCC120649R9FKEA`: R104
-- [ ] 13.7k, `CR1206-FX-1372ELF`: R106
-- [ ] 12k, `ERJ-8ENF1202V`: R302
+- [x] 10k (kit): R101, R109, R114 (3)
+- [x] 100k (kit): R105, R110, R301 (3)
+- [x] 4.7k (kit): R303, R304 (2)
+- [x] 0 Ω (kit): R112 — **leave LK2 open**: same 0 Ω part, fitted at Gate 1 after the buck check
+- [x] 511k, `RT1206FRE07511KL`: R102
+- [x] 105k, `CR1206-FX-1053ELF`: R103
+- [x] 49.9 Ω, `RCC120649R9FKEA`: R104
+- [x] 13.7k, `CR1206-FX-1372ELF`: R106
+- [x] 12k, `ERJ-8ENF1202V`: R302
 
 Discretes
 
-- [ ] BAT54S, `BAT54S RFG`, SOT-23: D301, D302, D303, D304 (4)
-- [ ] BZT52C10, SOD-123: D101 (cathode band)
-- [ ] SMBJ15A, SMB: D102 (cathode band)
-- [ ] IPD50P04P4L-11, `IPD50P04P4L11ATMA2`, TO-252: Q101
+- [x] BAT54S, `BAT54S RFG`, SOT-23: D301, D302, D303, D304 (4)
+- [x] BZT52C10, SOD-123: D101 (cathode band)
+- [x] SMBJ15A, SMB: D102 (cathode band)
+- [x] IPD50P04P4L-11, `IPD50P04P4L11ATMA2`, TO-252: Q101
 
 Large SMD
 
-- [ ] 10 µF 35 V, `CC1210KKX7RGBB106`, 1210: C103
-- [ ] 22 µF 25 V, `MBAST32MSB7226KPNA18`, 1210: C106, C107 (2)
-- [ ] 2 A Slo-Blo fuse, `0468002.NRHF`, 1206: F101
-- [ ] 0.75 A PTC, `1812L075/33DR`, 1812: F102
-- [ ] 10 µF tantalum, `F911C106MAAAJ6`, 3216-18: C301 (**polarized**, + to 5V_MCU)
+- [x] 10 µF 35 V, `CC1210KKX7RGBB106`, 1210: C103
+- [x] 22 µF 25 V, `MBAST32MSB7226KPNA18`, 1210: C106, C107 (2)
+- [x] 2 A Slo-Blo fuse, `0468002.NRHF`, 1206: F101
+- [x] 0.75 A PTC, `1812L075/33DR`, 1812: F102
+- [x] 10 µF tantalum, `F911C106MAAAJ6`, 3216-18: C301 (**polarized**, + to 5V_MCU)
 
 MCU module
 
-- [ ] RP2040-Zero: U301, USB toward the board edge, castellations centred on their pads, every pad soldered and inspected.
+- [x] RP2040-Zero: U301, USB toward the board edge, castellations centred on their pads, every pad soldered and inspected.
   Parts on the module's underside hold it about 0.8 mm off the board: too much for a plain solder
   bridge. Tack two opposite corners, check the module sits level, then stand a cut-off 1/4 W
   resistor lead in each castellation, solder it to the board pad and the castellation, and trim it
@@ -114,31 +116,31 @@ MCU module
 
 Tall SMD and through-hole
 
-- [ ] 100 µF 35 V electrolytic, `EEE-FK1V101XP`: C101 (**polarized**)
-- [ ] 15 µH radial (kit): L101
-- [ ] 2-pin header: JP101, **shunt fitted**
+- [x] 100 µF 35 V electrolytic, `EEE-FK1V101XP`: C101 (**polarized**)
+- [x] 15 µH radial (kit): L101
+- [x] 2-pin header: JP101, **shunt fitted**
 
 Harness
 
-- [ ] PWR_IN: J101 (harness or bench leads)
+- [x] PWR_IN: J101 (harness or bench leads)
 - [ ] Optional now, needed by step 4: DISP, J301
 
 **Gate 1 — bring-up step 1** (acceptance: rails in tolerance, no back-feed from USB)
 
-- [ ] Flux cleaned
-- [ ] Links: LK1 open (no 12 V to the HV converter until Gate 2), LK2 open (fitted below, after the
+- [x] Flux cleaned
+- [x] Links: LK1 open (no 12 V to the HV converter until Gate 2), LK2 open (fitted below, after the
   buck check); R112 fitted (a 0 Ω resistor, not a link); JP101 shunt fitted
-- [ ] Unpowered, to GND (not a short): VIN_PROT (TP101) ___ Ω, +5V (TP103) ___ Ω, 5V_MCU (TP310) ___ Ω, +3V3 (TP309) ___ Ω
-- [ ] Bench 12 V, current limit set low: ___ mA
-- [ ] VIN_PROT (TP101) ___ V; input current ___ mA
-- [ ] Buck output on LK2's buck-side pad, unloaded ___ V (design 4.95 V, R105 / R106)
-- [ ] Power off, **fit LK2**: 0 Ω (kit), 1206
-- [ ] +5V (TP103) ___ V; 5V_MCU (TP310) ___ V; +3V3 (TP309) ___ V; 5V_DISP (J301 pin 1) ___ V; input current ___ mA
-- [ ] JP101 shunt lifted briefly: HV_EN_PIN (JP101 pin 1) at 0 V (R110 pull-down), then refitted
-- [ ] 12 V off, USB to the RP2040-Zero: +5V (TP103) ___ V and VIN_PROT (TP101) ___ V stay near 0 (no back-feed)
-- [ ] RP2040-Zero enumerates over USB (BOOTSEL)
-- [ ] 12 V and USB together: rails as above
-- [ ] Result copied into bringup.md step 1
+- [x] Unpowered, to GND (not a short): VIN_PROT (TP101) 0.16 MΩ, +5V (TP103) > 2 MΩ, 5V_MCU (TP310) > 2 MΩ, +3V3 (TP309) 1.2 MΩ
+- [x] Bench 12 V, current limit set low: 50 mA. When powering the board, voltage is raised in steps of 1V to avoid over current trip due to capacitors charging.
+- [x] VIN_PROT (TP101) 12.00 V; input current 1 mA
+- [x] Buck output on LK2's buck-side pad, unloaded 4.98 V (design 4.95 V, R105 / R106)
+- [x] Power off, **fit LK2**: 0 Ω (kit), 1206
+- [x] +5V (TP103) 4.98 V; 5V_MCU (TP310) 4.98 V; +3V3 (TP309) 3.31 V; 5V_DISP (J301 pin 1) 4.98 V; input current 6 mA
+- [x] JP101 shunt lifted briefly: HV_EN_PIN (JP101 pin 1) at 0 V (R110 pull-down), then refitted
+- [x] 12 V off, USB to the RP2040-Zero: +5V (TP103) 0.04 V and VIN_PROT (TP101) 0.04 V stay near 0 (no back-feed)
+- [x] RP2040-Zero enumerates over USB (BOOTSEL)
+- [x] 12 V and USB together: rails as above, but 12 V feed current is down to 1 mA
+- [x] Result copied into bringup.md step 1
 
 ## Stage 2 — HV boost, tripler, OVP
 
