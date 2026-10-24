@@ -98,7 +98,11 @@ Large SMD
 
 MCU module
 
-- [ ] RP2040-Zero: U301, USB toward the board edge, castellations centred on their pads, every pad soldered and inspected
+- [ ] RP2040-Zero: U301, USB toward the board edge, castellations centred on their pads, every pad soldered and inspected.
+  Parts on the module's underside hold it about 0.8 mm off the board: too much for a plain solder
+  bridge. Tack two opposite corners, check the module sits level, then stand a cut-off 1/4 W
+  resistor lead in each castellation, solder it to the board pad and the castellation, and trim it
+  flush. Check each joint with a meter, castellation to its board trace
 
 Tall SMD and through-hole
 
