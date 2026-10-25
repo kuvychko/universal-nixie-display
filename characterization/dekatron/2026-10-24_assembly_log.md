@@ -248,6 +248,10 @@ HV on (shunt removed for the run only, refitted after):
   regulated again: board HV_SENSE 451.4-454.8 V, PGOOD high (peak 476.3 V since `on`, higher than
   the 458-459 V at Gate 2; VIN read 8.49 V just before, the supply still rising, scope not used)
 - [x] Power off, discharge checked, JP101 shunt refitted; dummy load **kept** until the OVP test
+- [ ] The deferred items above (ripple, startup overshoot, inductor current, load response,
+  temperature, V_B discharge) are not pursued with the 1M load: user decision 2026-10-25, judged
+  not important enough. Load response and temperature are more meaningful with the tube lit.
+  1M dummy load removed (discharge checked first) ___
 - [x] Result copied into bringup.md step 2 (partial)
 
 ## Stage 3 — tube drive
@@ -256,45 +260,74 @@ G+ / RTN regulators, guide drivers, index level shifter and the anode resistors.
 
 Capacitors, 1206
 
-- [ ] 0.1 µF **100 V** X7R, `AC1206KKX7R0BB104`: C201
-- [ ] 1 µF **100 V** X7R, `C1206C105M1RACAUTO`: C202
-- [ ] 1 nF C0G, `1206N102K501CT`: C204
+- [x] 0.1 µF **100 V** X7R, `AC1206KKX7R0BB104`: C201
+- [x] 1 µF **100 V** X7R, `C1206C105M1RACAUTO`: C202
+- [x] 1 nF C0G, `1206N102K501CT`: C204
 
 Resistors, 1206
 
-- [ ] 10k (kit): R206, R209 (2)
-- [ ] 10k 1 %: R204
-- [ ] 47k (kit): R207, R210 (2)
-- [ ] 470k (kit): R205, R208 (2)
-- [ ] 220k (kit), **1206**: R211 (not R212)
-- [ ] 13k, `CR1206-FX-1302ELF`: R214
+- [x] 10k (kit): R206, R209 (2)
+- [x] 10k 1 %: R204
+- [x] 47k (kit): R207, R210 (2)
+- [x] 470k (kit): R205, R208 (2)
+- [x] 220k (kit), **1206**: R211 (not R212)
+- [x] 13k, `CR1206-FX-1302ELF`: R214
 
 Discretes
 
-- [ ] MMBTA42 (NPN), SOT-23: Q201, Q202 (2)
-- [ ] MMBTA92 (PNP), SOT-23: Q203
-- [ ] 39 V zener, `MMSZ5259BH RHG`, SOD-123: D201 (cathode band)
-- [ ] 51 V zener, `MMSZ5262BT1G`, SOD-123: D202 (cathode band)
+- [x] MMBTA42 (NPN), SOT-23: Q201, Q202 (2)
+- [x] MMBTA92 (PNP), SOT-23: Q203
+- [x] 39 V zener, `MMSZ5259BH RHG`, SOD-123: D201 (cathode band)
+- [x] 51 V zener, `MMSZ5262BT1G`, SOD-123: D202 (cathode band)
 
 Through-hole
 
-- [ ] 40.2k MRS25, `MRS25000C4022FCT00`: R201
-- [ ] 200k HHV-25, `HHV-25FR-52-200K`: R202
-- [ ] 220k HHV-25, `HHV-25FR-52-220K`: R212
-- [ ] 330k HHV-50, `HHV-50FR-52-330K`: R215, R216 (2)
-- [ ] Wire links LK4, LK5: **not yet**, see gate
+- [x] 40.2k MRS25, `MRS25000C4022FCT00`: R201
+- [x] 200k HHV-25, `HHV-25FR-52-200K`: R202
+- [x] 220k HHV-25, `HHV-25FR-52-220K`: R212
+- [x] 330k HHV-50, `HHV-50FR-52-330K`: R215, R216 (2)
+- [x] Wire link LK5 ONLY
 
 **Gate 3 — bring-up step 3** (acceptance: guide waveforms and index signal at 3.3 V as designed)
 
-- [ ] Flux cleaned
-- [ ] Discharge checked; **fit LK5** (wire link); LK4 still open, no tube
-- [ ] HV on: RTN (TP202) ___ V (D202, 51 V), G+ (TP201) ___ V (D201, 39 V above RTN); RTN_SENSE ___ V
-- [ ] Guides at rest (RP2040 in reset): G1 (TP203) and G2 (TP204) at G+
-- [ ] Guide pulses driven from the RP2040: G1 / G2 waveforms ___
+- [x] Flux cleaned
+- [x] Discharge checked; **fit LK5** (wire link); LK4 still open, no tube
+- [x] HV on: RTN (TP202) **49 V** to TP107 (D202, 51 V ±5 %); board RTN_SENSE 50.1 V, HV 452 V
+  (board), PGOOD high. G+ (TP201) **89.3 V** to TP107, 40.3 V above RTN (D201, 39 V ±5 %). A first
+  reading of 61 V was a meter range error; unpowered, TP201-TP202 read open / 0.2 MΩ by polarity
+  and TP201-TP107 open (> 2 MΩ), so no leakage path
+- [x] Guides at rest (firmware idle, HV on): G1 (TP203) **85.4 V**, G2 (TP204) **85.5 V** to TP107,
+  i.e. G+ less the 10 MΩ meter's load through the 470k pull-up (≈ 4.0 V, calculated). Driven on
+  (`guide 1 1`, `guide 2 1`): **0 V** each; back to rest after. With 12 V on and HV off the guides
+  follow the pass-through, ≈ 11 V. HV cannot be on with the RP2040 in reset (HV_EN pull-down),
+  so the reset case is checked unpowered from HV: RESET held, Q201 / Q202 base ≈ 0 V ___
+- [ ] Guide pulses driven from the RP2040: G1 / G2 waveforms ___. **Deferred** (user,
+  2026-10-25): scope measurements later; on to the tube
 - [ ] Power off, discharge checked; **fit LK4** (wire link)
 - [ ] TUBE harness soldered: J201 (anode, alone, ≥ 3 mm from other pads), J202 (G1, G2, K1, RTN)
-- [ ] Tube fitted; HV on: tube strikes, NDX (TP205) ___ V with the glow on K1, ~0 V elsewhere
-- [ ] Result copied into bringup.md step 3
+- [ ] Tube fitted, before HV (12 V on, HV off): RTN (TP202) 2.9 V (0.1-0.2 V before the tube),
+  G1 (TP203) 4.3 V, G2 (TP204) 10.5 V, G+ (TP201) 10.99 V, NDX 0.0 V. G1 leaks ≈ 14 µA into
+  RTN. Unplugging G1 at the board restores TP203 to 10.5 V; removing the tube clears it. **Bare
+  tube: pin 5 (G1) to pin 9 (K4) 96 kΩ**, not adjacent pins, so most likely inside the tube
+  (2026-10-25). The 2026-10-09 bench test stepped reliably, so the leak is probably new
+- [ ] Tube fitted; HV on: tube strikes, NDX (TP205) ___ V with the glow on K1, ~0 V elsewhere.
+  2026-10-25, three 20 s runs: tube strikes and glows. Board NDX **2.83 V** on the third run with the
+  glow on K1 (design 2.81 V at RTN 50 V), 0.01 V on the first two. G1 rest (TP203) **57.2 V**, 7 V
+  above RTN (G1-K4 leak; design ≈ 89 V). **HV out of regulation:** board HV_SENSE 412-422 V,
+  PGOOD low (452 V, PGOOD high without the tube, LK5 fitted). Input **56 mA** at 11.93 V
+  (0.67 W; 38 mA / 0.45 W at Gate 2 with the 1M load)
+- Stepping, `on 60`, `step 1 fwd 500 10` (phase 500 µs, 10 steps/s): glow steps clockwise; 10
+  steps move round cleanly by eye. Single steps with a `status` read after each: NDX **2.83 V** at
+  one position in 12 (step 9), 0.01-0.02 V elsewhere. The firmware's hit counter read NDX 60 µs
+  after the guides released and missed K1; moved to one step period after each step
+- **G1 leak cleared** after these HV runs, tube and wiring untouched: with 12 V on and HV off, RTN
+  0.1 V (was 3.1 V) and G1 (TP203) **11.0 V** (was 4.3 V). Burned clear or intermittent; recheck
+  pin 5-9 on the bare tube later. Under HV, G1 at rest (TP203) **89 V** = G+
+- **Stepping with index count** (phase 500 µs; HV 415-417 V board, PGOOD low): 10 fwd at 10/s
+  `ndx_hits=1`; 10 rev at 10/s `1`; 100 fwd at 100/s `10`; 200 fwd and 200 rev at 200/s `20` each.
+  Every run exact. (The counter first read 0: `analogRead()` turns off GP26's digital input
+  buffer, so it now compares an ADC reading with 2.0 V, the RP2040's V_IH min)
+- [x] Result copied into bringup.md step 3 (partial)
 
 ## After the board
 

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
 Host side of the dekatron bring-up firmware (firmware/dekatron-bringup/): one command per call,
-so it can be run step by step during Gate 2.
+so it can be run step by step during Gates 2 and 3.
 
     uv run --group bench python tools/hv_bringup.py status
     uv run --group bench python tools/hv_bringup.py on 10
     uv run --group bench python tools/hv_bringup.py off
     uv run --group bench python tools/hv_bringup.py log 5 --hz 20 --out characterization/dekatron/<file>.csv
     uv run --group bench python tools/hv_bringup.py discharge
+    uv run --group bench python tools/hv_bringup.py guide 1 1
+    uv run --group bench python tools/hv_bringup.py step 10 fwd 500 20
 
 Exits non-zero when the firmware answers ERR or reports a FAULT.
 
@@ -61,6 +63,14 @@ def main():
     p_on.add_argument("seconds", type=int)
     sub.add_parser("off")
     sub.add_parser("clear")
+    p_guide = sub.add_parser("guide", help="hold a guide on (1) or at rest (0); needs HV on")
+    p_guide.add_argument("guide", type=int, choices=(1, 2))
+    p_guide.add_argument("on", type=int, choices=(0, 1))
+    p_step = sub.add_parser("step", help="step the glow; needs HV on")
+    p_step.add_argument("n", type=int)
+    p_step.add_argument("dir", choices=("fwd", "rev"))
+    p_step.add_argument("phase_us", type=int, help="time between guide transitions")
+    p_step.add_argument("hz", type=int, help="steps per second")
     p_log = sub.add_parser("log")
     p_log.add_argument("seconds", type=int)
     p_log.add_argument("--hz", type=int, default=10)
@@ -112,8 +122,23 @@ def main():
                     sys.exit(f"still {hv:.1f} V after {t:.1f} s")
                 time.sleep(0.5)
 
-        cmd = {"on": f"on {getattr(args, 'seconds', '')}"}.get(args.cmd, args.cmd)
+        cmd = {
+            "on": lambda: f"on {args.seconds}",
+            "guide": lambda: f"guide {args.guide} {args.on}",
+            "step": lambda: f"step {args.n} {args.dir} {args.phase_us} {args.hz}",
+        }.get(args.cmd, lambda: args.cmd)()
         lines = send(ser, cmd)
+        if args.cmd == "step" and lines[-1].startswith("OK"):
+            # Wait for the "OK step done" (or a FAULT / timeout off) that ends the run.
+            deadline = time.monotonic() + args.n / args.hz + 3
+            while time.monotonic() < deadline:
+                raw = ser.readline().decode(errors="replace").strip()
+                if raw:
+                    lines.append(raw)
+                if raw.startswith(("OK step done", "FAULT", "OK timeout")):
+                    break
+            else:
+                lines.append("ERR no 'step done' (HV timed out?)")
         for line in lines:
             print(line)
         if any(l.startswith(("ERR", "FAULT")) for l in lines):
