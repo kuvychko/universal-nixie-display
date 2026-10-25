@@ -41,5 +41,7 @@ drives it, how fast it can count, why the tube is a memory, and a short history.
     The display is under construction. The dekatron controller and power-supply boards are
     made (fabrication sponsored by [PCBWay](about.md#acknowledgements)) and now being brought up,
     and the A101 dekatron has been bench-tested: it strikes,
-    holds its glow and steps reliably in both directions (the video above). The Nixie side comes
+    holds its glow and steps reliably in both directions (the video above). Since 2026-10-25 it
+    also runs from the first assembled board, which steps it at up to 200 steps/s
+    ([watch on YouTube](https://youtu.be/51U_WKXrzoA)). The Nixie side comes
     next. See [Build and investigate](build.md).

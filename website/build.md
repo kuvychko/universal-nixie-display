@@ -67,9 +67,15 @@ opened to show the perf board.*
     or probing anything.
 
 !!! info "Status"
-    Phase 1 (dekatron controller and power supply) is in bring-up: boards and parts are
-    in hand, and the tube is bench-tested. A full build guide will follow a working, tested
-    instrument.
+    Phase 1 (dekatron controller and power supply) is in bring-up: the first board is assembled
+    and drives the A101 from its own HV supply, stepping the glow at up to 200 steps/s with exact
+    index counts. Its HV still sags below the setpoint with the tube lit, which is being worked on.
+    A full build guide will follow a working, tested instrument.
+
+[![Still from the video: the assembled controller/PSU board on a blue mat with scope probes attached, wired to the A101 in its socket housing, the glow lit; two bare boards lie alongside](assets/dekatron-board-video-still.jpg){ width="480" }](https://youtu.be/51U_WKXrzoA)
+
+*The first controller/PSU board driving the A101 through a demo loop: still, slow both ways,
+up to 200 steps/s, and a swing ([watch on YouTube](https://youtu.be/51U_WKXrzoA), 2026-10-25).*
 
 ![The five bare dekatron controller/PSU boards: four top side up and one bottom side up](assets/dekatron-pcbs.jpg)
 

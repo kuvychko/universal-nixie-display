@@ -25,6 +25,23 @@ they are, with the dekatron held horizontally, its end facing the viewer. The M3
 housing's side faces are its mounting points in the enclosure. Print files and hardware are in
 [enclosure/](enclosure/README.md#dekatron-bench-test-a101-bench-test-fixture).
 
+## The dekatron on its own board
+
+On 2026-10-25 the A101 ran from the first assembled controller/PSU board: the board's own HV
+converter, bias supplies and guide drivers, with the RP2040 stepping the glow and counting its
+passes over the index cathode. The video shows a demo loop: glow held still, slow rotation both
+ways, speeding up to 200 steps/s, and a back-and-forth swing
+([`tools/dekatron_demo.py`](tools/dekatron_demo.py), on the
+[bring-up firmware](firmware/dekatron-bringup/README.md)). Stepping runs of up to 200 steps/s
+in both directions counted every index pass exactly. With the tube lit the converter holds
+about 415 V instead of its 451 V setpoint; the cause is being tracked down in the
+[assembly log](characterization/dekatron/2026-10-24_assembly_log.md).
+
+<a href="https://youtu.be/51U_WKXrzoA"><img src="website/assets/dekatron-board-video-still.jpg" alt="Still from the video: the assembled controller/PSU board on a blue mat with scope probes attached, wired to the A101 in its socket housing, the glow lit; two bare boards lie alongside" height="300"></a>
+
+*The first controller/PSU board driving the A101
+([video](https://youtu.be/51U_WKXrzoA), 2026-10-25).*
+
 ## Status
 
 **Phase 1D — dekatron controller/PSU bring-up** (boards from PCBWay received 2026-10-15; parts
@@ -46,8 +63,9 @@ assembled and brought up section by section. The planning baseline is
 ### Dekatron controller/PSU at a glance
 
 Readable without KiCad. Board as fabricated (commit f4fd414, ordered 2026-10-09); the schematic
-title block still reads "Rev A draft". **Fabrication-ready, not yet electrically validated:**
-bring-up is in progress (Phase 1D).
+title block still reads "Rev A draft". **Not yet fully validated:** bring-up is in progress
+(Phase 1D); on board 1 the HV supply and tube drive run, with the HV short of its setpoint under
+load ([docs/bringup.md](docs/bringup.md)).
 
 | What | File |
 |---|---|
