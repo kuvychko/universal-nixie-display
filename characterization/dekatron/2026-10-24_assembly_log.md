@@ -327,6 +327,26 @@ Through-hole
   `ndx_hits=1`; 10 rev at 10/s `1`; 100 fwd at 100/s `10`; 200 fwd and 200 rev at 200/s `20` each.
   Every run exact. (The counter first read 0: `analogRead()` turns off GP26's digital input
   buffer, so it now compares an ADC reading with 2.0 V, the RP2040's V_IH min)
+- [ ] HV shortfall with the tube lit: scope on Q102 source (R117 high side), HV ≈ 415 V. Waveform
+  "pretty ugly"; the scope's counter read 380 kHz, most likely the DCM ringing rather than the
+  switching period (design ≈ 150 kHz, R111 147k). Period, ramp peak and burst pattern ___; R111 in
+  circuit ___ (paused, user, 2026-10-25)
+- Gate (Q102 pin 1), HV ≈ 420 V, tube lit: clean square wave, **152 kHz** (design ≈ 150 kHz, so
+  R111 is right); on-time **1.7-3.0 µs, varying** (≈ 3.8 µs expected at the 0.42-0.49 A current
+  limit with 100 µH at 11.9 V, calculated). Cycles end early: suspect the pump surge through Q102
+  and R117 reaching the 100 mV CS threshold (see hardware.md "Pump surge"). Unpowered: R121 47.5 Ω,
+  R118 100 Ω, C119 fitted, R117 **0.2 Ω** after nulling the 0.6 Ω leads (0.22 Ω part)
+- CS (top of C119) vs gate, HV ≈ 415 V, tube lit (1× probes, long ground leads): on-time
+  **≈ 2.9-3.1 µs**, the same each cycle (the earlier 1.7 µs was the cursor readout, not a cycle).
+  CS ramp ≈ 27 mV/µs (26 mV/µs calculated for 100 µH, 0.22 Ω, 11.9 V), starts at ≈ 0 (DCM), no
+  leading-edge spike or pedestal; gate falls at CS **≈ 60-65 mV** (≈ 0.29 A), below the 93 mV
+  minimum current-limit threshold. Ringing of ±250 mV follows turn-off. **Pump surge ruled out**
+- HV log at 100 Hz for 8 s, tube lit: **415.0 V, σ 0.3 V**, no slow oscillation. COMP (U106 pin 8)
+  **2.82 V** on the meter, at the max COMP clamp (2.5-2.8 V, datasheet). So the error amp is
+  saturated and the PWM comparator caps the peak at ≈ 0.29 A before the current limit:
+  0.5 × 100 µH × 0.29² A² × 152 kHz ≈ 0.64 W, matching the 0.67 W input. The ≈ 1.2 W design
+  capacity assumed the 0.42-0.49 A current limit sets the peak. PGOOD low is the 90 %/95 %
+  hysteresis (406/428 V, datasheet). Fix _open_ (simulate first)
 - [x] Result copied into bringup.md step 3 (partial)
 
 ## After the board
