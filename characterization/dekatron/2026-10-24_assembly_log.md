@@ -347,6 +347,42 @@ Through-hole
   0.5 × 100 µH × 0.29² A² × 152 kHz ≈ 0.64 W, matching the 0.67 W input. The ≈ 1.2 W design
   capacity assumed the 0.42-0.49 A current limit sets the peak. PGOOD low is the 90 %/95 %
   hysteresis (406/428 V, datasheet). Fix _open_ (simulate first)
+- 12 V input with HV off, USB plugged: **1 mA**, so nearly all of the 0.67 W goes to the HV
+  converter. `hv_fsw.cir` (as built, 450 V setting, tube lit) regulates at 450.9 V with a 0.28 A
+  peak (CS 61 mV), COMP 1.69 V, 0.60 W into the power stage: about the same peak and power as
+  the board, which reaches only 415 V with COMP at its clamp
+- Gate persistence (1 µs/div): on-time **smeared over 1.9-3.2 µs**, so the cycles end at a
+  varying point, not a fixed threshold
+- CS at C119 pin 1, 10× probe, triggered on the gate falling edge: a flat **≈ +2 V pulse for
+  ≈ 350 ns** right after turn-off (the inductor's reset interval). Tip moved to C119 pin 2 (GND),
+  ground lead unchanged: same shape, ≈ 5× smaller. So ≈ 0.4 V is pickup in the probe loop and
+  ≈ 1.7 V is across C119 on the board (CS abs max 0.3 V). Layout: C119 and R118 sit next to L102
+  (unshielded radial drum), ≈ 20 mm of CS trace from U106 pin 7; R117's ground end is ≈ 36 mm
+  from U106. The voltage at U106 pin 7 itself is not yet measured
+- **Working hypothesis:** noise coupled into the CS path (L102's field into the R118/C119 loop,
+  the long unfiltered trace to pin 7, ground offset between R117 and U106) trips the PWM or
+  current-limit comparator early, at varying points. That caps the peak near 0.29 A with COMP
+  at its clamp. The TI model has none of these parasitics, so it regulates with headroom
+- **Next troubleshooting steps** (HV protocol throughout: probes placed with HV off and
+  discharged, hands clear while on):
+  - [ ] HV off: tack a short fine wire to the CS trace at U106 pin 7. CH2 (10×) on the wire,
+    ground at C118's GND end (≈ 3 mm from U106). Trigger on the gate falling edge: tip on the
+    wire ___, then tip on the ground point with the lead unchanged (probe-loop share) ___
+  - [ ] Same point at 50 mV/div with persistence: spikes during the on-time at the pin ___;
+    do the short cycles end on a spike? ___
+  - [ ] If spikes line up with an asynchronous source: CH2 on the 5 V buck's switch node,
+    trigger on the gate falling edge, look for coincidence ___
+  - [ ] Optional cross-checks: U106 pins 5 and 6 to R117's GND end, unpowered (≈ 0 Ω) ___;
+    COMP and CS peak with the tube out (LK5 fitted, regulating) vs the model's 1.69 V for
+    0.28 A ___; tube current from the anode-resistor drop (HV-rated meter) vs 381 µA modelled ___
+- **Next steps (fix, decided from the pin-7 capture; none chosen yet):**
+  - [ ] Filter at the pin: a kit 470 pF (C119's design value) across U106 pins 7 (CS) and
+    6 (AGND), the adjacent pin. Re-measure on-time spread, COMP and HV
+  - [ ] Reduce the field: shielded inductor, or L102 turned or moved; layout change for board 2
+    (CS filter at the pin, Kelvin sense from R117's pads, R117 ground close to U106)
+  - [ ] Headroom regardless: 220k piggybacked on R111 (≈ 252 kHz, datasheet Eq. 5); rerun
+    `hv_fsw.cir` at 88.1k first (the run failed to converge at 0.47 ms, node g1)
+  - [ ] Record the outcome in hardware.md (capacity figure, kit inductor) and bringup.md step 3
 - [x] Result copied into bringup.md step 3 (partial)
 
 ## After the board
