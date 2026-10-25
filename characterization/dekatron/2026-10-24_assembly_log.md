@@ -240,8 +240,13 @@ HV on (shunt removed for the run only, refitted after):
 - [ ] **Deferred** (user, 2026-10-24): load response, temperature. Done: input power 0.45 W (11.94 V × 38 mA, USB also
   connected; 1 mA of it with HV off). Load ≈ 0.35 W (449 V into 1M ‖ 2.706M ‖ 2.714M):
   ≈ 79 % including the VDRV LDO
-- [ ] **Deferred** (user, 2026-10-24); do it at the start of Gate 3, before LK5 is fitted, so the
-  trip voltage stays off the Stage 3 parts. OVP: with HV inhibited, lift R126 (the feedback string's top), release the inhibit, record the trip ___ V (design 543.7 V); restore R126
+- [x] Done at the start of Gate 3, before LK5 was fitted, so the trip voltage stayed off the
+  Stage 3 parts. OVP: R126 (the feedback string's top) removed rather than lifted, JP101 shunt off,
+  1M load fitted, VIN 11.94 V, `on 5`. HV still rising at 532 V 0.2 s after `on`; the OVP pulled
+  EN low and the firmware latched `en_low`, HV off. Trip: board peak **549.4 V**, ≈ 545-546 V
+  allowing for the ≈ 3-4 V high reading (design 543.7 V, simulated 545.1 V). R126 refitted; `on 5`
+  regulated again: board HV_SENSE 451.4-454.8 V, PGOOD high (peak 476.3 V since `on`, higher than
+  the 458-459 V at Gate 2; VIN read 8.49 V just before, the supply still rising, scope not used)
 - [x] Power off, discharge checked, JP101 shunt refitted; dummy load **kept** until the OVP test
 - [x] Result copied into bringup.md step 2 (partial)
 
