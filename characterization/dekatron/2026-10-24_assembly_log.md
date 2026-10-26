@@ -343,8 +343,10 @@ Through-hole
   minimum current-limit threshold. Ringing of ±250 mV follows turn-off. **Pump surge ruled out**
 - HV log at 100 Hz for 8 s, tube lit: **415.0 V, σ 0.3 V**, no slow oscillation. COMP (U106 pin 8)
   **2.82 V** on the meter, at the max COMP clamp (2.5-2.8 V, datasheet). So the error amp is
-  saturated and the PWM comparator caps the peak at ≈ 0.29 A before the current limit:
-  0.5 × 100 µH × 0.29² A² × 152 kHz ≈ 0.64 W, matching the 0.67 W input. The ≈ 1.2 W design
+  saturated and the peak is capped at ≈ 0.29 A: 0.5 × 100 µH × 0.29² A² × 152 kHz ≈ 0.64 W,
+  matching the 0.67 W input. (Corrected 2026-10-25: not by the PWM comparator. With COMP at
+  2.8 V its threshold is ≈ 0.21 V of CS (2.8 V × G_COMP 0.142 − 0.17 V offset − slope,
+  datasheet Fig. 9-18), far above the 100 mV current limit; see the pin-7 results below.) The ≈ 1.2 W design
   capacity assumed the 0.42-0.49 A current limit sets the peak. PGOOD low is the 90 %/95 %
   hysteresis (406/428 V, datasheet). Fix _open_ (simulate first)
 - 12 V input with HV off, USB plugged: **1 mA**, so nearly all of the 0.67 W goes to the HV
@@ -365,23 +367,51 @@ Through-hole
   at its clamp. The TI model has none of these parasitics, so it regulates with headroom
 - **Next troubleshooting steps** (HV protocol throughout: probes placed with HV off and
   discharged, hands clear while on):
-  - [ ] HV off: tack a short fine wire to the CS trace at U106 pin 7. CH2 (10×) on the wire,
-    ground at C118's GND end (≈ 3 mm from U106). Trigger on the gate falling edge: tip on the
-    wire ___, then tip on the ground point with the lead unchanged (probe-loop share) ___
-  - [ ] Same point at 50 mV/div with persistence: spikes during the on-time at the pin ___;
-    do the short cycles end on a spike? ___
+  - [x] HV off: tack a short fine wire to the CS trace at U106 pin 7. CH2 (10×) on the wire,
+    ground at C118's GND end (≈ 3 mm from U106), ground clip replaced by a ≈ 1 cm wire spring
+    on the probe's ground ring. Trigger on the gate falling edge, 100 mV/div, persistence, tube
+    lit. Tip on the wire: the ramp rises ≈ 30 mV/µs to **≈ +90 mV at turn-off** (±15 mV
+    reading), on a wavy background; **+400 mV spikes at each turn-on** (the chip blanks only
+    ≈ 50 ns, its minimum on-time); dips to −150 mV before turn-on; after turn-off a **dip to
+    ≈ −300 mV for ≈ 0.5 µs** (CS abs min), a ≈ +80 mV hump and a second dip at ≈ 2.4 µs (end of
+    demag). Tip on the ground point, spring unchanged: **nearly flat**, so the probe loop adds
+    little and this is what pin 7 sees. (An intermittent tip contact first showed a flat trace
+    with no ramp; discarded.)
+  - [x] HV (status ≈ 1 s after `on`, not settled): 421.6 and 437.7 V (PGOOD high) with the tip
+    on pin 7, 415.1 V with it on ground. Tube lit throughout
+  - [ ] Same point at 50 mV/div: not done; the 470 pF below now sits on the pins and the user
+    chose not to probe there again
   - [ ] If spikes line up with an asynchronous source: CH2 on the 5 V buck's switch node,
     trigger on the gate falling edge, look for coincidence ___
   - [ ] Optional cross-checks: U106 pins 5 and 6 to R117's GND end, unpowered (≈ 0 Ω) ___;
     COMP and CS peak with the tube out (LK5 fitted, regulating) vs the model's 1.69 V for
     0.28 A ___; tube current from the anode-resistor drop (HV-rated meter) vs 381 µA modelled ___
-- **Next steps (fix, decided from the pin-7 capture; none chosen yet):**
-  - [ ] Filter at the pin: a kit 470 pF (C119's design value) across U106 pins 7 (CS) and
-    6 (AGND), the adjacent pin. Re-measure on-time spread, COMP and HV
-  - [ ] Reduce the field: shielded inductor, or L102 turned or moved; layout change for board 2
-    (CS filter at the pin, Kelvin sense from R117's pads, R117 ground close to U106)
-  - [ ] Headroom regardless: 220k piggybacked on R111 (≈ 252 kHz, datasheet Eq. 5); rerun
-    `hv_fsw.cir` at 88.1k first (the run failed to converge at 0.47 ms, node g1)
+- **Fixes tried (2026-10-25, tube lit, VIN 11.93 V):**
+  - [x] **470 pF across U106 pin 7 and pins 5/6** (kit part; one leg links pins 5 (PGND) and
+    6 (AGND), the other on pin 7; with R118 a ≈ 47 ns filter). 45 s log at 20 Hz: **430.4-430.9 V**
+    in every 5 s bin, PGOOD high throughout (was 415.0 V, PGOOD low). COMP still **2.8 V**
+  - [x] **470k piggybacked on R111** (147k ‖ 470k = 112k; Eq. 5 ≈ 196 kHz). Gate **199 kHz**
+    measured. `hv_fsw.cir` at 112k first: 450.9 V, peak 0.25 A (CS 54 mV), COMP 1.66 V, 0.60 W,
+    stage voltages ≤ 157 V, PGOOD high. Board, first run from cold: 437-438 V falling to 429.7 V
+    over 45 s; warm, 85 s log at 10 Hz: **428.2-428.7 V** in every 10 s bin, PGOOD high. COMP
+    **2.8 V**. 12 V input **61 mA** at 5 s, then **60 mA** (≈ 0.72 W, +8 % for +31 % f_sw).
+    Nothing warm to the touch afterwards
+  - Gate persistence at 199 kHz (2 µs/div, rising-edge trigger): on-time **smeared over
+    ≈ 1.2-2.7 µs**; the longest is ≈ 0.32 A (12 V / 100 µH), so no cycle reaches the
+    0.42-0.49 A current limit; duty ≤ 0.54
+  - **Reading:** cycles still end early at random points, below both designed thresholds: ramp
+    plus noise reaches the 100 mV current limit first. The pin filter helped (≈ +15 V); the higher
+    f_sw barely did, because the cycles got shorter. The remaining noise likely comes in through
+    the ground path (U106 pin 6 to R117's ground end ≈ 36 mm, carrying switching current)
+- **Next steps:**
+  - [ ] Unpowered: U106 pin 6 to R117's GND end ___ Ω (≈ 0 expected; a noticeable fraction of an
+    ohm points at the ground path)
+  - [ ] **Kit 1 Ω across R117** (0.22 ‖ 1 = 0.18 Ω, user, fitting 2026-10-26): whatever ends the
+    cycles at ≈ 100 mV on CS then allows ≈ 22 % more current, ≈ 49 % more energy per cycle. True
+    current limit 0.52-0.59 A, inside L102's 0.71 A rating (hardware.md). Keep the 470k on R111
+    and the 470 pF. Then a 60-90 s log, COMP, 12 V current, gate on-time spread
+  - [ ] Board 2 layout: CS filter at the pin, Kelvin sense from R117's pads, R117 ground close to
+    U106; shielded inductor or L102 moved away from R118/C119
   - [ ] Record the outcome in hardware.md (capacity figure, kit inductor) and bringup.md step 3
 - [x] Result copied into bringup.md step 3 (partial)
 

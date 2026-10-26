@@ -7,10 +7,13 @@
 * Current design as hv_500.cir, but feedback 2.7M / (3.0k + 3.0k) -> 451.0 V and anode 2 x 330k.
 * Cases (edit the .param line; logs hv_fsw_<case>.log):
 *   147k   RRT=147k   ~150 kHz, as built (datasheet Eq. 5: 2.21e10 / (RT + 955))
+*   112k   RRT=112k   ~196 kHz, 147k || 470k (fitted on board 1, 199 kHz measured)
 *   88k    RRT=88.1k  ~248 kHz, 147k || 220k (a kit part piggybacked on R111)
 * Result 147k (2026-10-25): HV 450.9 V (0.18 V p-p), tube 381 uA, inductor peak 0.28 A (CS 61 mV),
 *   COMP 1.69 V, 0.60 W into the power stage, PGOOD high. 88k: did not converge ("timestep too
-*   small" at node g1, 0.47 ms); not rerun.
+*   small" at node g1, 0.47 ms); not rerun. 112k: HV 450.9 V (0.13 V p-p), tube 381 uA, inductor
+*   peak 0.25 A (CS 54 mV), COMP 1.66 V, 0.60 W, PGOOD high, stage voltages <= 157 V (the tper
+*   measurement picks the wrong edges, so f_sw is from Eq. 5 and the scope).
 * Run from this directory:  ngspice_con -b hv_fsw.cir > hv_fsw_<case>.log
 
 .include models/vendor/ti/LM5156-Q1_PSPICE_TRANS/LM5156-Q1_TRANS.ngspice.lib
