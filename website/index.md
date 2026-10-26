@@ -43,5 +43,6 @@ drives it, how fast it can count, why the tube is a memory, and a short history.
     and the A101 dekatron has been bench-tested: it strikes,
     holds its glow and steps reliably in both directions (the video above). Since 2026-10-25 it
     also runs from the first assembled board, which steps it at up to 200 steps/s
-    ([watch on YouTube](https://youtu.be/51U_WKXrzoA)). The Nixie side comes
+    ([watch on YouTube](https://youtu.be/51U_WKXrzoA)), and since 2026-10-26 its HV supply
+    holds its setpoint with the tube lit. The Nixie side comes
     next. See [Build and investigate](build.md).

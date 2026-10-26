@@ -757,7 +757,7 @@ and RTN regulators belong to the `tube` sheet. Simulation benches live in
 | Controller | LM5156H (D2) | |
 | Switching frequency | **~150 kHz, R_T = 147 kΩ** (was 100 kHz / 220 kΩ) | Raised with the kit inductor's lower current limit (below) |
 | Inductor | **100 µH ±10 % from the user's 6 × 8 mm radial kit: rated 0.71 A, DCR 0.35 Ω** (was SRR1260-101M) | User's kit (2026-10-06); see Kit inductor below |
-| Sense resistor | **0.22 Ω → cycle limit 0.42-0.49 A** (100 mV ±7 %) | Inside the kit inductor's 0.71 A rating |
+| Sense resistor | **0.22 Ω → cycle limit 0.42-0.49 A** (100 mV ±7 %) | Inside the kit inductor's 0.71 A rating. Board 1 reworked to 0.18 Ω and ≈ 199 kHz (see Board 1 below) |
 | DCM margin | t_on + t_off = L·I_pk·(1/V_IN + 1/(V_b − V_IN)) ≈ 5.3 µs < 6.7 µs at 0.49 A, 110 µH, 10.8 V in | Stays DCM at the current limit, +10 % inductance and −10 % input |
 | CS filter | 100 Ω + 470 pF (47 ns) | **Required:** see pump surge below |
 | MOSFET | **Infineon IPD70R1K4P7S (CoolMOS P7, `IPD70R1K4P7SAUMA1`): 700 V**, 1.4 Ω max (1.15 typ.) at V_GS = 10 V, V_th 2.5-3.5 V, Q_g 4.7 nC typ., V_GS ±16 V static, 8.2 A pulsed, DPAK (G 1, D tab, S 3); datasheet Rev. 2.2 | 3.6× margin at the worst case (below). Replaced the IPD50R1K4CE (500 V, 1.4 Ω, 8.2 nC; End of Life at Mouser, user 2026-10-08), which had replaced the AOS AOD5N40 (400 V, 1.6 Ω, not stocked by Mouser). Same R_DS(on) and threshold, so the simulations (generic model) stand. Chosen over logic-level parts (user, 2026-10-06) |
@@ -776,6 +776,19 @@ rises to ~150 kHz: at the low end of the limit and −10 % inductance, DCM deliv
 CS ≤ 0.10 V, PGOOD high. Cold start (`hv_startup.cir`, same values): tube strikes at 18.5 ms
 (9.5 ms with the old 0.82 A limit); at 38-40 ms HV 449.9 V, 0.12 V p-p, tube 379 µA, PGOOD high,
 switch node 159 V.
+
+**Board 1: HV short with the tube lit, and the rework (2026-10-25/26).** As built, board 1
+regulated at 452 V with the tube out but sagged to ≈ 415 V with it lit, COMP at its clamp and
+≈ 0.67 W in. The gate on-time was smeared and no cycle reached the current limit: they ended at
+≈ 0.29 A, where the CS ramp plus pickup at U106 pin 7 (+400 mV spikes at turn-on, −300 mV dips
+after turn-off, measured at the pin) reached the 100 mV threshold. So the ≈ 1.2 W capacity above
+is not available on this layout. Three reworks with kit parts, measured one at a time (board ADC,
+tube lit): 470 pF across U106 pins 7 and 5/6 → 430.6 V, COMP still clamped; 470k across R111
+(R_T 112k, 199 kHz measured) → ≈ 428.5 V warm, only +8 % input power; 1 Ω across R117 (0.18 Ω,
+limit 0.52-0.59 A, inside L102's 0.71 A) → **452.7 V, PGOOD high, COMP 1.94 V, 0.82 W in**.
+Details in the [assembly log](../characterization/dekatron/2026-10-24_assembly_log.md). Whether
+board 2 takes the same values or a layout fix (CS filter at the pin, Kelvin sense, R117 ground
+close to U106, L102 away from R118/C119) is _open_.
 
 **Power-up inrush through the inductor.** The run's largest inductor current, 0.775 A, occurs at
 10 µs, *before* the converter is enabled: when 12 V appears, current flows through the inductor and

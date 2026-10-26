@@ -33,9 +33,10 @@ passes over the index cathode. The video shows a demo loop: glow held still, slo
 ways, speeding up to 200 steps/s, and a back-and-forth swing
 ([`tools/dekatron_demo.py`](tools/dekatron_demo.py), on the
 [bring-up firmware](firmware/dekatron-bringup/README.md)). Stepping runs of up to 200 steps/s
-in both directions counted every index pass exactly. With the tube lit the converter holds
-about 415 V instead of its 451 V setpoint; the cause is being tracked down in the
-[assembly log](characterization/dekatron/2026-10-24_assembly_log.md).
+in both directions counted every index pass exactly. With the tube lit the converter first held
+only about 415 V of its 451 V setpoint; noise at the current-sense pin was ending its cycles
+early. Since 2026-10-26, after three small reworks with kit parts, it regulates at the setpoint
+with the tube lit ([assembly log](characterization/dekatron/2026-10-24_assembly_log.md)).
 
 <a href="https://youtu.be/51U_WKXrzoA"><img src="website/assets/dekatron-board-video-still.jpg" alt="Still from the video: the assembled controller/PSU board on a blue mat with scope probes attached, wired to the A101 in its socket housing, the glow lit; two bare boards lie alongside" height="300"></a>
 
@@ -64,8 +65,8 @@ assembled and brought up section by section. The planning baseline is
 
 Readable without KiCad. Board as fabricated (commit f4fd414, ordered 2026-10-09); the schematic
 title block still reads "Rev A draft". **Not yet fully validated:** bring-up is in progress
-(Phase 1D); on board 1 the HV supply and tube drive run, with the HV short of its setpoint under
-load ([docs/bringup.md](docs/bringup.md)).
+(Phase 1D); on board 1 the HV supply and tube drive run, the HV at its setpoint under load after
+reworks to the current sense and switching frequency ([docs/bringup.md](docs/bringup.md)).
 
 | What | File |
 |---|---|

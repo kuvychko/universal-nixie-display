@@ -404,12 +404,16 @@ Through-hole
     f_sw barely did, because the cycles got shorter. The remaining noise likely comes in through
     the ground path (U106 pin 6 to R117's ground end ≈ 36 mm, carrying switching current)
 - **Next steps:**
-  - [ ] Unpowered: U106 pin 6 to R117's GND end ___ Ω (≈ 0 expected; a noticeable fraction of an
-    ohm points at the ground path)
-  - [ ] **Kit 1 Ω across R117** (0.22 ‖ 1 = 0.18 Ω, user, fitting 2026-10-26): whatever ends the
-    cycles at ≈ 100 mV on CS then allows ≈ 22 % more current, ≈ 49 % more energy per cycle. True
-    current limit 0.52-0.59 A, inside L102's 0.71 A rating (hardware.md). Keep the 470k on R111
-    and the 470 pF. Then a 60-90 s log, COMP, 12 V current, gate on-time spread
+  - [x] Unpowered: U106 pin 6 to R117's GND end **0 Ω** on the user's meter (2026-10-26). No DC
+    offset; any ground noise is from the path's inductance
+  - [x] **Kit 1 Ω across R117** (0.22 ‖ 1 = 0.18 Ω, fitted on top of R117, 2026-10-26): whatever
+    ends the cycles at ≈ 100 mV on CS then allows ≈ 22 % more current, ≈ 49 % more energy per
+    cycle. True current limit 0.52-0.59 A, inside L102's 0.71 A rating (hardware.md). 470k on
+    R111 and the 470 pF kept. Result, tube lit, 85 s log at 10 Hz: **452.7-452.8 V** in every
+    10 s bin (451.5-456.1 V), **PGOOD high** throughout, steady from the first second (same ADC
+    read 452 V with the tube out). **COMP 1.94 V**, off the clamp. 12 V input **69 mA**
+    (≈ 0.82 W). Gate 199.0 kHz, on-time ≈ 1.4-2.9 µs (now set by the loop, not a ceiling).
+    **HV shortfall resolved on board 1**
   - [ ] Board 2 layout: CS filter at the pin, Kelvin sense from R117's pads, R117 ground close to
     U106; shielded inductor or L102 moved away from R118/C119
   - [ ] Record the outcome in hardware.md (capacity figure, kit inductor) and bringup.md step 3

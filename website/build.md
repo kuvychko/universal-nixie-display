@@ -69,7 +69,8 @@ opened to show the perf board.*
 !!! info "Status"
     Phase 1 (dekatron controller and power supply) is in bring-up: the first board is assembled
     and drives the A101 from its own HV supply, stepping the glow at up to 200 steps/s with exact
-    index counts. Its HV still sags below the setpoint with the tube lit, which is being worked on.
+    index counts. Its HV supply first sagged below the setpoint with the tube lit; since 2026-10-26,
+    after small reworks, it holds the setpoint.
     A full build guide will follow a working, tested instrument.
 
 [![Still from the video: the assembled controller/PSU board on a blue mat with scope probes attached, wired to the A101 in its socket housing, the glow lit; two bare boards lie alongside](assets/dekatron-board-video-still.jpg){ width="480" }](https://youtu.be/51U_WKXrzoA)
