@@ -788,7 +788,8 @@ tube lit): 470 pF across U106 pins 7 and 5/6 → 430.6 V, COMP still clamped; 47
 limit 0.52-0.59 A, inside L102's 0.71 A) → **452.7 V, PGOOD high, COMP 1.94 V, 0.82 W in**.
 Details in the [assembly log](../characterization/dekatron/2026-10-24_assembly_log.md). Whether
 board 2 takes the same values or a layout fix (CS filter at the pin, Kelvin sense, R117 ground
-close to U106, L102 away from R118/C119) is _open_.
+close to U106, L102 away from R118/C119) is _open_. Lessons for anyone building the board again:
+[rev2.md](../hardware/dekatron/rev2.md).
 
 **Power-up inrush through the inductor.** The run's largest inductor current, 0.775 A, occurs at
 10 µs, *before* the converter is enabled: when 12 V appears, current flows through the inductor and
@@ -1054,7 +1055,94 @@ review of failure modes and the bring-up procedure.
 
 Phase 2. Six IN-14 tubes, six K155ID1, current limiting, separate HV switches for decimal points,
 blanking. Static drive preferred. Six BCD decoders need 24 signals plus DP and blanking, more than
-an RP2040-Zero exposes comfortably: plan shift registers or expanders.
+an RP2040-Zero exposes comfortably.
+
+**Decision (user, 2026-10-26): RP2040-Zero + a 74HC595 chain.** An expander-only board (no MCU)
+was considered and dropped: the encoder would lose detents when polled over I2C, and frames could
+not be applied atomically. The RP2040 keeps the encoder (see [Encoder](#encoder)) and drives the
+BCD and decimal-point lines through the shift registers; their latch applies a whole frame at once
+and their OE gives a global blank. Open: register count, OE pull-up (dark while the RP2040 is in
+reset), and whether every K155ID1 blanks on an out-of-range code or anode blanking is needed for
+blanking in operation (plan §4).
+
+**Board scope (user, 2026-10-26):** the RP2040-Zero, the 74HC595 chain, the K155ID1s, the six
+IN-14s (soldered to the back side of the board with their spacers), the encoder and the Nixie HV
+module's 12 V switch. The RTC and the WWVB receiver are optional modules on their own boards,
+wired to it (see [Time sources](#time-sources)).
+
+**Nixie HV module 12 V switch (user, 2026-10-26).** The purchased module has no enable input, so
+the Nixie board switches its 12 V feed (from the dekatron board's `NIX_12V` output, J102) and
+passes it on to the module:
+
+* High side: a P-channel MOSFET in the +12 V line, its gate driven from a Nixie RP2040 GPIO
+  through an NPN or N-MOSFET level shifter. The module's ground is not switched: it is the HV
+  return the tubes and K155ID1s share.
+* **Off by default:** a gate pull-up to 12 V holds the P-FET off, and a pull-down on the driver's
+  input keeps it off while the RP2040 is in reset or being flashed. With the module unpowered
+  there is no Nixie HV, so startup is dark whatever the K155ID1s do with undefined codes.
+* Soft turn-on (RC on the P-FET gate) to limit the module's input-capacitor inrush within the
+  `NIX_12V` branch's resettable fuse.
+* Open until measured on the module in Phase 2: its input current at 12 V under load (the power
+  budget assumes 0.36 A), its inrush at power-up, and how fast its HV output decays after the
+  12 V is removed. Part choices and values _open_ until then.
+* Also used to turn the Nixie HV off for WWVB reception windows (see [Time sources](#time-sources)).
+
+### Time sources
+
+**Decision (user, 2026-10-26):** a battery-backed RTC and a WWVB receiver, both owned by the ESP32
+(plan §3: the ESP32 owns the time source). The RTC carries the time between WWVB syncs; NTP stays
+an option.
+
+**Optional modules on harnesses (user, 2026-10-26).** Both are add-ons on their own boards, not
+parts of the Nixie board; the display works without them. Each module already has header pins
+fitted, so the harness wires are soldered directly to the Nixie board and end in single-pin
+female jacks on the module headers, each wire with a printed label naming its signal.
+
+* One harness per module: the RTC's carries 3.3 V, GND and the main bus SDA/SCL; the ES100's
+  carries 3.3 V, GND, its private SDA/SCL, EN and IRQ-. The harnesses carry only 3.3 V and 3.3 V
+  logic, so a misplaced jack cannot put 5 V or 12 V on a module.
+* Jacks go on by the module's silk-screen signal names, never by position (as for the display
+  harness). Header pin order of each module _open_ until read off the boards.
+* Pull-ups and pull-downs sit on the Nixie board, so an unplugged module leaves defined levels:
+  ES100 EN pulled down (shutdown), IRQ- and private-bus pull-ups (unless the carrier has them;
+  to be checked). Values _open_.
+* Harness length and routing _open_ (Phase 4): short, the ES100 supply pair twisted (data sheet
+  p. 25), apart from HV wiring.
+* The Nixie RP2040 detects the ES100 by its device ID (register 0x0D = 0x10) and reports
+  "no receiver" when it is absent.
+
+* **RTC: ZS-042 module (DS3231),** the user's part, run with RTClib's `RTC_DS3231` in an earlier
+  sketch. On the main I2C bus, through its harness from the Nixie board. Open, pending the DS3231
+  datasheet (not yet in `docs/datasheets/`): address, accuracy, supply range. Commonly reported
+  for the ZS-042 and to be checked on the user's module: its own I2C pull-ups (conflict with the
+  single pull-up pair, D14/I2C bus; remove them or count them in) and a coin-cell charging path
+  (resistor + diode from VCC) that should not charge a CR2032.
+* **WWVB: EverSet ES100-MOD** on Universal Solder's carrier board, with two 60 × 10 mm ferrite
+  antennas and a 90° holder (the user's kit, verified over I2C). From the ES100 data sheet v0.97
+  (`docs/datasheets/es100/`, local copy, not redistributed):
+  * Supply 2.0-3.6 V (abs max 3.6 V): the 3.3 V rail. Receive 8 mA, processing 28 mA, idle
+    2.5 mA, shutdown 0.1 µA (typ).
+  * I2C target at **0x32**, ≤ 400 kHz; device ID register 0x0D reads 0x10. Plus **EN** (low =
+    shutdown) and **IRQ-** (active-low, data ready). Digital pins float in shutdown: EN needs a
+    pull-down (receiver off while the host is in reset) and IRQ- a pull-up; values _open_.
+  * **Dedicated I2C bus:** "The ES100 should be placed on a dedicated serial interface so that
+    reception is not compromised by serial interface traffic directed at another device." So it
+    does not go on the main bus. **Decided (user, 2026-10-26):** the Nixie RP2040 hosts it on its
+    second I2C controller (the first is the main-bus target), with EN and IRQ- on GPIOs, through
+    its harness. The RP2040 timestamps the IRQ- edge (the second boundary); the ESP32 reads the
+    result from the Nixie controller's status. This also leaves the display module's IO19, IO23
+    and IO35 free.
+  * Reception: full 1-minute frame ≈ 134 s; tracking ≈ 24.5 s, corrects the second only, needs
+    the clock within ±4 s and the start written at second :55. With the RTC holding time, routine
+    syncs can be tracking receptions.
+  * Interference (data sheet p. 25): avoid wire-wound inductors carrying time-varying current,
+    and clocks or periodic operations with a 60 kHz harmonic; antennas as far as possible from
+    anything active during reception; twisted supply wires. AN-005: the two antennas orthogonal
+    and parallel to the floor, so one is always within 3 dB of best.
+  * **Reception windows (proposed):** the ESP32 schedules them (e.g. at night) with both HV
+    converters off (dekatron `HV_EN` low, the Nixie board's 12 V switch open), tubes dark,
+    shift-register and I2C traffic paused. Antenna placement in the enclosure: Phase 4, away from
+    L102 and the Nixie PSU; the separate module board makes that possible.
 
 ## Harness tables
 

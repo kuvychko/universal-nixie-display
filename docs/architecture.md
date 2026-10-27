@@ -9,7 +9,8 @@ Power distribution, board boundaries and ownership. Derived from
 |---|---|---|---|---|
 | 1 | ESP32-2432S028R display board ("CYD", 2.8" ILI9341, landscape) | Purchased, existing (same as nanovolt-divider) | ESP32 | UI and protocol against simulated controller status |
 | 2 | Dekatron controller/PSU | Custom PCB (first deliverable) | RP2040-Zero daughterboard | USB console and built-in diagnostics, no ESP32 or Nixies |
-| 3 | Nixie controller/mount, with the front-panel rotary encoder | Custom PCB | RP2040-Zero daughterboard | Local diagnostic sequence or USB console with purchased HV module |
+| 3 | Nixie controller/mount, with the front-panel rotary encoder and the Nixie HV module's 12 V switch | Custom PCB | RP2040-Zero daughterboard, 74HC595 chain for the tube lines | Local diagnostic sequence or USB console with purchased HV module |
+| 3a | Optional time modules: DS3231 RTC (ZS-042) and ES100 WWVB receiver | Purchased modules, harnesses soldered to the Nixie board | — | The display runs without them |
 | 4 | Nixie HV module | Purchased | — | Dummy-load characterization |
 
 Exact board revisions are recorded in [hardware.md](hardware.md#board-revisions) once confirmed.
@@ -37,11 +38,18 @@ USB VBUS must never back-feed the 12 V-derived 5 V rail or vice versa (open item
 * Every input path (preset, touch, encoder, host) produces the same display frame through one
   application path.
 * Local vs. host ownership of the display is explicit (`DISP:MODE PRESET|REMOTE`).
+* **Time** (decided 2026-10-26): the ESP32 owns it. Sources: a DS3231 RTC (ZS-042 module) on the
+  main bus, holding time across power-off, and an ES100 WWVB receiver that the Nixie RP2040 runs
+  on its own private I2C bus and reports in status. Both are optional modules on harnesses from
+  the Nixie board. NTP optional. WWVB receptions run in
+  windows the ESP32 schedules with both HV converters off and the tubes dark
+  ([hardware.md](hardware.md#time-sources)).
 
 ## Signal boundaries
 
 * Internal I2C at 3.3 V, 100 kHz to start, one deliberate pull-up arrangement. Contracts in
-  [i2c_protocol.md](i2c_protocol.md).
+  [i2c_protocol.md](i2c_protocol.md). The ES100 is not on it: its data sheet asks for a dedicated
+  bus.
 * HV never shares a connector with I2C or the TFT harness; HV wiring is routed separately with
   strain relief.
 * No mains wiring inside the enclosure.

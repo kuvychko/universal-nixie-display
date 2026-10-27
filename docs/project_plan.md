@@ -19,6 +19,7 @@ Terminology: interpret “12DAC” as 12 VDC. “CYS” refers here to the user'
 - Main application, touchscreen, encoder behavior, presets, and host protocol live on the ESP32 display board.
 - Three additional board assemblies: Nixie controller/mounting board, dekatron controller/PSU board, and purchased Nixie HV module. The display board is a fourth physical board; RP2040-Zero modules are daughterboards on the controllers if used.
 - Internal I2C at 3.3 V logic, with the ESP32 as master and distinct controller addresses.
+- Time sources (decided 2026-10-26): a battery-backed DS3231 RTC (ZS-042 module) and an ES100 WWVB receiver, owned by the ESP32, both optional modules on harnesses from the Nixie board; the Nixie board switches the Nixie HV module's 12 V feed (off by default); WWVB receptions run with the HV converters off and the tubes dark (see hardware.md "Time sources").
 - Rev A retains the purchased Nixie supply. A shared custom converter is outside initial scope.
 - One sensed reference cathode for the dekatron. Homing between irregular animation cycles restores the position estimate.
 
@@ -31,7 +32,7 @@ Terminology: interpret “12DAC” as 12 VDC. “CYS” refers here to the user'
 | Nixie controller/mount | Six tubes, six K155ID1 drivers, current limiting, decimal-point switches, blanking, digital control | Local diagnostic sequence or USB console with purchased HV module |
 | Purchased Nixie PSU | 12 V to approximately 170–180 V | Dummy-load characterization before integration |
 
-Recommended initial controller arrangement: one RP2040-Zero per custom controller board. The Nixie board may use shift registers or expanders behind its MCU to obtain enough outputs. Six statically driven BCD decoders alone require 24 signals; do not assume all required signals fit directly on a Zero module. Static tube drive is the initial preference; multiplexing is not required.
+Recommended initial controller arrangement: one RP2040-Zero per custom controller board. The Nixie board uses a 74HC595 chain behind its MCU to obtain enough outputs (decided 2026-10-26; an expander-only board without an MCU was considered and dropped, see hardware.md "Nixie controller/mount"). Six statically driven BCD decoders alone require 24 signals; do not assume all required signals fit directly on a Zero module. Static tube drive is the initial preference; multiplexing is not required.
 
 The local MCUs are peripheral controllers, not competing application brains. They own time-sensitive sequences and hardware state; the ESP32 owns what the instrument should display.
 

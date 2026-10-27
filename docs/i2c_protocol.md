@@ -8,6 +8,9 @@ Versioned command/status contracts between the ESP32 (sole master) and the contr
 * 3.3 V logic, 100 kHz initially, short internal wiring.
 * One pull-up arrangement for the whole bus: location and value _open_.
 * Connector pinout by signal name, keyed, with ground; no HV on the connector.
+* Third-party devices: the DS3231 RTC (ZS-042 module), address _open_ until checked against its
+  data sheet. The ES100 WWVB receiver (0x32) is **not** on this bus: its data sheet asks for a
+  dedicated one, so the Nixie controller runs it privately. Both are optional modules.
 
 ## Rules common to all controllers
 
@@ -40,3 +43,9 @@ The front-panel rotary encoder is on this board (decision 2026-10-06). Its RP204
 quadrature and debounces the button, and status exposes a cumulative signed detent count (wrapping
 counter; the ESP32 takes differences) and button press/release events with a pending-event count.
 The ESP32 polls it and owns what the encoder means.
+
+WWVB (2026-10-26): status reports whether a receiver is present (ES100 device ID found). The
+ESP32 asks the Nixie controller to start a reception (full frame or tracking) and polls status
+for the outcome: busy, success/failure, the received UTC date and time with the IRQ- second
+boundary, DST and leap-second flags, next DST transition. The ESP32 sets the time; the controller
+never does. Byte layout _open_.
