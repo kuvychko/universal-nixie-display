@@ -741,6 +741,11 @@ on the dekatron board. The Nixie board's RP2040 decodes it and reports a cumulat
 and button events over I2C ([i2c_protocol.md](i2c_protocol.md#nixie-controller)); the ESP32 owns
 their meaning (plan §8). A cumulative count lets the ESP32 poll without losing detents.
 
+**Mounting (user, 2026-10-26):** the encoder itself sits on the front panel, to the right of the
+TFT (plan §2), as a panel-mount part (threaded bushing and nut) needing no board of its own. A
+harness soldered to the Nixie board carries A, B, the push switch and GND to it; pull-ups and any
+debounce filter sit on the Nixie board. Part and values _open_.
+
 The display module's IO19, IO23 and IO35 stay unused (free for later), and microSD stays omitted
 (plan §8).
 
@@ -1066,9 +1071,55 @@ reset), and whether every K155ID1 blanks on an out-of-range code or anode blanki
 blanking in operation (plan §4).
 
 **Board scope (user, 2026-10-26):** the RP2040-Zero, the 74HC595 chain, the K155ID1s, the six
-IN-14s (soldered to the back side of the board with their spacers), the encoder and the Nixie HV
-module's 12 V switch. The RTC and the WWVB receiver are optional modules on their own boards,
-wired to it (see [Time sources](#time-sources)).
+IN-14s (soldered to the back side of the board with their spacers), the encoder interface and the
+Nixie HV module's 12 V switch. The encoder (on the front panel), the RTC and the WWVB receiver are
+wired to it on harnesses (see [Encoder](#encoder) and [Time sources](#time-sources)).
+
+**Geometry (user, 2026-10-26):**
+
+* Side A (F.Cu, KiCad front) carries all the components. In the enclosure the board is
+  horizontal with **side A facing down**, so the Nixie HV parts and the tube solder joints face
+  into the enclosure.
+* Side B carries only the six IN-14s, soldered with their spacers, standing vertically. They run
+  in one row **along the board's front edge**.
+* The top cover sits over side B, with holes for the tubes and the mounting holes for the A101
+  socket housing (`enclosure/dekatron-bench-test/`).
+* **Custom IN-14 footprint**, placed on B.Cu by flipping the footprint, not by mirroring the
+  pinout. Row pitch, distance to the edge and tube height above the cover _open_.
+
+**IN-14 data sheet** (`docs/datasheets/in-14/`, local copy, not redistributed; a 4-page scan
+compiled from several sources, no text layer):
+
+* Body Ø19 mm, glass 45 mm long (55 mm with the tip), 35 mm flexible wire leads. Row pitch
+  therefore > 19 mm.
+* 13 leads: 1 anode, 2 and 13 decimal points, 3-11 digits 1-9, 12 digit 0.
+* Page 4 (a later diagram, "as viewed from bottom of nixie tube") shows the leads in a U: anode
+  at the back, the decimal points beside it, digits 1-5 up one side and 6-0 down the other, and
+  the viewing direction on the 5/6 side. Pages 2-3 (the original drawing) give the same order.
+* Electrical (for the Phase 2 anode resistors): ignition ≤ 170 V; digits ≤ 2.5 mA, decimal points
+  ≤ 0.3 mA on the summary table, while page 1 also gives 2-3.5 mA (digits) and ≤ 0.7 mA (points)
+  for DC operation. The operating point is chosen in Phase 2 against the Nixie module's measured
+  output.
+
+**IN-14 outline and pinout** ([tube-tester.com IN-14 page](https://www.tube-tester.com/sites/nixie/data/in-14/in-14.htm),
+"Outline/Pinout"; agrees with the data sheet where both give a value):
+
+* Ø19 mm × 54.5 mm glass, digit height 18 mm; 13 wire leads, **Ø0.5 mm**, 35 mm long.
+* Pinout drawing, **bottom view:** leads on a **Ø11 mm circle** (Ø18.5 mm glass bottom), pin 1
+  (anode) at the back, marked by an arrow in the glass bottom; **front ("pin 7 and 8 at front")**
+  between digits 5 and 6, as the data sheet's page 4. Pin 2 = left decimal point (PL), pin 13 =
+  right (PR); in the bottom view PL is on the page's right, so it is the viewer's left, again as
+  page 4.
+* Lead angles are not dimensioned (the drawing is not to scale). **The leads are equally spaced,
+  360/13 = 27.7°** (checked by the user on the tubes, 2026-10-26, along with the other sizes):
+  2.63 mm between adjacent lead centres.
+* Footprint: `hardware/nixie/lib/nixie.pretty/IN-14.kicad_mod`, drawn as seen from the tube's
+  top (the mirror of the bottom view) for flipping onto B.Cu; pin 1 square, front toward +Y and
+  marked. Drill 0.8 mm and pad 1.4 mm are proposed (1.2 mm copper gap between adjacent pads), to
+  be checked against the spacers and a 1:1 print with a tube before ordering. Courtyard Ø19.5 mm.
+* Typical maintaining voltage 145 V; current 2.5 mA (decimal point 0.3 mA).
+* Side A facing down puts the RP2040-Zero's USB-C and BOOT button inside the enclosure: flashing
+  needs service access from below or a USB extension (Phase 4).
 
 **Nixie HV module 12 V switch (user, 2026-10-26).** The purchased module has no enable input, so
 the Nixie board switches its 12 V feed (from the dekatron board's `NIX_12V` output, J102) and
