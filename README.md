@@ -77,7 +77,10 @@ reworks to the current sense and switching frequency ([docs/bringup.md](docs/bri
 | Gerbers and drill files | [hardware/dekatron/fab/](hardware/dekatron/fab/README.md) |
 | Bring-up results | [docs/bringup.md](docs/bringup.md) |
 
-<img src="hardware/dekatron/docs/dekatron-pcb-top.png" alt="3D render of the dekatron controller/PSU board, top side" height="300">
+<img src="hardware/dekatron/docs/dekatron-pcb-top.png" alt="3D render of the dekatron controller/PSU board, top side" height="300"> <img src="website/assets/dekatron-board-assembled.jpg" alt="The assembled board 1, top side, in the same orientation: RP2040-Zero soldered in at the lower left, the five red film capacitors of the HV stage at the right, and a yellow 470 pF disc capacitor added beside U106" height="300">
+
+*Render and board 1 as assembled by hand (2026-10-27). The yellow disc capacitor beside U106 is a
+bring-up rework: 470 pF at the converter's current-sense pin.*
 
 ## Architecture
 

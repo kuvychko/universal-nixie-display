@@ -78,6 +78,13 @@ opened to show the perf board.*
 *The first controller/PSU board driving the A101 through a demo loop: still, slow both ways,
 up to 200 steps/s, and a swing ([watch on YouTube](https://youtu.be/51U_WKXrzoA), 2026-10-25).*
 
+![KiCad 3D render of the dekatron controller/PSU board, top side, with the RP2040-Zero shown only as its castellated pads](assets/dekatron-board-render.jpg){ width="360" }
+![The assembled board 1, top side, in the same orientation: RP2040-Zero soldered in at the lower left, the five red film capacitors of the HV stage at the right, a yellow 470 pF disc capacitor added beside U106, wire links fitted and leads soldered to J101, J201 and J202](assets/dekatron-board-assembled.jpg){ width="360" }
+
+*The design and the result: the KiCad render (left) and board 1 as assembled by hand (right),
+2026-10-27. The yellow disc capacitor next to U106 is one of the bring-up reworks: 470 pF at the
+converter's current-sense pin, which stopped noise from ending its switching cycles early.*
+
 ![The five bare dekatron controller/PSU boards: four top side up and one bottom side up](assets/dekatron-pcbs.jpg)
 
 *The dekatron controller/PSU boards as received from PCBWay, 2026-10-15: 100 × 85 mm, two layers,
