@@ -1,0 +1,366 @@
+(kicad_symbol_lib (version 20251024) (generator "nixie-gen") (generator_version "10.0")
+(symbol "K155ID1" (exclude_from_sim no) (in_bom yes) (on_board yes)
+	(property "Reference" "U" (at 2.54 16.51 0) (effects (font (size 1.27 1.27))))
+	(property "Value" "K155ID1" (at 2.54 -16.51 0) (effects (font (size 1.27 1.27))))
+	(property "Footprint" "Package_DIP:DIP-16_W7.62mm" (at 0 0 0) (hide yes) (effects (font (size 1.27 1.27))))
+	(property "Datasheet" "docs/datasheets/k155id1/k155id1_chipdip.pdf" (at 0 0 0) (hide yes) (effects (font (size 1.27 1.27))))
+	(property "Description" "BCD to decimal Nixie driver, 60 V open-collector outputs (SN74141 equivalent), DIP-16" (at 0 0 0) (hide yes) (effects (font (size 1.27 1.27))))
+	(symbol "K155ID1_0_1"
+		(rectangle (start -7.62 15.24) (end 7.62 -15.24) (stroke (width 0.254) (type default)) (fill (type background)))
+	)
+	(symbol "K155ID1_1_1"
+		(pin input line (at -10.16 7.62 0) (length 2.54) (name "X1" (effects (font (size 1.27 1.27)))) (number "3" (effects (font (size 1.27 1.27))))) (pin input line (at -10.16 2.54 0) (length 2.54) (name "X2" (effects (font (size 1.27 1.27)))) (number "6" (effects (font (size 1.27 1.27))))) (pin input line (at -10.16 -2.54 0) (length 2.54) (name "X3" (effects (font (size 1.27 1.27)))) (number "7" (effects (font (size 1.27 1.27))))) (pin input line (at -10.16 -7.62 0) (length 2.54) (name "X4" (effects (font (size 1.27 1.27)))) (number "4" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 11.43 180) (length 2.54) (name "0" (effects (font (size 1.27 1.27)))) (number "16" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 8.89 180) (length 2.54) (name "1" (effects (font (size 1.27 1.27)))) (number "15" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 6.35 180) (length 2.54) (name "2" (effects (font (size 1.27 1.27)))) (number "8" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 3.8099999999999996 180) (length 2.54) (name "3" (effects (font (size 1.27 1.27)))) (number "9" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 1.2699999999999996 180) (length 2.54) (name "4" (effects (font (size 1.27 1.27)))) (number "13" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 -1.2699999999999996 180) (length 2.54) (name "5" (effects (font (size 1.27 1.27)))) (number "14" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 -3.8100000000000005 180) (length 2.54) (name "6" (effects (font (size 1.27 1.27)))) (number "11" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 -6.350000000000001 180) (length 2.54) (name "7" (effects (font (size 1.27 1.27)))) (number "10" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 -8.89 180) (length 2.54) (name "8" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27))))) (pin open_collector line (at 10.16 -11.43 180) (length 2.54) (name "9" (effects (font (size 1.27 1.27)))) (number "2" (effects (font (size 1.27 1.27))))) (pin power_in line (at 0 17.78 270) (length 2.54) (name "VCC" (effects (font (size 1.27 1.27)))) (number "5" (effects (font (size 1.27 1.27))))) (pin power_in line (at 0 -17.78 90) (length 2.54) (name "GND" (effects (font (size 1.27 1.27)))) (number "12" (effects (font (size 1.27 1.27)))))
+	)
+	(embedded_fonts no)
+)
+(symbol "IN-14" (exclude_from_sim no) (in_bom yes) (on_board yes)
+	(property "Reference" "N" (at 3.81 19.05 0) (effects (font (size 1.27 1.27))))
+	(property "Value" "IN-14" (at 3.81 -19.05 0) (effects (font (size 1.27 1.27))))
+	(property "Footprint" "nixie:IN-14" (at 0 0 0) (hide yes) (effects (font (size 1.27 1.27))))
+	(property "Datasheet" "https://www.tube-tester.com/sites/nixie/data/in-14/in-14.htm" (at 0 0 0) (hide yes) (effects (font (size 1.27 1.27))))
+	(property "Description" "IN-14 Nixie tube, digits 0-9, left and right decimal points, 13 wire leads" (at 0 0 0) (hide yes) (effects (font (size 1.27 1.27))))
+	(symbol "IN-14_0_1"
+		(rectangle (start -7.62 17.78) (end 7.62 -17.78) (stroke (width 0.254) (type default)) (fill (type background)))
+	)
+	(symbol "IN-14_1_1"
+		(pin passive line (at 0 20.32 270) (length 2.54) (name "A" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 13.97 0) (length 2.54) (name "LDP" (effects (font (size 1.27 1.27)))) (number "2" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 11.43 0) (length 2.54) (name "0" (effects (font (size 1.27 1.27)))) (number "12" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 8.89 0) (length 2.54) (name "1" (effects (font (size 1.27 1.27)))) (number "3" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 6.3500000000000005 0) (length 2.54) (name "2" (effects (font (size 1.27 1.27)))) (number "4" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 3.8100000000000005 0) (length 2.54) (name "3" (effects (font (size 1.27 1.27)))) (number "5" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 1.2700000000000014 0) (length 2.54) (name "4" (effects (font (size 1.27 1.27)))) (number "6" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 -1.2699999999999996 0) (length 2.54) (name "5" (effects (font (size 1.27 1.27)))) (number "7" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 -3.8100000000000005 0) (length 2.54) (name "6" (effects (font (size 1.27 1.27)))) (number "8" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 -6.35 0) (length 2.54) (name "7" (effects (font (size 1.27 1.27)))) (number "9" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 -8.889999999999999 0) (length 2.54) (name "8" (effects (font (size 1.27 1.27)))) (number "10" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 -11.429999999999998 0) (length 2.54) (name "9" (effects (font (size 1.27 1.27)))) (number "11" (effects (font (size 1.27 1.27))))) (pin passive line (at -10.16 -13.97 0) (length 2.54) (name "RDP" (effects (font (size 1.27 1.27)))) (number "13" (effects (font (size 1.27 1.27)))))
+	)
+	(embedded_fonts no)
+)
+(symbol "RP2040-Zero" (exclude_from_sim no) (in_bom yes) (on_board yes)
+	(property "Reference" "U" (at -12.7 24.13 0) (effects (font (size 1.27 1.27))))
+	(property "Value" "RP2040-Zero" (at 2.54 24.13 0) (effects (font (size 1.27 1.27))))
+	(property "Footprint" "nixie:RP2040-Zero_Castellated" (at 0 0 0) (hide yes) (effects (font (size 1.27 1.27))))
+	(property "Datasheet" "https://www.waveshare.com/wiki/RP2040-Zero" (at 0 0 0) (hide yes) (effects (font (size 1.27 1.27))))
+	(property "Description" "Waveshare RP2040-Zero module, soldered by its 23 castellated edge pads" (at 0 0 0) (hide yes) (effects (font (size 1.27 1.27))))
+	(symbol "RP2040-Zero_0_1"
+		(rectangle (start -12.7 22.86) (end 12.7 -27.94) (stroke (width 0.254) (type default)) (fill (type background)))
+	)
+	(symbol "RP2040-Zero_1_1"
+		(pin power_in line (at -15.24 20.32 0) (length 2.54) (name "5V" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27))))) (pin power_in line (at -15.24 15.24 0) (length 2.54) (name "GND" (effects (font (size 1.27 1.27)))) (number "2" (effects (font (size 1.27 1.27))))) (pin power_out line (at -15.24 10.16 0) (length 2.54) (name "3V3" (effects (font (size 1.27 1.27)))) (number "3" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at -15.24 5.08 0) (length 2.54) (name "GP29" (effects (font (size 1.27 1.27)))) (number "4" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at -15.24 0.0 0) (length 2.54) (name "GP28" (effects (font (size 1.27 1.27)))) (number "5" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at -15.24 -5.079999999999998 0) (length 2.54) (name "GP27" (effects (font (size 1.27 1.27)))) (number "6" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at -15.24 -10.16 0) (length 2.54) (name "GP26" (effects (font (size 1.27 1.27)))) (number "7" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at -15.24 -15.240000000000002 0) (length 2.54) (name "GP15" (effects (font (size 1.27 1.27)))) (number "8" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at -15.24 -20.32 0) (length 2.54) (name "GP14" (effects (font (size 1.27 1.27)))) (number "9" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at -10.16 -30.48 90) (length 2.54) (name "GP13" (effects (font (size 1.27 1.27)))) (number "10" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at -5.08 -30.48 90) (length 2.54) (name "GP12" (effects (font (size 1.27 1.27)))) (number "11" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 0.0 -30.48 90) (length 2.54) (name "GP11" (effects (font (size 1.27 1.27)))) (number "12" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 5.08 -30.48 90) (length 2.54) (name "GP10" (effects (font (size 1.27 1.27)))) (number "13" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 10.16 -30.48 90) (length 2.54) (name "GP9" (effects (font (size 1.27 1.27)))) (number "14" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 15.24 -20.32 180) (length 2.54) (name "GP8" (effects (font (size 1.27 1.27)))) (number "15" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 15.24 -15.24 180) (length 2.54) (name "GP7" (effects (font (size 1.27 1.27)))) (number "16" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 15.24 -10.16 180) (length 2.54) (name "GP6" (effects (font (size 1.27 1.27)))) (number "17" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 15.24 -5.08 180) (length 2.54) (name "GP5" (effects (font (size 1.27 1.27)))) (number "18" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 15.24 0.0 180) (length 2.54) (name "GP4" (effects (font (size 1.27 1.27)))) (number "19" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 15.24 5.079999999999998 180) (length 2.54) (name "GP3" (effects (font (size 1.27 1.27)))) (number "20" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 15.24 10.16 180) (length 2.54) (name "GP2" (effects (font (size 1.27 1.27)))) (number "21" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 15.24 15.240000000000002 180) (length 2.54) (name "GP1" (effects (font (size 1.27 1.27)))) (number "22" (effects (font (size 1.27 1.27))))) (pin bidirectional line (at 15.24 20.32 180) (length 2.54) (name "GP0" (effects (font (size 1.27 1.27)))) (number "23" (effects (font (size 1.27 1.27)))))
+	)
+	(embedded_fonts no)
+)
+	(symbol "Q_PMOS_GSD"
+		(pin_numbers
+			(hide yes)
+		)
+		(pin_names
+			(offset 0)
+			(hide yes)
+		)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(duplicate_pin_numbers_are_jumpers no)
+		(property "Reference" "Q"
+			(at 5.08 1.27 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Q_PMOS"
+			(at 5.08 -1.27 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+			(at 5.08 2.54 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "P-MOSFET, SOT-23 pinout 1 G, 2 S, 3 D"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "PMOS P-MOS"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(symbol "Q_PMOS_GSD_0_1"
+			(polyline
+				(pts
+					(xy 0.254 1.905)
+					(xy 0.254 -1.905)
+				)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.254 0)
+					(xy -2.54 0)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.762 2.286)
+					(xy 0.762 1.27)
+				)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.762 1.778)
+					(xy 3.302 1.778)
+					(xy 3.302 -1.778)
+					(xy 0.762 -1.778)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.762 0.508)
+					(xy 0.762 -0.508)
+				)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.762 -1.27)
+					(xy 0.762 -2.286)
+				)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(circle
+				(center 1.651 0)
+				(radius 2.794)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 2.286 0)
+					(xy 1.27 0.381)
+					(xy 1.27 -0.381)
+					(xy 2.286 0)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type outline)
+				)
+			)
+			(polyline
+				(pts
+					(xy 2.54 2.54)
+					(xy 2.54 1.778)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(circle
+				(center 2.54 1.778)
+				(radius 0.254)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type outline)
+				)
+			)
+			(circle
+				(center 2.54 -1.778)
+				(radius 0.254)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type outline)
+				)
+			)
+			(polyline
+				(pts
+					(xy 2.54 -2.54)
+					(xy 2.54 0)
+					(xy 0.762 0)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 2.921 -0.381)
+					(xy 3.683 -0.381)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 3.302 -0.381)
+					(xy 2.921 0.254)
+					(xy 3.683 0.254)
+					(xy 3.302 -0.381)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+		)
+		(symbol "Q_PMOS_GSD_1_1"
+			(pin passive line
+				(at 2.54 5.08 270)
+				(length 2.54)
+				(name "D"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin input line
+				(at -5.08 0 0)
+				(length 2.54)
+				(name "G"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 2.54 -5.08 90)
+				(length 2.54)
+				(name "S"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
+)

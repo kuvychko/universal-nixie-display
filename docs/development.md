@@ -53,6 +53,21 @@ python tools/gen_schematics.py
 BIAS = VCC mode (intentional, D2); and three `pin_to_pin` open collector to power output, the
 unused LM66100 ST pins tied to GND as their datasheet asks (U102-U104, 2026-10-07). Every inter-sheet global label connects.
 
+### Nixie board generator
+
+`tools/gen_nixie_schematics.py` writes `hardware/nixie/` (power, logic and tubes sheets, project
+symbols K155ID1 / IN-14 / RP2040-Zero / Q_PMOS_GSD, the RP2040-Zero footprint, `bom.csv`). It
+imports the dekatron generator's core and points its project globals at the Nixie project. The
+sheets use the label-stub style (`Sheet.part`); values not yet sourced are written `_open_`.
+`hardware/nixie/lib/nixie.pretty/IN-14.kicad_mod` is maintained by hand.
+
+```
+python tools/gen_nixie_schematics.py
+kicad-cli sch erc --severity-all --exit-code-violations hardware/nixie/nixie.kicad_sch
+```
+
+ERC baseline (2026-10-26): **0 violations.**
+
 ### Project footprint
 
 `hardware/dekatron/lib/dekatron.pretty/RP2040-Zero_Castellated.kicad_mod` (generated) carries the

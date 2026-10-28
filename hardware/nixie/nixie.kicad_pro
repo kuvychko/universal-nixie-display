@@ -1,0 +1,113 @@
+{
+  "board": {
+    "design_settings": {
+      "defaults": {},
+      "rule_severities": {}
+    },
+    "layer_presets": [],
+    "viewports": []
+  },
+  "boards": [],
+  "cvpcb": {
+    "equivalence_files": []
+  },
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  },
+  "meta": {
+    "filename": "nixie.kicad_pro",
+    "version": 3
+  },
+  "net_settings": {
+    "classes": [
+      {
+        "name": "Default",
+        "clearance": 0.2,
+        "track_width": 0.25,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "priority": 2147483647,
+        "bus_width": 12,
+        "line_style": 0,
+        "wire_width": 6
+      },
+      {
+        "name": "NHV",
+        "clearance": 0.2,
+        "track_width": 0.3,
+        "via_diameter": 0.8,
+        "via_drill": 0.4,
+        "priority": 0,
+        "bus_width": 12,
+        "line_style": 0,
+        "wire_width": 6
+      },
+      {
+        "name": "NCATH",
+        "clearance": 0.2,
+        "track_width": 0.3,
+        "via_diameter": 0.8,
+        "via_drill": 0.4,
+        "priority": 0,
+        "bus_width": 12,
+        "line_style": 0,
+        "wire_width": 6
+      }
+    ],
+    "meta": {
+      "version": 4
+    },
+    "net_colors": null,
+    "netclass_assignments": null,
+    "netclass_patterns": [
+      {
+        "netclass": "NHV",
+        "pattern": "NIX_HV"
+      },
+      {
+        "netclass": "NHV",
+        "pattern": "*_ANODE"
+      },
+      {
+        "netclass": "NCATH",
+        "pattern": "*T?_K?"
+      },
+      {
+        "netclass": "NCATH",
+        "pattern": "*DP_K"
+      },
+      {
+        "netclass": "NCATH",
+        "pattern": "*DP_C"
+      }
+    ]
+  },
+  "pcbnew": {
+    "last_paths": {},
+    "page_layout_descr_file": ""
+  },
+  "schematic": {
+    "legacy_lib_dir": "",
+    "legacy_lib_list": []
+  },
+  "sheets": [
+    [
+      "342c77a5-28ce-53e1-b1ae-2a73c7a137ed",
+      "Root"
+    ],
+    [
+      "b8e5b074-02b3-59b1-a13a-b55296c1432f",
+      "power"
+    ],
+    [
+      "b4480b98-de1d-5866-af6c-bbd30d1d3d6f",
+      "logic"
+    ],
+    [
+      "4a3c58e0-1298-56f3-a47b-8e916bdabf0d",
+      "tubes"
+    ]
+  ],
+  "text_variables": {}
+}

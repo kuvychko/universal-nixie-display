@@ -1138,6 +1138,84 @@ passes it on to the module:
   12 V is removed. Part choices and values _open_ until then.
 * Also used to turn the Nixie HV off for WWVB reception windows (see [Time sources](#time-sources)).
 
+### Nixie board electrical design (Phase 1A, draft 2026-10-26)
+
+Packages: SOIC, SOT-23, SC-70, DIP and 0805/1206 only. No exposed-pad or fine-pitch HTSSOP parts:
+U106 on the dekatron board was the one part that was hard to hand-solder (user, 2026-10-26).
+
+* **5 V** arrives on `NIX_LV` from the dekatron board, which already feeds it through an ideal
+  diode (U104, LM66100). The Nixie RP2040-Zero's USB therefore cannot back-feed the dekatron
+  rail, and this board needs no second ideal diode. The D6 residual case (our rail feeding a
+  host's VBUS) applies here as on the dekatron board.
+* **12 V switch** for the Nixie HV module: see above. FET part and soft-start RC _open_ until the
+  module's input current and inrush are measured.
+* **Shift registers: 5 × 74HCT595** (SOIC-16) at 5 V, 40 bits: 24 BCD (4 per K155ID1) + 12
+  decimal points (both per tube, user 2026-10-26) + 4 spare. HCT, not HC: its 2.0 V input
+  threshold takes the RP2040's 3.3 V signals, and its outputs drive the K155ID1's TTL inputs. OE
+  pulled up to 3V3 (10k: it must win against the RP2040's reset pull-down, D7) so the outputs are
+  off while the RP2040 is in reset; the latch applies a whole frame.
+* **6 × K155ID1** (DIP-16), one per tube. From the chipdip data sheet
+  (`docs/datasheets/k155id1/`, local copy; SN74141 equivalent):
+  * Pins: inputs X1 (weight 1) 3, X2 6, X3 7, X4 4; +5 V pin 5, GND pin 12; outputs 0-16, 1-15,
+    2-8, 3-9, 4-13, 5-14, 6-11, 7-10, 8-1, 9-2 (the text list repeats "V5" at pin 11, a typo:
+    the symbol shows 6).
+  * **Codes 10-15 are not displayed** (no output on). So with OE high the inputs float to TTL
+    high, code 15, and the tube is dark: this settles the blanking question in the data sheet's
+    terms; check on the user's chips at bring-up. Startup is dark regardless (12 V switch off).
+  * Supply 5 V ± 5 % (4.9 V nominal rail, D6), ≤ 25 mA each; input low current −1.6 mA (pin 3),
+    −3.2 mA (pins 4, 6, 7), within a 74HCT595 output.
+  * Off-state output ≤ 60 V (abs max). The data sheet's application note: to avoid ghost
+    digits the off outputs should stay ≤ 55 V, limited by external resistors / zeners or a
+    resistor-biased diode matrix; running the internal clamp zeners above 60 V cuts the IC's life
+    to 500 h. Measure the off-cathode voltage with the module's real output in Phase 2 and add
+    limiting if needed (_open_).
+  * Body 238.16: 2.5 mm metric pitch; the 2.54 mm DIP-16 footprint takes it.
+* **Anode resistor per tube** from the module HV: R = (V_HV − 145 V) / I_tube (IN-14 typical
+  maintaining voltage 145 V, 2.5 mA). Value and rating _open_ until the module's output is
+  measured.
+* **Decimal points: 12 × MMBTA42** (300 V, SOT-23, as the dekatron guide drivers, D8), low side
+  on each point's cathode, with a series resistor (data sheet ≤ 0.3 mA) and a base resistor and
+  pull-down so a floating 595 output leaves the point off. Values _open_.
+* **HV monitor** (user, 2026-10-26): a divider from the module's HV output to an RP2040 ADC, with
+  an HV-rated top resistor. Reports whether the module is running and when its output has decayed
+  after switch-off. Ratio _open_ until the module's maximum output is known.
+* Main I2C pull-ups stay on the dekatron board (one pair for the bus).
+
+**RP2040-Zero pin assignment (proposed):**
+
+| GPIO | Signal | Notes |
+|---|---|---|
+| GP0 | `NIX12_EN` | 12 V switch driver; pull-down, off in reset |
+| GP1 | `NIX_SPARE` | From the dekatron board's GP12 via its LK15; pull-down, use _open_ |
+| GP2 / GP3 | `SDA` / `SCL` | I2C1 target, main bus (as on the dekatron board) |
+| GP4 / GP5 | `WWVB_SDA` / `WWVB_SCL` | I2C0 controller, ES100 only; pull-ups here |
+| GP6 | `WWVB_EN` | Pull-down: ES100 in shutdown while unplugged or in reset |
+| GP7 | `WWVB_IRQ` | Pull-up; the edge is timestamped |
+| GP8 | `SR_OE` | 595 output enable, pull-up (outputs off in reset) |
+| GP9 | `SR_LATCH` | 595 RCLK |
+| GP10 / GP11 | `SR_CLK` / `SR_DATA` | SPI1 SCK / TX |
+| GP13 / GP14 / GP15 | `ENC_A` / `ENC_B` / `ENC_SW` | Pull-ups and debounce filter values _open_ |
+| GP16 | WS2812 | On the module |
+| GP26 | `NIX_HV_SENSE` | ADC0, HV monitor |
+
+**Harness landings** (D14 style, wires soldered to pads): `NIX_LV` from the dekatron board (5V,
+GND, SDA, SCL, GND, spare); 12 V in from `NIX_12V`; 12 V out to the module; HV in from the module;
+encoder (4); RTC (4); ES100 (6).
+
+**Tools:** schematics from `tools/gen_nixie_schematics.py` (reuses `tools/gen_schematics.py`'s
+core); routing with FreeRouting (Specctra DSN/SES) instead of the dekatron board's
+`route_pcb.py` (proposed, 2026-10-26).
+
+**Schematic draft (2026-10-26):** `hardware/nixie/` (power, logic, tubes sheets), ERC clean.
+Values marked `_open_` in the schematics and `bom.csv`: Q101 (FET part), R101, R102, C102 (12 V
+switch and soft start), C101 (+5V bulk), R105/R106 (HV monitor divider), the six anode resistors
+(R210-R260), the twelve decimal-point series resistors, encoder pull-ups and debounce caps
+(R302-R304, C308-C310), ES100 pull resistors (R305-R308). Values carried over with their basis:
+10k / 47k base resistors (D8), 0.1 µF bypass and 10 µF module bulk (as the dekatron board),
+100 nF ADC reservoir and BAT54S clamp (as the dekatron ADC inputs), SR_OE pull-up 10k (above).
+Shift-register bit map: U302-U304 carry the BCD lines (two tubes each), U305-U306 the decimal
+points, U306 QE-QH spare.
+
 ### Time sources
 
 **Decision (user, 2026-10-26):** a battery-backed RTC and a WWVB receiver, both owned by the ESP32

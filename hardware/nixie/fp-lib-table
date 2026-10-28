@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "nixie")(type "KiCad")(uri "${KIPRJMOD}/lib/nixie.pretty")(options "")(descr "Project-local footprints"))
+)
