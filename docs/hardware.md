@@ -898,7 +898,9 @@ compensated, which makes that low-risk.
 
 `input_protect.cir`: hot-plug of a live 12 V adapter through its lead, with the loads as
 constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W behind its PTC; the
-measured module now gives 4.65 W at the full 18.6 mA, not re-simulated).
+measured module now gives 4.65 W at the full 18.6 mA, not re-simulated). The bench assumes 47 µF
+at the module; the measured module has 470 µF, but it sits behind the Nixie board's Q101, which is
+off at plug-in, so it does not load the hot-plug (module switch-on: `hardware/nixie/simulation`).
 
 | Case | Rail peak | Inrush peak | Fuse I²t | Notes |
 |---|---|---|---|---|
@@ -1134,23 +1136,56 @@ passes it on to the module:
   there is no Nixie HV, so startup is dark whatever the K155ID1s do with undefined codes.
 * Soft turn-on (RC on the P-FET gate) to limit the module's input-capacitor inrush within the
   `NIX_12V` branch's resettable fuse.
+* **Values (simulation, 2026-11-06):** Q101 **Infineon IPD50P04P4L-11** (DPAK, as the dekatron
+  board's reverse-polarity FET: one part type), R101 = R102 = **47k**, C102 = **3.3 µF** 25 V X7R
+  gate-source. V_GS is −6 V at 12 V and −12 V at the 24 V TVS clamp (rating +5/−16 V); R_DS(on)
+  ≤ 17.2 mΩ at −4.5 V. Basis: [`nix12_switch.cir`](../hardware/nixie/simulation/nix12_switch.cir),
+  module as its measured 470 µF input plus the 7.2 W start-up plateau, Q101 as a generic model
+  fitted to the data sheet's transfer curve, threshold ±0.5 V:
+
+  | C102 | Delay after enable | 10-90 % ramp | PTC peak | Rail min | Q101 peak / energy on | Off: delay to 8 V, peak |
+  |---|---|---|---|---|---|---|
+  | 1 µF | 11-18 ms | 2.4-2.9 ms | 2.8-3.4 A | 11.39 V | 10.9-13.2 W / 30-32 mJ | 30-50 ms, 0.3-0.4 W |
+  | **3.3 µF** | **34-57 ms** | **5.5-7.3 ms** | **1.6-1.9 A** | **11.63 V** | **5.2-6.4 W / 35-38 mJ** | **97-156 ms, 0.9-1.1 W** |
+
+  The 1 µF row brackets X7R DC-bias loss on C102: the result stays acceptable. Q101's energy is
+  mostly the ½CV² of the module's capacitor (34 mJ) whatever the ramp; at ≤ 6.4 W the DPAK is
+  far inside its 1 ms SOA line (the data sheet gives none longer). A gate-drain (Miller)
+  capacitor gave a gentler ramp (1.1-1.3 A, 3.2-4.0 W) but was not chosen: on hot-plug it couples
+  the rising input onto the gate (≈ 1 V of V_GS at the 24 V clamp, against a 1.2 V minimum threshold) and slows
+  turn-off. Firmware waits for `NIX_HV_SENSE` rather than a fixed delay.
+* **`NIX_12V` PTC, 1812L075/33DR** (Littelfuse 1812L datasheet, rev. 06/10/24): I_hold 0.75 A,
+  I_trip 1.50 A, 33 V max, 20 A I_max, R 0.11-0.40 Ω, time to trip at most 0.20 s at 8 A (all at
+  20 °C).
+  * Switch-on does not trip it. The soft-start pulse is 1.6-1.9 A for a few ms, I²t ≈ 0.02 A²s.
+    The average time-current curve (read roughly) puts 8 A at about 0.05-0.1 s, i.e. 3-6 A²s,
+    and 1.5-2 A at seconds or longer: two orders of margin. The unsoftened bench inrush (7.3 A
+    peak decaying in ≈ 1 ms, ≈ 0.01 A²s) would also pass.
+  * Hold current falls with ambient temperature: 0.66 A at 40 °C, 0.60 A at 50 °C, 0.56 A at 60 °C,
+    0.47 A at 70 °C, 0.36 A at 85 °C. Against the 0.39 A full-display budget (0.329 A measured at
+    175 V) that leaves margin up to about 70 °C next to the PTC on the dekatron board. The user
+    expects the enclosure to stay well below 40 °C at 25 °C room temperature (2026-11-06);
+    confirm with a temperature reading in Phase 2.
+* Open: a bench check of the ramp on the built board.
 * Measured (2026-11-01, [log](../characterization/nixie/2026-11-01_hv_module.md)): 0.329 A at
   175 V into 11 kΩ, 13 mA with 1 MΩ; with 12 V removed the output falls below 30 V in about 2-3 s
-  through 1 MΩ. Inrush (2026-11-06, same log): 7.3 A peak through a 1 Ω shunt, ≈ 1.2 ms; the FET
-  part and soft-start values stay _open_.
+  through 1 MΩ. Inrush (2026-11-06, same log): 7.3 A peak through a 1 Ω shunt, ≈ 1.2 ms; module
+  input capacitor 470 µF 25 V. These set the values above.
 * Also used to turn the Nixie HV off for WWVB reception windows (see [Time sources](#time-sources)).
 
 ### Nixie board electrical design (Phase 1A, draft 2026-10-26)
 
 Packages: SOIC, SOT-23, SC-70, DIP and 0805/1206 only. No exposed-pad or fine-pitch HTSSOP parts:
 U106 on the dekatron board was the one part that was hard to hand-solder (user, 2026-10-26).
+Exception: Q101 in DPAK (2026-11-06), the same package and part as the dekatron board's Q101, for
+its thermal mass in the soft start.
 
 * **5 V** arrives on `NIX_LV` from the dekatron board, which already feeds it through an ideal
   diode (U104, LM66100). The Nixie RP2040-Zero's USB therefore cannot back-feed the dekatron
   rail, and this board needs no second ideal diode. The D6 residual case (our rail feeding a
   host's VBUS) applies here as on the dekatron board.
-* **12 V switch** for the Nixie HV module: see above. FET part and soft-start RC _open_; input current
-  and inrush are now measured (above).
+* **12 V switch** for the Nixie HV module: see above. IPD50P04P4L-11, 47k / 47k / 3.3 µF from
+  simulation of the measured module.
 * **Shift registers: 5 × 74HCT595** (SOIC-16) at 5 V, 40 bits: 24 BCD (4 per K155ID1) + 12
   decimal points (both per tube, user 2026-10-26) + 4 spare. HCT, not HC: its 2.0 V input
   threshold takes the RP2040's 3.3 V signals, and its outputs drive the K155ID1's TTL inputs. OE
@@ -1212,8 +1247,7 @@ core); routing with FreeRouting (Specctra DSN/SES) instead of the dekatron board
 `route_pcb.py` (proposed, 2026-10-26).
 
 **Schematic draft (2026-10-26):** `hardware/nixie/` (power, logic, tubes sheets), ERC clean.
-Values marked `_open_` in the schematics and `bom.csv`: Q101 (FET part), R101, R102, C102 (12 V
-switch and soft start), C101 (+5V bulk), the twelve decimal-point series resistors, encoder pull-ups and debounce caps
+Values marked `_open_` in the schematics and `bom.csv`: C101 (+5V bulk), the twelve decimal-point series resistors, encoder pull-ups and debounce caps
 (R302-R304, C308-C310), ES100 pull resistors (R305-R308). Values carried over with their basis:
 10k / 47k base resistors (D8), 0.1 µF bypass and 10 µF module bulk (as the dekatron board),
 100 nF ADC reservoir and BAT54S clamp (as the dekatron ADC inputs), SR_OE pull-up 10k (above).

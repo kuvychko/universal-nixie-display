@@ -1,0 +1,122 @@
+* Nixie HV module 12 V switch (Nixie board Q101): switch-on and switch-off with the 12 V rail live
+*
+* Purpose (Phase 1B power sheet): size the soft start of Q101 against the module's measured input
+* (470 uF electrolytic, characterization/nixie/2026-11-01_hv_module.md): dip on the shared 12 V
+* rail, current through the dekatron board's NIX_12V PTC, and Q101 power and energy, at turn-on
+* and at turn-off (the module is switched off for every WWVB window).
+*
+* Chain: 12 V adapter, already on -> lead (1 uH, 0.1 ohm, as input_protect.cir) -> fuse (0.05)
+*   -> reverse-polarity P-FET (as a resistor, RREV) -> VIN_PROT: 100 uF / 0.34 ohm bulk + 33 uF
+*   ceramics, 5 V buck 3.7 W and HV boost 1 W as constant-power sinks
+*   -> PTC 1812L075/33 (RPTC, 0.11-0.4 ohm) -> harness (RHAR, LHAR, assumed)
+*   -> Nixie board +12V_IN (CIN ceramic) -> Q101 -> +12V_SW -> module
+* Module: 470 uF with ESR RESRM (assumed) and a constant-power load PMOD above VST, off below VST
+*   (start threshold not measured: swept). PMOD 7.2 W is the measured start-up plateau (0.6 A at
+*   12 V for ~40 ms), held for the whole run as the worst case; 4 W is the measured steady state.
+* Q101 gate (schematic): R101 G-S pull-up, C102 G-S, R102 gate to Q102's collector; Q102 as a
+*   switch (SQ102). Optional CGD gate-drain (Miller) capacitor, TOPO=1.
+* Q101 candidate: Infineon IPD50P04P4L-11 (the dekatron board's reverse-polarity FET; datasheet
+*   Rev. 1.1). Generic VDMOS fitted to its typical transfer curve (fig. 7, V_DS = -6 V: about 8 A at
+*   V_GS = -3 V, 65 A at -4 V) and capacitances (Ciss 3 nF, Crss 37-700 pF); VTO swept +-0.5 V for
+*   the threshold spread (-1.2 to -2.2 V at 85 uA). Not a vendor model.
+* Run from this directory:  "C:/Simulators/Qucs-S/bin/ngspice_con.exe" -b nix12_switch.cir > nix12_switch.log
+
+.param RPTC=0.25 RHAR=0.05 LHAR=0.5u RREV=0.011 CIN=10u RESRM=0.1 PMOD=7.2 VST=8
+.param R101=47k R102=47k C102=1u CGD=1p
+.param TON=20m TOFF=400m TEND=700m
+
+VADP  adp 0 DC 12
+LCAB  adp c1 1u
+RCAB  c1 jack 0.1
+RFUSE jack fz 0.05
+RRV   fz vprot {RREV}
+CBLK  vprot cb 100u
+RBLK  cb 0 0.34
+CCER  vprot 0 33u
+BBUCK vprot 0 I = 3.7 / max(V(vprot), 4) * (V(vprot) > 4.5 ? 1 : V(vprot)/4.5)
+BHV   vprot 0 I = 1.0 / max(V(vprot), 4) * (V(vprot) > 4.5 ? 1 : V(vprot)/4.5)
+
+VIP   vprot p0 0
+RPT   p0 p1 {RPTC}
+RHR   p1 p2 {RHAR}
+LHR   p2 v12 {LHAR}
+CIN1  v12 0 {CIN}
+
+* Q101: drain at the module, source at +12V_IN
+MQ    swd g v12 v12 MPF
+VIQ   swd sw 0
+R101  v12 g {R101}
+C102  v12 g {C102}
+CGD1  g sw {CGD}
+R102  g d {R102}
+* Q102 (MMBT3904) as a switch: on from TON to TOFF
+VEN   en 0 PULSE(0 1 {TON} 10u 10u {TOFF-TON} 10)
+SQ    d 0 en 0 SWQ
+.model SWQ SW(Vt=0.5 Vh=0.1 Ron=50 Roff=1e9)
+
+* Module input
+CMOD  sw cm 470u
+RESR  cm 0 {RESRM}
+BMOD  sw 0 I = {PMOD} / max(V(sw), {VST}) * 0.5 * (1 + tanh((V(sw) - {VST}) / 0.1))
+
+.param VTO=-2.5 KP=27
+.model MPF VDMOS(pchan Vto={VTO} Kp={KP} Rd=0.003 Rs=0.003 Cgdmax=700p Cgdmin=40p Cgs=3n Cjo=1.1n Is=1e-10 Rb=0.005)
+
+.options reltol=1e-3
+.tran 2u {TEND} 0 20u uic
+.control
+set noaskquit
+* Case A: C102 gate-source only (schematic as drawn)
+foreach c 1u 3.3u
+  foreach vto -2.0 -2.5 -3.0
+    alterparam C102=$c
+    alterparam CGD=1p
+    alterparam VTO=$vto
+    reset
+    run
+    echo "=== A C102=$c VTO=$vto"
+    let pq = (v(v12) - v(swd)) * i(VIQ)
+    let eq = integ(pq)
+    let vgs = v(g) - v(v12)
+    meas tran rail_min MIN v(vprot)   from=15m to=380m
+    meas tran ipt_pk   MAX i(VIP)     from=15m to=380m
+    meas tran ion_dly  WHEN v(sw)=1.2  RISE=1
+    meas tran ion_90   WHEN v(sw)=10.8 RISE=1
+    meas tran pq_on    MAX pq         from=15m to=380m
+    meas tran e_on     FIND eq        AT=380m
+    meas tran off_90   WHEN v(sw)=10.8 FALL=1
+    meas tran off_8v   WHEN v(sw)=8.05 FALL=1
+    meas tran pq_off   MAX pq         from=390m to=700m
+    meas tran e_tot    FIND eq        AT=700m
+    meas tran vgs_min  MIN vgs        from=0 to=700m
+    destroy all
+  end
+end
+* Case B: Miller capacitor CGD gate-drain plus C102 gate-source
+foreach cg 100n 150n
+  foreach vto -2.0 -2.5 -3.0
+    alterparam C102=3.3u
+    alterparam CGD=$cg
+    alterparam VTO=$vto
+    reset
+    run
+    echo "=== B CGD=$cg C102=3.3u VTO=$vto"
+    let pq = (v(v12) - v(swd)) * i(VIQ)
+    let eq = integ(pq)
+    let vgs = v(g) - v(v12)
+    meas tran rail_min MIN v(vprot)   from=15m to=380m
+    meas tran ipt_pk   MAX i(VIP)     from=15m to=380m
+    meas tran ion_dly  WHEN v(sw)=1.2  RISE=1
+    meas tran ion_90   WHEN v(sw)=10.8 RISE=1
+    meas tran pq_on    MAX pq         from=15m to=380m
+    meas tran e_on     FIND eq        AT=380m
+    meas tran off_90   WHEN v(sw)=10.8 FALL=1
+    meas tran off_8v   WHEN v(sw)=8.05 FALL=1
+    meas tran pq_off   MAX pq         from=390m to=700m
+    meas tran e_tot    FIND eq        AT=700m
+    meas tran vgs_min  MIN vgs        from=0 to=700m
+    destroy all
+  end
+end
+.endc
+.end

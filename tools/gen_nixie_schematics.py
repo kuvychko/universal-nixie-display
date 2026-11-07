@@ -9,7 +9,7 @@ Writes into hardware/nixie/:
   logic.kicad_sch             RP2040-Zero, 74HCT595 chain, encoder / RTC / ES100 landings
   tubes.kicad_sch             6 x (K155ID1, IN-14, anode resistor, two decimal-point drivers)
   sym-lib-table / fp-lib-table
-  lib/nixie.kicad_sym         project symbols (K155ID1, IN-14, RP2040-Zero, Q_PMOS_GSD)
+  lib/nixie.kicad_sym         project symbols (K155ID1, IN-14, RP2040-Zero)
   lib/nixie.pretty/RP2040-Zero_Castellated.kicad_mod   (IN-14.kicad_mod is maintained by hand)
   bom.csv
 
@@ -24,7 +24,6 @@ Usage:  python tools/gen_nixie_schematics.py [--kicad-share "C:/Program Files/Ki
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 import os
 import uuid
@@ -131,27 +130,9 @@ def zero_symbol_text() -> str:
     return gs.rp2040_zero_symbol_text().replace("dekatron:RP2040-Zero_Castellated", FP_ZERO)
 
 
-def pmos_gsd_symbol(lib: gs.SymbolLib) -> list:
-    """Device:Q_PMOS with SOT-23 pad numbers (1 G, 2 S, 3 D). Check against the chosen FET."""
-    sym = copy.deepcopy(lib.get("Device", "Q_PMOS"))
-    sym[1] = q("Q_PMOS_GSD")
-    for sub in find_all(sym, "symbol"):
-        sub[1] = q(unq(sub[1]).replace("Q_PMOS_", "Q_PMOS_GSD_", 1))
-        for p in find_all(sub, "pin"):
-            num = find(p, "number")
-            num[1] = q({"G": "1", "S": "2", "D": "3"}[unq(num[1])])
-    for p in find_all(sym, "property"):
-        if unq(p[1]) == "Footprint":
-            p[2] = q(FP_SOT23)
-        elif unq(p[1]) == "Description":
-            p[2] = q("P-MOSFET, SOT-23 pinout 1 G, 2 S, 3 D")
-    return sym
-
-
 def project_symbol_lib_text(lib: gs.SymbolLib) -> str:
     return ('(kicad_symbol_lib (version 20251024) (generator "nixie-gen") (generator_version "10.0")\n'
-            + k155id1_symbol_text() + "\n" + in14_symbol_text() + "\n" + zero_symbol_text() + "\n"
-            + gs.dump(pmos_gsd_symbol(lib), 1) + "\n)\n")
+            + k155id1_symbol_text() + "\n" + in14_symbol_text() + "\n" + zero_symbol_text() + "\n)\n")
 
 
 # --------------------------------------------------------------------------------------
@@ -203,14 +184,16 @@ def build_power(lib) -> Sheet:
             fields=F("+5V bulk at the harness landing (value open)"))
 
     note(sh, "NIXIE HV MODULE 12 V SWITCH", "High side, off by default (R101 holds Q101 off; R104 holds Q102 off in "
-         "reset). Values open until the module is measured", 106.68, 22.86)
-    sh.part("nixie:Q_PMOS_GSD", "Q101", OPEN, 152.4, 63.5, {"1": "NIX12_G", "2": "+12V_IN", "3": "+12V_SW"},
-            footprint=FP_SOT23, fields=F("Nixie module 12 V high-side switch (part open: V_DS, I_D, pulsed rating)"))
-    sh.part(R, "R101", OPEN, 127.0, 58.42, {"1": "+12V_IN", "2": "NIX12_G"}, footprint=FP_R,
-            fields=F("Q101 gate pull-up: off by default"))
-    sh.part(C, "C102", OPEN, 114.3, 58.42, {"1": "+12V_IN", "2": "NIX12_G"}, footprint=FP_C,
-            fields=F("Q101 gate-source: soft turn-on with R102 (inrush into the module)"))
-    sh.part(R, "R102", OPEN, 127.0, 93.98, {"1": "NIX12_G", "2": "NIX12_D"}, footprint=FP_R,
+         "reset). Soft start into the module's 470 uF: hardware/nixie/simulation/nix12_switch.cir", 106.68, 22.86)
+    sh.part("Transistor_FET:Q_PMOS_GDS", "Q101", "IPD50P04P4L-11", 152.4, 63.5,
+            {"1": "NIX12_G", "2": "+12V_SW", "3": "+12V_IN"}, footprint=gs.FP_DPAK,
+            fields=F("Nixie module 12 V high-side switch with soft start", "IPD50P04P4L-11", "Infineon",
+                     "-40 V, 17.2 mohm max at VGS -4.5 V, VGS +5/-16 V"))
+    sh.part(R, "R101", "47k", 127.0, 58.42, {"1": "+12V_IN", "2": "NIX12_G"}, footprint=FP_R,
+            fields=F("Q101 gate pull-up: off by default. With R102: VGS -6 V at 12 V, -12 V at the 24 V clamp"))
+    sh.part(C, "C102", "3.3uF", 114.3, 58.42, {"1": "+12V_IN", "2": "NIX12_G"}, footprint=FP_C,
+            fields=F("Q101 gate-source: soft turn-on with R101/R102; holds Q101 off on hot-plug", rating="25 V X7R"))
+    sh.part(R, "R102", "47k", 127.0, 93.98, {"1": "NIX12_G", "2": "NIX12_D"}, footprint=FP_R,
             fields=F("Q101 gate series: sets the turn-on ramp with C102"))
     sh.part(NPN, "Q102", "MMBT3904", 152.4, 99.06, {"1": "NIX12_B", "2": "GND", "3": "NIX12_D"},
             footprint=FP_SOT23, fields=F("Level shifter for Q101's gate", "MMBT3904", rating="40 V NPN"))

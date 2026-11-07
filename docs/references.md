@@ -34,7 +34,8 @@ revision as it is used.
 | `aod5n40.pdf` | AOS AOD5N40, 400 V MOSFET (HV boost switch until 2026-10-07; not stocked by Mouser) | https://www.aosmd.com/res/datasheets/AOD5N40.pdf | — |
 | (not stored) | Infineon IPD50R1K4CE, 500 V CoolMOS CE (HV boost switch until 2026-10-08, End of Life at Mouser). Figures from distributor listings | https://www.infineon.com/part/IPD50R1K4CE | — |
 | `ipd70r1k4p7s.pdf` | Infineon IPD70R1K4P7S, 700 V CoolMOS P7 (HV boost switch) | https://www.infineon.com/dgdl/Infineon-IPD70R1K4P7S-DataSheet-v02_02-EN.pdf?fileId=5546d462602a9dc801607f84c5fe3fea | Rev. 2.2, 2019-08-09 |
-| `ipd50p04p4l-11.pdf` | Infineon IPD50P04P4L-11, −40 V P-channel (reverse-polarity protection) | https://www.infineon.com/assets/row/public/documents/10/49/infineon-ipd50p04p4l-11-datasheet-en.pdf | Rev. 1.1, 2019-07-04 |
+| `ipd50p04p4l-11.pdf` | Infineon IPD50P04P4L-11, −40 V P-channel (reverse-polarity protection; Nixie module switch Q101) | https://www.infineon.com/assets/row/public/documents/10/49/infineon-ipd50p04p4l-11-datasheet-en.pdf | Rev. 1.1, 2019-07-04 |
+| `littelfuse_1812l.pdf` | Littelfuse 1812L PolySwitch PPTC series (1812L075/33DR, Nixie module branch) | littelfuse.com, 1812L Series datasheet (supplied by the user) | Revised GD. 06/10/24 |
 | `yageo_hhv.pdf` | Yageo HHV metal glaze high-voltage resistors (HHV-25 1600 V, HHV-50 3500 V; replaced Vishay HVR25 / HVR37) | https://yageogroup.com/content/datasheet/asset/file/YAGEO-HHV_DATASHEET | V.3, 2024-04-03 |
 | `lm66100.pdf` | TI LM66100 ideal diode (CE to VOUT for always-on reverse-current blocking, §8.3.2) | https://www.ti.com/lit/ds/symlink/lm66100.pdf | SLVSEZ8A, Jun 2019 |
 | `tps54202.pdf` | TPS54202 2 A buck (original 5 V buck; backordered 2026-10-08) | https://www.ti.com/lit/gpn/tps54202 | SLVSD26C, Feb 2026 |

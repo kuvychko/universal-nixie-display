@@ -1627,10 +1627,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "nixie:Q_PMOS_GSD"
-			(pin_numbers
-				(hide yes)
-			)
+		(symbol "Transistor_FET:Q_PMOS_GDS"
 			(pin_names
 				(offset 0)
 				(hide yes)
@@ -1641,7 +1638,7 @@
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "Q"
-				(at 5.08 1.27 0)
+				(at 5.08 1.905 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -1651,8 +1648,8 @@
 					(justify left)
 				)
 			)
-			(property "Value" "Q_PMOS"
-				(at 5.08 -1.27 0)
+			(property "Value" "Q_PMOS_GDS"
+				(at 5.08 0 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -1662,7 +1659,7 @@
 					(justify left)
 				)
 			)
-			(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+			(property "Footprint" ""
 				(at 5.08 2.54 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1684,7 +1681,7 @@
 					)
 				)
 			)
-			(property "Description" "P-MOSFET, SOT-23 pinout 1 G, 2 S, 3 D"
+			(property "Description" "P-MOSFET transistor, gate/drain/source"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1695,7 +1692,7 @@
 					)
 				)
 			)
-			(property "ki_keywords" "PMOS P-MOS"
+			(property "ki_keywords" "transistor PMOS P-MOS P-MOSFET"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1706,7 +1703,7 @@
 					)
 				)
 			)
-			(symbol "Q_PMOS_GSD_0_1"
+			(symbol "Q_PMOS_GDS_0_1"
 				(polyline
 					(pts
 						(xy 0.254 1.905)
@@ -1891,25 +1888,7 @@
 					)
 				)
 			)
-			(symbol "Q_PMOS_GSD_1_1"
-				(pin passive line
-					(at 2.54 5.08 270)
-					(length 2.54)
-					(name "D"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
+			(symbol "Q_PMOS_GDS_1_1"
 				(pin input line
 					(at -5.08 0 0)
 					(length 2.54)
@@ -1929,6 +1908,24 @@
 					)
 				)
 				(pin passive line
+					(at 2.54 5.08 270)
+					(length 2.54)
+					(name "D"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
 					(at 2.54 -5.08 90)
 					(length 2.54)
 					(name "S"
@@ -1938,7 +1935,7 @@
 							)
 						)
 					)
-					(number "2"
+					(number "3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2688,32 +2685,35 @@
 	  (instances (project "nixie" (path "/342c77a5-28ce-53e1-b1ae-2a73c7a137ed/b8e5b074-02b3-59b1-a13a-b55296c1432f" (reference "#PWRPOWER014") (unit 1))))
 	)
 	(text "NIXIE HV MODULE 12 V SWITCH" (exclude_from_sim no) (at 106.68 22.86 0) (effects (font (size 2.0 2.0)) (justify left bottom)) (uuid "7d91dc6c-b8a7-56a0-8073-6bd7d0395995"))
-	(text "High side, off by default (R101 holds Q101 off; R104 holds Q102 off in reset). Values open until the module is measured" (exclude_from_sim no) (at 106.68 27.18 0) (effects (font (size 1.27 1.27)) (justify left bottom)) (uuid "7d5525be-6a6b-5e3c-be7d-439bcdf9338a"))
-	(symbol (lib_id "nixie:Q_PMOS_GSD") (at 152.4 63.5 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "9a43d488-85e4-5566-aa61-0219db8e8106")
+	(text "High side, off by default (R101 holds Q101 off; R104 holds Q102 off in reset). Soft start into the module's 470 uF: hardware/nixie/simulation/nix12_switch.cir" (exclude_from_sim no) (at 106.68 27.18 0) (effects (font (size 1.27 1.27)) (justify left bottom)) (uuid "7d5525be-6a6b-5e3c-be7d-439bcdf9338a"))
+	(symbol (lib_id "Transistor_FET:Q_PMOS_GDS") (at 152.4 63.5 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "9a43d488-85e4-5566-aa61-0219db8e8106")
 	  (property "Reference" "Q101" (at 155.6 62.5 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Value" "_open_" (at 155.6 65.1 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Footprint" "Package_TO_SOT_SMD:SOT-23" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Value" "IPD50P04P4L-11" (at 155.6 65.1 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Datasheet" "" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Description" "P-MOSFET, SOT-23 pinout 1 G, 2 S, 3 D" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Function" "Nixie module 12 V high-side switch (part open: V_DS, I_D, pulsed rating)" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (pin "3" (uuid "80e6a0df-d9d4-5d5f-8ac1-7ea6a73cd588"))
-	  (pin "1" (uuid "45e22603-f8d7-5e12-a07e-88e9c48e5251"))
-	  (pin "2" (uuid "6ac65ef6-7d87-5759-8f8a-f3d2b542f657"))
+	  (property "Description" "P-MOSFET transistor, gate/drain/source" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Function" "Nixie module 12 V high-side switch with soft start" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "MPN" "IPD50P04P4L-11" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Manufacturer" "Infineon" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Rating" "-40 V, 17.2 mohm max at VGS -4.5 V, VGS +5/-16 V" (at 152.4 63.5 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (pin "1" (uuid "80e6a0df-d9d4-5d5f-8ac1-7ea6a73cd588"))
+	  (pin "2" (uuid "45e22603-f8d7-5e12-a07e-88e9c48e5251"))
+	  (pin "3" (uuid "6ac65ef6-7d87-5759-8f8a-f3d2b542f657"))
 	  (instances (project "nixie" (path "/342c77a5-28ce-53e1-b1ae-2a73c7a137ed/b8e5b074-02b3-59b1-a13a-b55296c1432f" (reference "Q101") (unit 1))))
 	)
-	(wire (pts (xy 154.94 58.42) (xy 154.94 55.88)) (stroke (width 0) (type default)) (uuid "57dcd171-5362-51cf-bbf9-d03c2ec6fd0e"))
-	(label "+12V_SW" (at 154.94 55.88 90) (effects (font (size 1.27 1.27)) (justify left bottom)) (uuid "4b0a0eb8-8494-55b7-8a7d-9ce10d612c27"))
-	(wire (pts (xy 147.32 63.5) (xy 144.78 63.5)) (stroke (width 0) (type default)) (uuid "aa074164-26c3-536b-a976-a4e40ea47655"))
-	(label "NIX12_G" (at 144.78 63.5 180) (effects (font (size 1.27 1.27)) (justify right bottom)) (uuid "60848888-f74c-5052-8c14-89293f788e80"))
+	(wire (pts (xy 147.32 63.5) (xy 144.78 63.5)) (stroke (width 0) (type default)) (uuid "57dcd171-5362-51cf-bbf9-d03c2ec6fd0e"))
+	(label "NIX12_G" (at 144.78 63.5 180) (effects (font (size 1.27 1.27)) (justify right bottom)) (uuid "4b0a0eb8-8494-55b7-8a7d-9ce10d612c27"))
+	(wire (pts (xy 154.94 58.42) (xy 154.94 55.88)) (stroke (width 0) (type default)) (uuid "aa074164-26c3-536b-a976-a4e40ea47655"))
+	(label "+12V_SW" (at 154.94 55.88 90) (effects (font (size 1.27 1.27)) (justify left bottom)) (uuid "60848888-f74c-5052-8c14-89293f788e80"))
 	(wire (pts (xy 154.94 68.58) (xy 154.94 71.12)) (stroke (width 0) (type default)) (uuid "985c5a51-2a8e-5461-9e65-b2ad6170c6ee"))
 	(global_label "+12V_IN" (shape passive) (at 154.94 71.12 270) (fields_autoplaced yes) (effects (font (size 1.27 1.27)) (justify right)) (uuid "2376b3e2-3ca7-5d1f-aa96-1155bff64e7c") (property "Intersheetrefs" "${INTERSHEET_REFS}" (at 154.94 71.12 0) (effects (font (size 1.27 1.27)) (hide yes))))
 	(symbol (lib_id "Device:R") (at 127 58.42 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "b113d002-0bd1-547a-b243-a5486a589f6d")
 	  (property "Reference" "R101" (at 130.2 57.42 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Value" "_open_" (at 130.2 60.02 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Value" "47k" (at 130.2 60.02 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Footprint" "Resistor_SMD:R_1206_3216Metric" (at 127 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Datasheet" "" (at 127 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Description" "Resistor" (at 127 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Function" "Q101 gate pull-up: off by default" (at 127 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Function" "Q101 gate pull-up: off by default. With R102: VGS -6 V at 12 V, -12 V at the 24 V clamp" (at 127 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "aa5ee183-f39c-5049-a877-806725a2f3cd"))
 	  (pin "2" (uuid "3e78dc1f-75fd-5f48-8aea-3eae7ffe99d4"))
 	  (instances (project "nixie" (path "/342c77a5-28ce-53e1-b1ae-2a73c7a137ed/b8e5b074-02b3-59b1-a13a-b55296c1432f" (reference "R101") (unit 1))))
@@ -2724,11 +2724,12 @@
 	(label "NIX12_G" (at 127 64.77 270) (effects (font (size 1.27 1.27)) (justify right bottom)) (uuid "abcad711-e71d-5d66-9a99-d3a211d8a7fe"))
 	(symbol (lib_id "Device:C") (at 114.3 58.42 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "d231c3cf-2c4e-5284-9f8f-7c11215f6e3b")
 	  (property "Reference" "C102" (at 117.5 57.42 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Value" "_open_" (at 117.5 60.02 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Value" "3.3uF" (at 117.5 60.02 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (at 114.3 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Datasheet" "" (at 114.3 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Description" "Unpolarized capacitor" (at 114.3 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Function" "Q101 gate-source: soft turn-on with R102 (inrush into the module)" (at 114.3 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Function" "Q101 gate-source: soft turn-on with R101/R102; holds Q101 off on hot-plug" (at 114.3 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Rating" "25 V X7R" (at 114.3 58.42 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "4fb682fc-2e2a-5482-abe0-44fcf6f135b8"))
 	  (pin "2" (uuid "9f2be4bb-474c-5b57-ae38-19efcc3b3410"))
 	  (instances (project "nixie" (path "/342c77a5-28ce-53e1-b1ae-2a73c7a137ed/b8e5b074-02b3-59b1-a13a-b55296c1432f" (reference "C102") (unit 1))))
@@ -2739,7 +2740,7 @@
 	(label "NIX12_G" (at 114.3 64.77 270) (effects (font (size 1.27 1.27)) (justify right bottom)) (uuid "24e06979-fe7a-56de-83f5-25efc4e92399"))
 	(symbol (lib_id "Device:R") (at 127 93.98 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "208e4afd-e9f6-5317-8dd4-12461cedbdf2")
 	  (property "Reference" "R102" (at 130.2 92.98 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Value" "_open_" (at 130.2 95.58 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Value" "47k" (at 130.2 95.58 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Footprint" "Resistor_SMD:R_1206_3216Metric" (at 127 93.98 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Datasheet" "" (at 127 93.98 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Description" "Resistor" (at 127 93.98 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
