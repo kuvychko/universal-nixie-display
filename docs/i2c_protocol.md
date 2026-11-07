@@ -36,7 +36,7 @@ position.
 Address: _open_.
 
 Frames are staged then applied together. A frame holds six digit/blank values and decimal-point
-state; brightness only once the hardware supports it. Status reports pending/active frame and
+state, plus a brightness level (the Nixie RP2040 dims by PWM on the HV5622 blanking line). Status reports pending/active frame and
 faults.
 
 The front-panel rotary encoder is on this board (decision 2026-10-06). Its RP2040 decodes the

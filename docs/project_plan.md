@@ -81,7 +81,7 @@ Use one documented, versioned command/status contract per controller. Start at 1
 
 Commands should be brief and nonblocking: HOME starts work and returns; status polling reports completion. Use bounded buffers, explicit payload lengths, valid ranges, a protocol version, module identity, and error/status codes. Long tube sequences must not execute inside I2C interrupt callbacks.
 
-Stage complete Nixie frames and apply them together to avoid partly updated numbers. A frame contains six digit/blank values and decimal-point state, with brightness controls only after the chosen hardware supports them. Include status for pending/active frame and faults. Addresses and byte layouts are assigned in the interface document before independent firmware development.
+Stage complete Nixie frames and apply them together to avoid partly updated numbers. A frame contains six digit/blank values and decimal-point state, plus a brightness level (PWM on the HV5622 blanking line, hardware.md). Include status for pending/active frame and faults. Addresses and byte layouts are assigned in the interface document before independent firmware development.
 
 ### External host interface
 

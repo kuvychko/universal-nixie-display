@@ -135,10 +135,15 @@ First module data, 2026-11-01: input current, efficiency and decay in the
 Board checks to add to the Phase 2 step table:
 
 * **HV setpoint and overvoltage cut-off.** Set the module's trimmer to 175 V on the bench and fix it
-  (glue or varnish) before fitting; do not turn it toward its maximum (the module may have no
+  with glue before fitting; do not turn it toward its maximum (the module may have no
   overvoltage protection). Check the firmware cut-off: `NIX12_EN` drops when `NIX_HV_SENSE` reads
   above 200 V, by scaling the threshold down in a test build rather than raising the HV
   ([hardware.md](hardware.md), HV limit).
+* **HV fuse F101.** Board powered with the tubes lit: `NIX_HV` (TP103) equals `NIX_HV_MOD` (TP106)
+  within the fuse's drop. Do not test it by shorting HV.
+* **Dimming (PWM on `DRV_BL`).** Sweep frequency and duty: all digits ignite at the lowest duty, no
+  flicker, and the HV module keeps regulation (`NIX_HV_SENSE`, scope on TP103) with no audible
+  noise. Record the chosen frequency and minimum duty in [hardware.md](hardware.md).
 * **Decimal-point resistors (R2n1/R2n2, 150k starting value).** On one tube, measure the current
   in the point's series resistor (voltage across it) with the point alone and with a digit lit.
   Acceptance: ≤ 0.3 mA with the point alone (IN-14 data sheet); point visibly lit with a digit on.

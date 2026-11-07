@@ -39,6 +39,7 @@ revision as it is used.
 | `hv5622.pdf` | Microchip HV5622, 32-channel serial-to-parallel converter, 220 V open-drain outputs (Nixie tube drivers) | https://ww1.microchip.com/downloads/en/DeviceDoc/20005854A.pdf | DS20005854A, 2017 |
 | `hv5122_hv5222.pdf` | Microchip HV5122 / HV5222 (considered for the tube drivers, rejected: no latches) | https://ww1.microchip.com/downloads/en/DeviceDoc/20005418B.pdf | DS20005418B, 2015 |
 | `cd40109b.pdf` | TI CD40109B quad low-to-high level shifter (3.3 V to the HV5622's 12 V logic) | https://www.ti.com/lit/ds/symlink/cd40109b.pdf | SCHS099B, Jan 2003 |
+| (not stored) | axtar / HighVoltGlow Nixie-Calculator: HV5622 + CD40109B + IN-12B reference design (schematics, EasyEDA projects, firmware); Nixie board cross-check in hardware.md | https://github.com/axtar/Nixie-Calculator | IN-12 boards Rev 2 (2025-06-09), controller Rev 2a |
 | `yageo_hhv.pdf` | Yageo HHV metal glaze high-voltage resistors (HHV-25 1600 V, HHV-50 3500 V; replaced Vishay HVR25 / HVR37) | https://yageogroup.com/content/datasheet/asset/file/YAGEO-HHV_DATASHEET | V.3, 2024-04-03 |
 | `lm66100.pdf` | TI LM66100 ideal diode (CE to VOUT for always-on reverse-current blocking, §8.3.2) | https://www.ti.com/lit/ds/symlink/lm66100.pdf | SLVSEZ8A, Jun 2019 |
 | `tps54202.pdf` | TPS54202 2 A buck (original 5 V buck; backordered 2026-10-08) | https://www.ti.com/lit/gpn/tps54202 | SLVSD26C, Feb 2026 |

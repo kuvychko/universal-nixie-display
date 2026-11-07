@@ -1211,7 +1211,7 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
   * **HV limit:** the module's output must stay ≤ 220 V. Its trimmer reached 204 V on the bench;
     its maximum will not be measured: the module may have no internal overvoltage protection, so
     the user will not turn it further (2026-11-06). Treat the trimmer range as able to exceed
-    220 V. Protection: (1) set the trimmer to 175 V on the bench, then fix it (glue or varnish)
+    220 V. Protection: (1) set the trimmer to 175 V on the bench, then glue it (user, 2026-11-06)
     before the module goes into the clock; (2) firmware: the RP2040 reads `NIX_HV_SENSE` (scale
     to 278 V) and drops `NIX12_EN` above **200 V** (user, 2026-11-06), which also
     catches a module fault. The firmware check is not a hardware guarantee; a comparator on the
@@ -1261,6 +1261,20 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
   resistors / zeners or a diode matrix), since running the internal clamp zeners above 60 V cuts
   the IC's life to 500 h. That limit, still unmeasured with the module, and the user's untested
   old K155ID1s are why the board moved to HV5622s.
+* **Dimming** (user, 2026-11-06): PWM on `DRV_BL` (GP8), after the reference design below
+  (20 kHz, duty 40-255 of 255 there). No hardware change: U302's 300-600 ns propagation and the
+  HV5622's t_ON ≤ 500 ns are small against a 50 µs period. The RP2040 runs the PWM; the ESP32 only
+  sends a brightness level (ESP32 owns what is shown, RP2040 owns timing). Frequency and minimum
+  duty _open_, set at bring-up: the purchased HV module sees a pulsed load at that frequency.
+* **HV output fuse F101** (user, 2026-11-06), after the reference design's 40 mA fast fuse on its
+  HV output. Between the module output (`NIX_HV_MOD`, J104) and the tubes' `NIX_HV`; it covers a
+  short on the HV net before the anode resistors, which the 12 V PTC sees only as the module's
+  input current. The HV monitor divider R105 / R106 stays on the module side, so it still bleeds
+  the module's output capacitor after the fuse opens and the 200 V cut-off sees the module's own
+  voltage. Voltage rating ≥ 300 V DC (D13's 1.5× rule on the 200 V cut-off); **DC rating must be
+  stated by the maker** (many small fuses are rated AC only). **40 mA fast-acting, starting
+  value** (user, 2026-11-06, as the reference) against a load of ≈ 15 mA (6 × 2.5 mA) plus decimal
+  points and R105. Part and footprint _open_ (TR5-style radial placeholder).
 * **HV monitor** (user, 2026-10-26; values user, 2026-11-01): 1 MΩ HHV-50 over 12 kΩ to an RP2040
   ADC, ratio 84.3, so 3.3 V at about 278 V (above the 204 V measured; the trimmer's maximum will
   not be measured, see HV limit). Also the input of the firmware overvoltage cut-off. Reports whether the module is running and when its output has decayed after
@@ -1278,7 +1292,7 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
 | GP4 / GP5 | `WWVB_SDA` / `WWVB_SCL` | I2C0 controller, ES100 only; pull-ups here |
 | GP6 | `WWVB_EN` | Pull-down: ES100 in shutdown while unplugged or in reset |
 | GP7 | `WWVB_IRQ` | Pull-up; the edge is timestamped |
-| GP8 | `DRV_BL` | HV5622 blanking via U302; pull-down (tubes off in reset) |
+| GP8 | `DRV_BL` | HV5622 blanking via U302; pull-down (tubes off in reset); PWM for dimming |
 | GP9 | `DRV_LE` | HV5622 latch enable via U302 |
 | GP10 / GP11 | `DRV_CLK` / `DRV_DATA` | SPI1 SCK / TX via U302; the HV5622 shifts on the falling clock edge |
 | GP13 / GP14 / GP15 | `ENC_A` / `ENC_B` / `ENC_SW` | Pull-ups and debounce filter values _open_ |
@@ -1299,6 +1313,34 @@ pull resistors (R305-R308). Values carried over with their basis: 0.1 µF bypass
 bulk (as the dekatron board), 100 nF ADC reservoir and BAT54S clamp (as the dekatron ADC inputs).
 Redrawn for the HV5622 drivers 2026-11-06 (tubes and logic sheets), ERC clean. Decimal-point series
 resistors (R211-R262) 150k as a starting value, checked at bring-up (2026-11-06).
+
+#### Cross-check against a published HV5622 design (2026-11-06)
+
+Reference: axtar / HighVoltGlow **Nixie-Calculator** (https://github.com/axtar/Nixie-Calculator),
+IN-12 driver and display boards Rev 2 (2025-06-09), controller Rev 2a, HV PSU Rev 2, firmware
+`Firmware/Controller/main/DisplayDriver.hpp`. Six HV5622PG-G in PQFP-44 driving IN-12B tubes from an
+ESP32; built and in use. Read from the published schematic PDFs, EasyEDA source projects and
+firmware (MIT licence for the software); nothing copied. One hobby design: where it and a datasheet
+disagree, the datasheet wins.
+
+| Item | This board | Reference | Verdict |
+|---|---|---|---|
+| HV5622 pin map (PQFP-44) | `HV5622_OUT` in the generator | Same pin numbers and names on its symbol | **Matches** |
+| POL, VDD, VSS | POL and VDD to `+12V_LOGIC`, VSS to GND | POL and VDD to +12V, VSS to GND | **Matches.** POL must stay high: BL low with POL low is "all on" (Table 3-2) |
+| Chain, unused pins | DOUT → next DIN, last DOUT and NC pins open | Same | **Matches** |
+| Bypass | 0.1 µF per HV5622, 10 µF on the rail (C305) | 100 nF per HV5622; 220 µF on the controller's 12 V | **Matches** |
+| Level shifter | CD40109B, VCC 3V3, VDD 12 V, all enables to VCC | **Same part**, same wiring; VDD jumper 12 V / 5 V (5 V for its LED variant) | **Matches** |
+| VDD protection | R309 + 13 V zener (24 V TVS on the input) | LTC4365 over/undervoltage cut-off on the 12 V input | Different method, same goal; no change |
+| Dark during MCU reset | BL pulled down on both sides of U302 (R301, R310) | No pull on BLANK; firmware drives it high at start-up | **Ours stronger;** keep |
+| Anode / DP wiring | 12k anode; DP cathode via 150k to its own output | 15k anode; DP via 82k to its own output | Same topology; values per tube (above) |
+| Shift clock | ≤ 1 MHz (CD40109B propagation 300-600 ns, uncharacterized at 3.3 V) | 2 MHz SPI through the same CD40109B | **Keep ≤ 1 MHz.** Clock and data pass through different U302 channels: the HV5622 needs 25 ns setup and 10 ns hold before CLK falls; at 1 MHz there are 500 ns between the data change and the falling edge, more than any channel-to-channel skew within the datasheet's delay range. 2 MHz works on their board but has no datasheet margin |
+| Clock phase | Data shifts on the falling CLK edge | SPI mode 1, MSB first (data set on the rising edge, sampled on the falling) | **Firmware note:** use the same phase |
+| LE handling | (firmware not written) | LE idle high (latches transparent), low while shifting, high to commit | **Firmware note:** LE high = transparent, LE low = hold (Table 3-2). Prefer LE idle low with a pulse after each frame, so a register that is still shifting never shows |
+| Start-up | BL held low by hardware | BL driven high before the first frame is shifted | **Firmware note:** shift a blank frame and latch it before releasing BL |
+| **Dimming** | Not planned before this check | **PWM on BL**, 20 kHz, duty 40-255 of 255 | **Adopted** (user, 2026-11-06): see Dimming above |
+| HV output fusing | PTC on the module's 12 V input only | 40 mA fast fuse in series with the HV output | **Adopted** (user, 2026-11-06): F101, see above |
+| HV setpoint | Trimmer set to 175 V and fixed | Own PSU: trimmer, or a fixed resistor for a fixed voltage | **Kept the trimmer**, glued (user, 2026-11-06) |
+| Cathode clearance | `NCATH` rule _open_ | Board defaults: 0.2 mm (driver) and 0.15 mm (display); cathode tracks 0.41 mm (driver) and 0.64 mm (display); HV tracks 1.0-1.5 mm | **Data point only.** The HV5622's own pins are 0.8 mm apart and cannot meet a 1.25 mm rule; fan out from the pads and widen the clearance once clear of the package. Value still _open_ |
 
 ### Time sources
 
