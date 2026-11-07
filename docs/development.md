@@ -196,6 +196,9 @@ kicad-cli pcb export gerbers --check-zones --subtract-soldermask --no-x2 -l F.Cu
 kicad-cli pcb export drill --format excellon --excellon-units mm --excellon-separate-th --generate-map --map-format pdf --generate-report --report-path hardware/dekatron/fab/dekatron-drill_report.txt -o hardware/dekatron/fab/ hardware/dekatron/dekatron.kicad_pcb
 ```
 
+The Nixie module the same way: replace `dekatron` by `nixie` in both commands
+(`hardware/nixie/fab/`, generated 2026-11-07, not yet ordered).
+
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.
 
 ### Readable exports
