@@ -180,8 +180,10 @@ pass 8). What the pieces do:
   assigning their outputs from the geometry (hardware.md, `HV_MAP`) cut the cathode tracks
   (`NCATH`) from 2444 mm and 73 vias to ≈ 1300 mm and ≈ 57-61 vias. Shrunk to 150 × 70 mm
   (logic block 10 mm forward, 2026-11-07): still 0 errors, 0 unconnected. GND pours then
-  extended to the whole board on both layers, except inside the tube lead rings: 0 errors, 0
-  unconnected.
+  extended to the whole board on both layers, except inside the tube lead rings, and stitched
+  with targeted vias (`targeted_stitch()`, `TARGET_R` 3 mm around SMD GND pads and signal vias)
+  plus `pcb_io.stitch()` (the dekatron board's 2.5 mm grid) after the first fill: ≈ 515 vias,
+  0 errors, 0 unconnected.
 
 ### Fab outputs
 

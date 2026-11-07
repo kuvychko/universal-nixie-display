@@ -24,6 +24,7 @@ BUILD = os.path.join(ROOT, "build")
 FREEROUTING = os.environ.get("FREEROUTING",
                              os.path.join(os.environ.get("LOCALAPPDATA", ""), "freerouting", "freerouting.exe"))
 KICAD_CLI = os.environ.get("KICAD_CLI", r"C:\Program Files\KiCad\10.0\bin\kicad-cli.exe")
+TARGET_R = 3.0               # mm: targeted GND stitching via within this of its pad or signal via
 CLEARANCE_MARGIN_UM = 20     # added to every DSN clearance: Freerouting rounding (2-3 um) and widening its neck-downs to 0.16 mm (25 left a net unrouted)
 
 
@@ -79,6 +80,64 @@ def import_ses(b, path):
     return n_tracks, n_vias
 
 
+def targeted_stitch(b, pcb_io):
+    """GND vias where the return current needs them: within TARGET_R of each SMD GND pad (bypass
+    caps, IC ground pins) and of each Default-class signal via (the return changes layer with the
+    signal; NCATH and NHV carry DC or slowly multiplexed current).
+    A target that already has a GND via within its radius is skipped. A candidate must sit with a
+    pcb_io.STITCH_RING circle inside both GND fills and pcb_io.STITCH_HOLE from every hole."""
+    import math
+    fills = {z.GetLayer(): z.GetFilledPolysList(z.GetLayer()) for z in b.Zones()
+             if not z.GetIsRuleArea() and z.GetNetname() == "GND"}
+    if len(fills) < 2:
+        return 0
+    keep_out = [z.Outline() for z in b.Zones() if z.GetIsRuleArea() and z.GetDoNotAllowVias()]
+    P = lambda x, y: pcbnew.VECTOR2I(pcbnew.FromMM(x), pcbnew.FromMM(y))  # noqa: E731
+    xy = lambda p: (pcbnew.ToMM(p.x), pcbnew.ToMM(p.y))  # noqa: E731
+    holes, gnd_vias, targets = [], [], []
+    ns = b.GetDesignSettings().m_NetSettings
+    for v in b.GetTracks():
+        if v.Type() == pcbnew.PCB_VIA_T:
+            holes.append(xy(v.GetPosition()))
+            if v.GetNetname() == "GND":
+                gnd_vias.append(xy(v.GetPosition()))
+            elif ns.GetEffectiveNetClass(v.GetNetname()).GetName() == "Default":   # not DC HV/cathodes
+                targets.append(xy(v.GetPosition()))
+    for fp in b.GetFootprints():
+        for pad in fp.Pads():
+            if pad.GetDrillSize().x > 0:
+                holes.append(xy(pad.GetPosition()))
+            elif pad.GetNetname() == "GND":
+                targets.insert(0, xy(pad.GetPosition()))
+    ring = [(pcb_io.STITCH_RING * math.cos(k * math.pi / 4), pcb_io.STITCH_RING * math.sin(k * math.pi / 4))
+            for k in range(8)] + [(0, 0)]
+    gnd = b.FindNet("GND")
+    n = 0
+    for tx, ty in targets:
+        if any(math.hypot(tx - gx, ty - gy) <= TARGET_R for gx, gy in gnd_vias):
+            continue
+        for r in (0.9, 1.2, 1.5, 2.0, 2.5, TARGET_R):
+            cand = [(tx + r * math.cos(k * math.pi / 8), ty + r * math.sin(k * math.pi / 8)) for k in range(16)]
+            ok = [(x, y) for x, y in cand
+                  if all(f.Contains(P(x + dx, y + dy)) for f in fills.values() for dx, dy in ring)
+                  and not any(k.Contains(P(x, y)) for k in keep_out)
+                  and all(math.hypot(x - hx, y - hy) >= pcb_io.STITCH_HOLE for hx, hy in holes)]
+            if ok:
+                x, y = ok[0]
+                v = pcbnew.PCB_VIA(b)
+                v.SetPosition(P(x, y))
+                v.SetWidth(pcbnew.FromMM(pcb_io.VIA_D))
+                v.SetDrill(pcbnew.FromMM(pcb_io.VIA_DRILL))
+                v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu)
+                v.SetNet(gnd)
+                b.Add(v)
+                holes.append((x, y))
+                gnd_vias.append((x, y))
+                n += 1
+                break
+    return n
+
+
 def save(b):
     pcbnew.SaveBoard(BOARD, b)
     raw = open(BOARD, "rb").read()
@@ -132,6 +191,17 @@ def main():
     for z in pours:
         b.Add(z)
     pcbnew.ZONE_FILLER(b).Fill(b.Zones())
+    # GND stitching (user, 2026-11-07: 2.5 mm grid plus strategic placement): first a via beside
+    # every SMD GND pad and every signal via, then pcb_io.stitch's 2.5 mm grid (as on the dekatron
+    # board, 0.7/0.35 mm vias) wherever both pours have solid copper; none in the lead rings
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    import pcb_io
+    nt = targeted_stitch(b, pcb_io)
+    ns = pcb_io.stitch(b, lambda x, y: pcbnew.VECTOR2I(pcbnew.FromMM(x + pcb_io.OX), pcbnew.FromMM(y + pcb_io.OY)))
+    print(f"{nt} targeted + {ns} grid GND stitching vias")
+    ns += nt
+    if ns:
+        pcbnew.ZONE_FILLER(b).Fill(b.Zones())
     save(b)
     rpt = drc()
     # pads whose second thermal spoke is blocked by a routed track (KiCad wants two): connect solid
