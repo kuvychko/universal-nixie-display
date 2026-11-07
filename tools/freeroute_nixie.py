@@ -12,6 +12,7 @@ The board file is rewritten in place; run tools/gen_nixie_pcb.py first for a cle
 Set FREEROUTING to the executable if it is not in the default per-user install location.
 """
 import os
+import re
 import subprocess
 import sys
 
@@ -23,7 +24,7 @@ BUILD = os.path.join(ROOT, "build")
 FREEROUTING = os.environ.get("FREEROUTING",
                              os.path.join(os.environ.get("LOCALAPPDATA", ""), "freerouting", "freerouting.exe"))
 KICAD_CLI = os.environ.get("KICAD_CLI", r"C:\Program Files\KiCad\10.0\bin\kicad-cli.exe")
-SOLID_GND = [("R310", "2")]   # starved thermal in the DRC of the 2026-11-06 routing
+CLEARANCE_MARGIN_UM = 10     # added to every DSN clearance: Freerouting's rounding left 2-3 um slivers
 
 
 def import_ses(b, path):
@@ -78,6 +79,19 @@ def import_ses(b, path):
     return n_tracks, n_vias
 
 
+def save(b):
+    pcbnew.SaveBoard(BOARD, b)
+    raw = open(BOARD, "rb").read()
+    open(BOARD, "wb").write(raw.replace(b"\r\n", b"\n"))
+
+
+def drc():
+    rpt = os.path.join(BUILD, "nixie_drc.rpt")
+    subprocess.run([KICAD_CLI, "pcb", "drc", "--severity-error", "--schematic-parity", "-o", rpt, BOARD],
+                   capture_output=True, check=False)
+    return rpt
+
+
 def main():
     passes = sys.argv[1] if len(sys.argv) > 1 else "40"
     os.makedirs(BUILD, exist_ok=True)
@@ -92,6 +106,14 @@ def main():
         b.Remove(z)
     if not pcbnew.ExportSpecctraDSN(b, dsn):
         raise SystemExit("DSN export failed")
+    txt = open(dsn, encoding="utf-8").read()
+    # (not on NHV: the IN-14's own pads are 1.156 mm apart, just above its 1.15 mm)
+    txt = re.sub(r"\(clearance (\d+)\)", lambda m: "(clearance %d)" % (
+        int(m.group(1)) + (CLEARANCE_MARGIN_UM if int(m.group(1)) < 1000 else 0)), txt)
+    # Freerouting spaces vias of every net class by the structure (Default) clearance; NCATH needs more
+    txt = txt.replace("(clearance 50 (type smd_smd))", "(clearance 50 (type smd_smd))\n      "
+                      "(clearance %d (type via_via))" % (250 + CLEARANCE_MARGIN_UM), 1)
+    open(dsn, "w", encoding="utf-8").write(txt)
     if os.path.exists(ses):
         os.remove(ses)
     with open(os.path.join(BUILD, "freerouting.log"), "w") as log:
@@ -107,18 +129,21 @@ def main():
     print(f"widened {len(narrow)} neck-down segments to 0.16 mm")
     for z in pours:
         b.Add(z)
-    # pads whose second thermal spoke is blocked by a routed track (KiCad wants two): connect solid
-    for ref, num in SOLID_GND:
-        for pad in b.FindFootprintByReference(ref).Pads():
-            if pad.GetNumber() == num:
-                pad.SetLocalZoneConnection(pcbnew.ZONE_CONNECTION_FULL)
     pcbnew.ZONE_FILLER(b).Fill(b.Zones())
-    pcbnew.SaveBoard(BOARD, b)
-    raw = open(BOARD, "rb").read()
-    open(BOARD, "wb").write(raw.replace(b"\r\n", b"\n"))
-    rpt = os.path.join(BUILD, "nixie_drc.rpt")
-    subprocess.run([KICAD_CLI, "pcb", "drc", "--severity-error", "--schematic-parity", "-o", rpt, BOARD],
-                   capture_output=True, check=False)
+    save(b)
+    rpt = drc()
+    # pads whose second thermal spoke is blocked by a routed track (KiCad wants two): connect solid
+    starved = re.findall(r"\[starved_thermal\].*\n.*\n.*\n.*pad (\S+) \[GND\] of (\S+)",
+                         open(rpt, encoding="utf-8").read(), re.IGNORECASE)
+    if starved:
+        for num, ref in starved:
+            for pad in b.FindFootprintByReference(ref).Pads():
+                if pad.GetNumber() == num:
+                    pad.SetLocalZoneConnection(pcbnew.ZONE_CONNECTION_FULL)
+        print("solid GND connection:", ", ".join(f"{r}.{n}" for n, r in starved))
+        pcbnew.ZONE_FILLER(b).Fill(b.Zones())
+        save(b)
+        rpt = drc()
     tail = [l for l in open(rpt, encoding="utf-8") if l.startswith("**")]
     print("".join(tail))
 

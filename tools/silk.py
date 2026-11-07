@@ -167,6 +167,8 @@ def main(path):
             ref.SetVisible(False)
             hidden.append(fp.GetReference())
     b.Save(path)
+    raw = open(path, "rb").read()                 # KiCad on Windows writes CRLF; the repo keeps LF
+    open(path, "wb").write(raw.replace(b"\r\n", b"\n"))
     print(f"{len(todo) - len(hidden)} references placed ({len(small)} reduced: {' '.join(sorted(small))})")
     print(f"hidden (no legal spot; still on Fab): {' '.join(sorted(hidden)) or 'none'}")
 

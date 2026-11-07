@@ -1101,6 +1101,10 @@ wired to it on harnesses (see [Encoder](#encoder) and [Time sources](#time-sourc
   proposal); tube height above the cover _open_.
 * **Outline:** compact, set after routing (user, 2026-11-06); first pass 150 × 80 mm. **Four M3
   holes at the corners** (user, 2026-11-06), as the dekatron board.
+* **Driver placement** (2026-11-06, from routing trials): each HV5622 sits between its two tubes,
+  centre 25 mm from the front edge, just behind the lead rings; each tube's 12k anode resistor
+  stands behind that tube (side A, clear of its courtyard). With the chips at 40 mm the cathode
+  tracks totalled ≈ 2.2-2.4 m; at 25 mm ≈ 1.3 m with fewer vias.
 
 **IN-14 data sheet** (`docs/datasheets/in-14/`, local copy, not redistributed; a 4-page scan
 compiled from several sources, no text layer):
@@ -1201,9 +1205,20 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
 * **Tube drivers: 3 × Microchip HV5622PG-G** (decision below), PQFP-44 10 × 10 mm, 0.8 mm pitch,
   no exposed pad; datasheet DS20005854A (`docs/datasheets/hv5622.pdf`):
   * 32 open-drain outputs each, **220 V** recommended maximum (230 V absolute), 100 mA sink;
-    off-state leakage ≤ 10 µA. Each chip drives two tubes: outputs 1-10 and 13-22 the digit
-    cathodes, 11-12 and 23-24 the decimal points, 25-32 spare (96 outputs, 72 used). Output order
-    may be permuted in layout; firmware owns the map.
+    off-state leakage ≤ 10 µA. Each chip drives two tubes (96 outputs, 72 used). Outputs are
+    assigned from the PCB geometry (2026-11-06, chips 25 mm from the front edge; `HV_MAP` in
+    `tools/gen_nixie_schematics.py`: tube pads sorted by angle from the chip centre, matched to the
+    best 24-pin window of the output arc), the
+    same on all three chips; firmware owns the map. "a" = the left tube of the chip's pair (U201:
+    tubes 1/2, U202: 3/4, U203: 5/6), "b" = the right one; HVOUT1-5 and 30-32 spare:
+
+    | HVOUT | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 |
+    |---|---|---|---|---|---|---|---|---|---|---|---|---|
+    | Drives | a LDP | a K1 | a K2 | a RDP | a K3 | a K4 | a K0 | a K5 | a K6 | a K9 | a K7 | a K8 |
+
+    | HVOUT | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 |
+    |---|---|---|---|---|---|---|---|---|---|---|---|---|
+    | Drives | b K3 | b K4 | b K2 | b K5 | b K6 | b K1 | b K7 | b K8 | b LDP | b K9 | b K0 | b RDP |
   * 32-bit shift register (data shifts on the falling `CLK` edge) and 32 latches: `LE` high loads
     the latches, so a whole 96-bit frame applies at once. Chain U201 → U202 → U203 by `DATA OUT`.
   * **Dark by default:** `BL` low with `POL` high turns every output off (Table 3-2). `POL` is tied

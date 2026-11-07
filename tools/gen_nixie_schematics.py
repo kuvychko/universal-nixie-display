@@ -313,22 +313,30 @@ TUBES_GLOBALS = {"NIX_HV", "+12V_LOGIC"} | {f"DRV12_{s}" for s in DRV}
 CHIPS = 3                                   # HV5622, two tubes each
 
 
-def tube_outputs(n):
-    """HV5622 outputs for one tube, in order: digit cathodes 0-9, then the decimal-point drives."""
-    return [f"T{n}_K{d}" for d in range(10)] + [f"T{n}_LDP_D", f"T{n}_RDP_D"]
+# HV5622 output -> (tube of the pair, signal), the same for all three chips (2026-11-06). Assigned
+# from the PCB geometry: the 24 tube pads sorted by angle as seen from the chip get a run of 24
+# adjacent outputs in the same order, the run with the least total distance (outputs follow the
+# package perimeter 35..44, 1..22). "a" = the pair's left tube, "b" = the right tube. Firmware owns
+# this map (bit n of a chip's 32 = HVOUTn; the chain is U201 -> U202 -> U203).
+HV_MAP = {29: ("b", "RDP_D"), 28: ("b", "K0"), 27: ("b", "K9"), 26: ("b", "LDP_D"), 25: ("b", "K8"),
+          24: ("b", "K7"), 23: ("b", "K1"), 22: ("b", "K6"), 21: ("b", "K5"), 20: ("b", "K2"),
+          19: ("b", "K4"), 18: ("b", "K3"), 17: ("a", "K8"), 16: ("a", "K7"), 15: ("a", "K9"),
+          14: ("a", "K6"), 13: ("a", "K5"), 12: ("a", "K0"), 11: ("a", "K4"), 10: ("a", "K3"),
+          9: ("a", "RDP_D"), 8: ("a", "K2"), 7: ("a", "K1"), 6: ("a", "LDP_D")}
+assert sorted(HV_MAP.values()) == sorted((t, s) for t in "ab" for s in [f"K{d}" for d in range(10)] + ["LDP_D", "RDP_D"])
 
 
 def build_tubes(lib) -> Sheet:
     sh = Sheet("tubes", "tubes.kicad_sch", U("file:tubes"), "A2", lib, f"/{ROOT_UUID}/{TUBES_UUID}",
                global_nets=TUBES_GLOBALS, title="Tubes: HV5622 drivers, IN-14s, resistors")
     note(sh, "TUBE DRIVERS: 3 x HV5622 (220 V open drain)", "Tube 1 at the left as seen by the viewer. Chain "
-         "U201 -> U202 -> U203, 96 bits latched whole (LE). Outputs 1-12 tube a, 13-24 tube b, 25-32 spare. "
-         "Output order may be swapped in layout (firmware owns the map)", 20.32, 22.86)
+         "U201 -> U202 -> U203, 96 bits latched whole (LE). Outputs assigned from the PCB geometry (HV_MAP in "
+         "tools/gen_nixie_schematics.py, table in docs/hardware.md); 1-5 and 30-32 spare. Firmware owns the map", 20.32, 22.86)
     for k in range(CHIPS):
         x0 = 20.32 + k * 190.5
         ta, tb = 2 * k + 1, 2 * k + 2
-        outs = tube_outputs(ta) + tube_outputs(tb) + ["NC"] * 8
-        nets = {HV5622_OUT[i + 1]: net for i, net in enumerate(outs)}
+        nets = {HV5622_OUT[o]: (f"T{ta if HV_MAP[o][0] == 'a' else tb}_{HV_MAP[o][1]}" if o in HV_MAP else "NC")
+                for o in range(1, 33)}
         nets.update({"30": "+12V_LOGIC", "29": "GND", "27": "+12V_LOGIC", "28": "DRV12_CLK", "31": "DRV12_LE",
                      "33": "DRV12_BL", "32": "DRV12_DATA" if k == 0 else f"DRV12_D{k}",
                      "23": f"DRV12_D{k + 1}" if k < CHIPS - 1 else "NC"})

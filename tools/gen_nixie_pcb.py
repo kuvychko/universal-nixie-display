@@ -41,6 +41,7 @@ W, H = 150.0, 80.0            # first pass; shrink after routing ("compact, deci
 TUBE_PITCH = 24.0             # 19 mm glass + 5 mm (user, 2026-11-06)
 TUBE_Y = 12.0                 # tube centre from the front edge: proposal (glass radius 9.5 + 2.5 mm)
 TUBE_X0 = 15.0                # first tube clear of the corner hole
+CHIP_Y = 25.0                 # HV5622 centre: between its two tubes, just behind the lead rings
 TUBE_ROT = 0                  # after Flip(): anode (pin 1) toward the back, front toward the front edge (checked by pad coordinates)
 
 DRU = """(version 1)
@@ -56,7 +57,7 @@ DRU = """(version 1)
 # Regions (x0, y0, x1, y1) in board mm, origin top-left, front edge at y = 0
 # --------------------------------------------------------------------------------------
 REG = {
-    "TUBE":  (0, 0, W, 31),            # anode and decimal-point resistors, between and behind tubes
+    "TUBE":  (0, 0, W, 40),            # decimal-point resistors, between and behind tubes
     "DRV":   (14, 29, W - 2, 50),      # HV5622 bypass
     "HVMON": (0, 24, 16, 62),          # HV module output, divider, clamp
     "PWR":   (0, 50, 40, H),           # 12 V switch
@@ -82,13 +83,14 @@ ANCHOR = {}
 for k in range(6):
     tx = TUBE_X0 + k * TUBE_PITCH
     ANCHOR[f"N{k + 1}"] = (tx, TUBE_Y, TUBE_ROT, "B")
-    # anode resistor behind its tube: pad 2 (anode) just right of the anode pad, pad 1 (NIX_HV) to the left
-    ANCHOR[f"R2{k + 1}0"] = (tx - 9.16, 24.0, 0, "F")
+    # anode resistor upright behind its tube (side A is free there: the glass is on side B): pad 2
+    # (anode) clear of the tube courtyard, pad 1 (NIX_HV) 10.16 mm further back
+    ANCHOR[f"R2{k + 1}0"] = (tx, CHIP_Y + 8.0, 90, "F")
 # HV5622 between its two tubes. Rotation 270: the bottom side (HVOUT1-11, tube a) faces left toward
 # tube a, the left side (HVOUT12-22, tube b) faces the tubes, the top (HVOUT23-24, tube b's points)
 # faces right toward tube b, the logic side faces the back.
 for k in range(3):
-    ANCHOR[f"U{201 + k}"] = (TUBE_X0 + TUBE_PITCH / 2 + 2 * k * TUBE_PITCH, 40.0, 270, "F")
+    ANCHOR[f"U{201 + k}"] = (TUBE_X0 + TUBE_PITCH / 2 + 2 * k * TUBE_PITCH, CHIP_Y, 270, "F")
 ANCHOR.update({
     "U301": (W - 12.5, 59.0, 270, "F"),    # RP2040-Zero, USB-C at the right edge
     "U302": (75.0, 58.0, 0, "F"),          # level shifter, middle: CLK / LE / BL bus to all three chips
@@ -102,7 +104,7 @@ ANCHOR.update({
     "J101": (110.0, H - 3.0, 0, "F"),       # NIX_LV
     # HV module output on the left edge, pads downward (rotation 270: +x -> +y)
     "J104": (3.0, 30.0, 270, "F"),
-    "R105": (12.0, 29.0, 270, "F"),          # HV divider top (DIN0411, 15.24 mm): NIX_HV pad at the top
+    "R105": (11.0, 36.0, 270, "F"),          # HV divider top (DIN0411, 15.24 mm): NIX_HV pad at the top
 })
 
 def tie_for(ref, x, y, rot, n):

@@ -163,9 +163,18 @@ pass 8). What the pieces do:
   for the export and filled afterwards); Freerouting's neck-downs under 0.16 mm are widened to
   0.16 mm, the board's DRC minimum (fab 0.1524 mm). Tie holes, mounting holes and a 0.6 mm edge
   band are keep-out rule areas, since board-only NPTH footprints do not reach the DSN.
+* Freerouting vs KiCad DRC: its rounding left 2-3 µm clearance slivers, so every DSN clearance
+  under 1 mm gets +10 µm (`CLEARANCE_MARGIN_UM`; not NHV, whose 1.15 mm is the IN-14's own pad gap);
+  it spaces vias of every class by the Default clearance, so the DSN gets a `via_via` rule at the
+  NCATH clearance. GND pads left with one thermal spoke (KiCad wants two) are read from the DRC
+  report and switched to a solid connection, then the zones are refilled.
+* `tools/route_stats.py <board>` prints track length per net class and layer, and via counts, to
+  compare placements. Freerouting results vary by a few percent between runs of the same input.
 * **First routing (2026-11-06):** 150 × 80 mm placement, all nets routed by Freerouting (0
   unrouted, 0 violations), KiCad DRC 0 errors and 0 unconnected pads with schematic parity, after
-  `silk.py` (C309, TP104, TP105 references hidden).
+  `silk.py` (C309, TP104, TP105 references hidden). Moving the HV5622s forward to 25 mm and
+  assigning their outputs from the geometry (hardware.md, `HV_MAP`) cut the cathode tracks
+  (`NCATH`) from 2444 mm and 73 vias to ≈ 1300 mm and ≈ 57-61 vias.
 
 ### Fab outputs
 
