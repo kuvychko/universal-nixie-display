@@ -55,6 +55,7 @@ FP_TANT_A = gs.FP_TANT_A
 FP_SOT23 = gs.FP_SOT23
 FP_TP = gs.FP_TP
 FP_AX0207 = gs.FP_AX0207
+FP_AX0411 = gs.FP_AX0411
 FP_WIRE1 = gs.FP_WIRE1
 FP_WIRE2 = gs.FP_WIRE2
 FP_WIRE4 = gs.FP_WIRE4
@@ -218,12 +219,12 @@ def build_power(lib) -> Sheet:
     sh.part(R, "R104", "47k", 114.3, 124.46, {"1": "NIX12_B", "2": "GND"}, footprint=FP_R,
             fields=F("Q102 base pull-down: switch off while the RP2040 is in reset (D7)"))
 
-    note(sh, "NIXIE HV MONITOR", "Divider to ADC0; ratio open until the module's maximum output is known. "
-         "BAT54S clamp and reservoir as the dekatron ADC inputs", 248.92, 22.86)
-    sh.part(R, "R105", OPEN, 269.24, 55.88, {"1": "NIX_HV", "2": "NIX_HV_SENSE"}, footprint=FP_AX0207,
-            fields=F("HV monitor divider, upper (HV-rated, leaded)"))
-    sh.part(R, "R106", OPEN, 269.24, 99.06, {"1": "NIX_HV_SENSE", "2": "GND"}, footprint=FP_R,
-            fields=F("HV monitor divider, lower"))
+    note(sh, "NIXIE HV MONITOR", "Divider to ADC0: 3.3 V at about 278 V. Also the bleeder (below 30 V in about "
+         "2-3 s, measured). BAT54S clamp and reservoir as the dekatron ADC inputs", 248.92, 22.86)
+    sh.part(R, "R105", "1M", 269.24, 55.88, {"1": "NIX_HV", "2": "NIX_HV_SENSE"}, footprint=FP_AX0411,
+            fields=F("HV monitor divider, upper; bleeder", "HHV-50FT-52-1M", rating="HHV-50: 0.5 W"))
+    sh.part(R, "R106", "12k", 269.24, 99.06, {"1": "NIX_HV_SENSE", "2": "GND"}, footprint=FP_R,
+            fields=F("HV monitor divider, lower", rating="1 %"))
     sh.part("Diode:BAT54S", "D101", "BAT54S", 302.26, 71.12, {"1": "GND", "2": "+3V3", "3": "NIX_HV_SENSE"},
             fields=F("NIX_HV_SENSE clamp to 3V3 / GND", "BAT54S", rating="30 V Schottky pair"))
     sh.part(C, "C103", "100nF", 330.2, 86.36, {"1": "NIX_HV_SENSE", "2": "GND"}, footprint=FP_C,
@@ -340,8 +341,8 @@ def build_tubes(lib) -> Sheet:
                 {"1": f"T{n}_ANODE", "2": f"T{n}_LDP_K", "13": f"T{n}_RDP_K", "12": f"T{n}_K0",
                  **{str(d + 2): f"T{n}_K{d}" for d in range(1, 10)}},
                 footprint=FP_IN14, fields=F(f"Tube {n}", "IN-14"))
-        sh.part(R, f"R{200 + 10 * n}", OPEN, x0 + 99.06, y0 + 50.8, {"1": "NIX_HV", "2": f"T{n}_ANODE"},
-                footprint=FP_AX0207, fields=F(f"Tube {n} anode resistor (value and rating open)"))
+        sh.part(R, f"R{200 + 10 * n}", "12k", x0 + 99.06, y0 + 50.8, {"1": "NIX_HV", "2": f"T{n}_ANODE"},
+                footprint=FP_AX0207, fields=F(f"Tube {n} anode resistor: (175 V - 145 V) / 2.5 mA, 75 mW", rating="1/4 W"))
         for j, dp in enumerate(("LDP", "RDP")):
             y = y0 + 144.78 + j * 33.02
             base = 200 + 10 * n + 1 + 3 * j

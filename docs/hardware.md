@@ -589,8 +589,8 @@ Estimates for sizing; each has its basis, and measurement replaces it in 1D.
 | **5 V total** | | **≈ 630 mA** | Buck rated **2 A** (> 3× margin, covers Wi-Fi bursts and estimate error) |
 | 5 V buck input | 12 V | 0.31 A | 630 mA × 5 V / 85 % |
 | HV converter | 12 V | 0.08 A | D3 at 75 % efficiency |
-| Purchased Nixie HV module | 12 V | 0.36 A | 20 mA × 170 V / 80 % assumed module efficiency; qualify in Phase 2 |
-| **12 V total** | | **≈ 0.75 A** | Adapter: **12 V, 2 A regulated**, 2.1 mm centre-positive (still protected against reversal) |
+| Purchased Nixie HV module | 12 V | 0.39 A | 18.6 mA (6 digits, 12 points) × 175 V / 70 % measured efficiency (calculated); 0.329 A measured at 175 V, 15.9 mA |
+| **12 V total** | | **≈ 0.78 A** | Adapter: **12 V, 2 A regulated**, 2.1 mm centre-positive (still protected against reversal) |
 
 5 V buck (nominal setpoint **4.9 V**, see D6): a 12 V → 5 V synchronous buck IC rated 2 A with ≥ 28 V input rating, chosen in 1B
 (e.g. TPS54202-class in SOT-23-6, which is easy to hand-solder). Its output feeds this board's
@@ -897,7 +897,8 @@ compensated, which makes that low-risk.
 ### Input protection results
 
 `input_protect.cir`: hot-plug of a live 12 V adapter through its lead, with the loads as
-constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W behind its PTC).
+constant-power sinks (5 V buck input 3.7 W, HV ≈ 1 W, Nixie HV module 4.5 W behind its PTC; the
+measured module now gives 4.65 W at the full 18.6 mA, not re-simulated).
 
 | Case | Rail peak | Inrush peak | Fuse I²t | Notes |
 |---|---|---|---|---|
@@ -1133,9 +1134,10 @@ passes it on to the module:
   there is no Nixie HV, so startup is dark whatever the K155ID1s do with undefined codes.
 * Soft turn-on (RC on the P-FET gate) to limit the module's input-capacitor inrush within the
   `NIX_12V` branch's resettable fuse.
-* Open until measured on the module in Phase 2: its input current at 12 V under load (the power
-  budget assumes 0.36 A), its inrush at power-up, and how fast its HV output decays after the
-  12 V is removed. Part choices and values _open_ until then.
+* Measured (2026-11-01, [log](../characterization/nixie/2026-11-01_hv_module.md)): 0.329 A at
+  175 V into 11 kΩ, 13 mA with 1 MΩ; with 12 V removed the output falls below 30 V in about 2-3 s
+  through 1 MΩ. Inrush (2026-11-06, same log): 7.3 A peak through a 1 Ω shunt, ≈ 1.2 ms; the FET
+  part and soft-start values stay _open_.
 * Also used to turn the Nixie HV off for WWVB reception windows (see [Time sources](#time-sources)).
 
 ### Nixie board electrical design (Phase 1A, draft 2026-10-26)
@@ -1147,8 +1149,8 @@ U106 on the dekatron board was the one part that was hard to hand-solder (user, 
   diode (U104, LM66100). The Nixie RP2040-Zero's USB therefore cannot back-feed the dekatron
   rail, and this board needs no second ideal diode. The D6 residual case (our rail feeding a
   host's VBUS) applies here as on the dekatron board.
-* **12 V switch** for the Nixie HV module: see above. FET part and soft-start RC _open_ until the
-  module's input current and inrush are measured.
+* **12 V switch** for the Nixie HV module: see above. FET part and soft-start RC _open_; input current
+  and inrush are now measured (above).
 * **Shift registers: 5 × 74HCT595** (SOIC-16) at 5 V, 40 bits: 24 BCD (4 per K155ID1) + 12
   decimal points (both per tube, user 2026-10-26) + 4 spare. HCT, not HC: its 2.0 V input
   threshold takes the RP2040's 3.3 V signals, and its outputs drive the K155ID1's TTL inputs. OE
@@ -1170,15 +1172,18 @@ U106 on the dekatron board was the one part that was hard to hand-solder (user, 
     to 500 h. Measure the off-cathode voltage with the module's real output in Phase 2 and add
     limiting if needed (_open_).
   * Body 238.16: 2.5 mm metric pitch; the 2.54 mm DIP-16 footprint takes it.
-* **Anode resistor per tube** from the module HV: R = (V_HV − 145 V) / I_tube (IN-14 typical
-  maintaining voltage 145 V, 2.5 mA). Value and rating _open_ until the module's output is
-  measured.
+* **HV setpoint 175 V, anode resistor 12 kΩ per tube** (user, 2026-11-01): R = (175 V − 145 V) /
+  2.5 mA (IN-14 typical maintaining voltage), about 75 mW, 1/4 W leaded part. 175 V is 5 V above
+  the IN-14's maximum ignition voltage (≤ 170 V): check strike on all six tubes, and the operating
+  point on a real tube, in Phase 2.
 * **Decimal points: 12 × MMBTA42** (300 V, SOT-23, as the dekatron guide drivers, D8), low side
   on each point's cathode, with a series resistor (data sheet ≤ 0.3 mA) and a base resistor and
   pull-down so a floating 595 output leaves the point off. Values _open_.
-* **HV monitor** (user, 2026-10-26): a divider from the module's HV output to an RP2040 ADC, with
-  an HV-rated top resistor. Reports whether the module is running and when its output has decayed
-  after switch-off. Ratio _open_ until the module's maximum output is known.
+* **HV monitor** (user, 2026-10-26; values user, 2026-11-01): 1 MΩ HHV-50 over 12 kΩ to an RP2040
+  ADC, ratio 84.3, so 3.3 V at about 278 V (above the 204 V measured; the trimmer's maximum is not
+  yet measured). Reports whether the module is running and when its output has decayed after
+  switch-off. The same 1 MΩ gave below 30 V in about 2-3 s on the bench, and draws about 31 mW at
+  175 V.
 * Main I2C pull-ups stay on the dekatron board (one pair for the bus).
 
 **RP2040-Zero pin assignment (proposed):**
@@ -1208,8 +1213,7 @@ core); routing with FreeRouting (Specctra DSN/SES) instead of the dekatron board
 
 **Schematic draft (2026-10-26):** `hardware/nixie/` (power, logic, tubes sheets), ERC clean.
 Values marked `_open_` in the schematics and `bom.csv`: Q101 (FET part), R101, R102, C102 (12 V
-switch and soft start), C101 (+5V bulk), R105/R106 (HV monitor divider), the six anode resistors
-(R210-R260), the twelve decimal-point series resistors, encoder pull-ups and debounce caps
+switch and soft start), C101 (+5V bulk), the twelve decimal-point series resistors, encoder pull-ups and debounce caps
 (R302-R304, C308-C310), ES100 pull resistors (R305-R308). Values carried over with their basis:
 10k / 47k base resistors (D8), 0.1 µF bypass and 10 µF module bulk (as the dekatron board),
 100 nF ADC reservoir and BAT54S clamp (as the dekatron ADC inputs), SR_OE pull-up 10k (above).

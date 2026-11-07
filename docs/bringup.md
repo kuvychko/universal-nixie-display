@@ -128,3 +128,6 @@ on the board itself, and raising RTN (D8) deepens it if needed.
 Purchased PSU at no load and ~15-20 mA, plus startup/blanking load steps: voltage,
 ripple/overshoot, audible noise, temperature. Then all digits and decimal points, default-dark
 startup, full-load stability.
+
+First module data, 2026-11-01: input current, efficiency and decay in the
+[bench log](../characterization/nixie/2026-11-01_hv_module.md). Inrush measured 2026-11-06 (same log); ripple and overshoot not yet measured.
