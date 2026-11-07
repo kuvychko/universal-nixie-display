@@ -1096,7 +1096,11 @@ wired to it on harnesses (see [Encoder](#encoder) and [Time sources](#time-sourc
 * The top cover sits over side B, with holes for the tubes and the mounting holes for the A101
   socket housing (`enclosure/dekatron-bench-test/`).
 * **Custom IN-14 footprint**, placed on B.Cu by flipping the footprint, not by mirroring the
-  pinout. Row pitch, distance to the edge and tube height above the cover _open_.
+  pinout. **Equal row pitch 24 mm** (19 mm glass + 5 mm between envelopes; user, 2026-11-06: a
+  universal display, so no HH MM SS grouping). Tube centres 12 mm from the front edge (layout
+  proposal); tube height above the cover _open_.
+* **Outline:** compact, set after routing (user, 2026-11-06); first pass 150 × 80 mm. **Four M3
+  holes at the corners** (user, 2026-11-06), as the dekatron board.
 
 **IN-14 data sheet** (`docs/datasheets/in-14/`, local copy, not redistributed; a 4-page scan
 compiled from several sources, no text layer):
@@ -1219,8 +1223,8 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
     An off cathode cannot rise above the HV rail, so 220 V outputs remove the K155ID1's off-state
     concern below.
   * Adjacent output pins are 0.8 mm apart and can differ by up to the HV rail when one cathode is
-    lit and its neighbour off; the part is rated for it. Layout: fan the cathode traces out to the
-    `NCATH` clearance straight from the pads (D13-style rules, values _open_).
+    lit and its neighbour off; the part is rated for it. Layout: fan the cathode traces straight out
+    of the pads; `NCATH` clearance 0.25 mm (Clearance rules below).
 * **Level shifter: TI CD40109B** (U302, datasheet SCHS099B): four non-inverting low-to-high
   shifters, VCC and VDD 3-18 V each, no supply-sequencing restriction. VCC = 3V3, VDD = the 12 V
   logic rail, enables tied to 3V3. `DRV_DATA` / `DRV_CLK` / `DRV_LE` / `DRV_BL` from the RP2040
@@ -1266,15 +1270,19 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
   HV5622's t_ON ≤ 500 ns are small against a 50 µs period. The RP2040 runs the PWM; the ESP32 only
   sends a brightness level (ESP32 owns what is shown, RP2040 owns timing). Frequency and minimum
   duty _open_, set at bring-up: the purchased HV module sees a pulsed load at that frequency.
-* **HV output fuse F101** (user, 2026-11-06), after the reference design's 40 mA fast fuse on its
-  HV output. Between the module output (`NIX_HV_MOD`, J104) and the tubes' `NIX_HV`; it covers a
-  short on the HV net before the anode resistors, which the 12 V PTC sees only as the module's
-  input current. The HV monitor divider R105 / R106 stays on the module side, so it still bleeds
-  the module's output capacitor after the fuse opens and the 200 V cut-off sees the module's own
-  voltage. Voltage rating ≥ 300 V DC (D13's 1.5× rule on the 200 V cut-off); **DC rating must be
-  stated by the maker** (many small fuses are rated AC only). **40 mA fast-acting, starting
-  value** (user, 2026-11-06, as the reference) against a load of ≈ 15 mA (6 × 2.5 mA) plus decimal
-  points and R105. Part and footprint _open_ (TR5-style radial placeholder).
+* **No HV output fuse** (user, 2026-11-06). Considered after the reference design's 40 mA fuse,
+  then dropped: no fuse at 40-100 mA with a maker's DC rating ≥ 300 V was found (small radial and
+  SMD fuses are rated 250 V AC or ≤ 125 V DC; telecom PTCs carry ≈ 60 V DC continuous). Protection
+  stays the 12 V-side PTC, the 200 V firmware cut-off and the per-tube anode resistors.
+* **Clearance rules** (user, 2026-11-06): each class gets the smallest copper gap already inside
+  the parts it lands on, since a wider rule cannot make the board safer than its own parts.
+  `NCATH` (cathodes, decimal-point drives) **0.25 mm**: HV5622 PQFP-44 pads, 0.8 mm pitch − 0.55 mm
+  pad (KiCad `Microchip_PQFP-44_10x10mm_P0.8mm`). `NHV` (`NIX_HV`, anodes) **1.15 mm**: the IN-14
+  footprint's square 1.4 mm anode pad to the round decimal-point pads beside it, 1.156 mm by KiCad
+  DRC (1.4 mm pads on the 11 mm lead circle), rounded down so the part passes its own DRC; it follows the IN-14 pad size, still to be checked against
+  the spacers. Between classes KiCad applies the larger value. Set in `nixie.kicad_pro`; plain
+  net-class clearances, so Freerouting reads them directly. Below the IPC-2221B B2 figure for
+  151-300 V (1.25 mm, D13) for cathodes, as on the reference design (0.15-0.2 mm).
 * **HV monitor** (user, 2026-10-26; values user, 2026-11-01): 1 MΩ HHV-50 over 12 kΩ to an RP2040
   ADC, ratio 84.3, so 3.3 V at about 278 V (above the 204 V measured; the trimmer's maximum will
   not be measured, see HV limit). Also the input of the firmware overvoltage cut-off. Reports whether the module is running and when its output has decayed after
@@ -1338,9 +1346,9 @@ disagree, the datasheet wins.
 | LE handling | (firmware not written) | LE idle high (latches transparent), low while shifting, high to commit | **Firmware note:** LE high = transparent, LE low = hold (Table 3-2). Prefer LE idle low with a pulse after each frame, so a register that is still shifting never shows |
 | Start-up | BL held low by hardware | BL driven high before the first frame is shifted | **Firmware note:** shift a blank frame and latch it before releasing BL |
 | **Dimming** | Not planned before this check | **PWM on BL**, 20 kHz, duty 40-255 of 255 | **Adopted** (user, 2026-11-06): see Dimming above |
-| HV output fusing | PTC on the module's 12 V input only | 40 mA fast fuse in series with the HV output | **Adopted** (user, 2026-11-06): F101, see above |
+| HV output fusing | PTC on the module's 12 V input only | 40 mA fast fuse in series with the HV output | **Not adopted** (user, 2026-11-06): no fuse with a ≥ 300 V DC rating at this current; see No HV output fuse |
 | HV setpoint | Trimmer set to 175 V and fixed | Own PSU: trimmer, or a fixed resistor for a fixed voltage | **Kept the trimmer**, glued (user, 2026-11-06) |
-| Cathode clearance | `NCATH` rule _open_ | Board defaults: 0.2 mm (driver) and 0.15 mm (display); cathode tracks 0.41 mm (driver) and 0.64 mm (display); HV tracks 1.0-1.5 mm | **Data point only.** The HV5622's own pins are 0.8 mm apart and cannot meet a 1.25 mm rule; fan out from the pads and widen the clearance once clear of the package. Value still _open_ |
+| Cathode clearance | `NCATH` rule _open_ | Board defaults: 0.2 mm (driver) and 0.15 mm (display); cathode tracks 0.41 mm (driver) and 0.64 mm (display); HV tracks 1.0-1.5 mm | Ours: `NCATH` 0.25 mm, `NHV` 1.15 mm, from the parts' own gaps (Clearance rules above) |
 
 ### Time sources
 

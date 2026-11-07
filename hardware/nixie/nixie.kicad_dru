@@ -1,0 +1,7 @@
+(version 1)
+# Net-class clearances live in nixie.kicad_pro (NCATH 0.25 mm, NHV 1.15 mm, Default 0.2 mm; KiCad
+# applies the larger value between two classes). Only fab minima here.
+(rule "Fab minimum (PCBWay standard, ordered at 6/6 mil)"
+  (constraint track_width (min 0.1524mm))
+  (constraint hole_size (min 0.2mm))
+  (constraint annular_width (min 0.15mm)))

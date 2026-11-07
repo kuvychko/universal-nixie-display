@@ -62,7 +62,6 @@ FP_WIRE6 = gs.FP_WIRE6
 FP_SOP16_NS = "Package_SO:SO-16_5.3x10.2mm_P1.27mm"   # TI NS0016A SOP: 5.2-5.4 mm body, 7.4-8.2 mm span
 FP_PQFP44 = "Package_QFP:Microchip_PQFP-44_10x10mm_P0.8mm"   # HV5622PG-G, 10 x 10 mm body, no exposed pad
 FP_SOD123 = gs.FP_SOD123
-FP_FUSE_TR5 = "Fuse:Fuse_Littelfuse_395Series"   # TR5-style radial (placeholder until the part is chosen)
 FP_IN14 = "nixie:IN-14"
 FP_ZERO = "nixie:RP2040-Zero_Castellated"
 
@@ -178,12 +177,12 @@ def build_power(lib) -> Sheet:
             footprint=FP_WIRE2, fields=F("12 V from the dekatron board's NIX_12V (J102, behind its PTC)"))
     sh.part("Connector_Generic:Conn_01x02", "J103", "12V_MODULE", 45.72, 114.3, {"1": "+12V_SW", "2": "GND"},
             footprint=FP_WIRE2, fields=F("Switched 12 V to the Nixie HV module input"))
-    sh.part("Connector_Generic:Conn_01x02", "J104", "HV_MODULE", 45.72, 134.62, {"1": "NIX_HV_MOD", "2": "GND"},
+    sh.part("Connector_Generic:Conn_01x02", "J104", "HV_MODULE", 45.72, 134.62, {"1": "NIX_HV", "2": "GND"},
             footprint=FP_WIRE2, fields=F("Nixie HV module output (~170 V) and its return"))
     sh.flag("+5V", 25.4, 160.02)
     sh.flag("GND", 35.56, 160.02)
     sh.flag("+12V_IN", 45.72, 160.02)
-    sh.flag("NIX_HV_MOD", 55.88, 160.02)
+    sh.flag("NIX_HV", 55.88, 160.02)
     sh.part(CP, "C101", OPEN, 76.2, 63.5, {"1": "+5V", "2": "GND"}, footprint=FP_TANT_A,
             fields=F("+5V bulk at the harness landing (value open)"))
 
@@ -208,12 +207,7 @@ def build_power(lib) -> Sheet:
 
     note(sh, "NIXIE HV MONITOR", "Divider to ADC0: 3.3 V at about 278 V. Also the bleeder (below 30 V in about "
          "2-3 s, measured). BAT54S clamp and reservoir as the dekatron ADC inputs", 248.92, 22.86)
-    note(sh, "NIXIE HV FUSE", "Between the module output and the tubes (as the axtar Nixie-Calculator HV PSU, "
-         "40 mA fast). Divider / bleeder stays on the module side", 160.02, 177.8)
-    sh.part("Device:Fuse", "F101", "40mA F", 177.8, 205.74, {"1": "NIX_HV_MOD", "2": "NIX_HV"}, footprint=FP_FUSE_TR5,
-            fields=F("Nixie HV output fuse: short on NIX_HV before the anode resistors. Rating >= 300 V DC, "
-                     "40 mA fast starting value (as the reference); part open"))
-    sh.part(R, "R105", "1M", 269.24, 55.88, {"1": "NIX_HV_MOD", "2": "NIX_HV_SENSE"}, footprint=FP_AX0411,
+    sh.part(R, "R105", "1M", 269.24, 55.88, {"1": "NIX_HV", "2": "NIX_HV_SENSE"}, footprint=FP_AX0411,
             fields=F("HV monitor divider, upper; bleeder", "HHV-50FT-52-1M", rating="HHV-50: 0.5 W"))
     sh.part(R, "R106", "12k", 269.24, 99.06, {"1": "NIX_HV_SENSE", "2": "GND"}, footprint=FP_R,
             fields=F("HV monitor divider, lower", rating="1 %"))
@@ -223,7 +217,7 @@ def build_power(lib) -> Sheet:
             fields=F("NIX_HV_SENSE ADC sampling reservoir (as the dekatron ADC inputs)", rating="25 V X7R"))
 
     note(sh, "TEST PADS", "Supplies and the switched 12 V", 218.44, 132.08)
-    for i, net in enumerate(("+12V_IN", "+12V_SW", "NIX_HV", "+5V", "GND", "NIX_HV_MOD")):
+    for i, net in enumerate(("+12V_IN", "+12V_SW", "NIX_HV", "+5V", "GND")):
         tp(sh, f"TP{101 + i}", net, 223.52 + i * 17.78, 152.4)
     return sh
 
@@ -377,8 +371,8 @@ def build_root(lib) -> Sheet:
 
 
 def project_json() -> str:
-    def nc(name):
-        return {"name": name, "clearance": 0.2, "track_width": 0.3, "via_diameter": 0.8, "via_drill": 0.4,
+    def nc(name, clearance):
+        return {"name": name, "clearance": clearance, "track_width": 0.3, "via_diameter": 0.8, "via_drill": 0.4,
                 "priority": 0, "bus_width": 12, "line_style": 0, "wire_width": 6}
     pro = {
         "board": {"design_settings": {"defaults": {}, "rule_severities": {}}, "layer_presets": [], "viewports": []},
@@ -386,16 +380,19 @@ def project_json() -> str:
         "cvpcb": {"equivalence_files": []},
         "libraries": {"pinned_footprint_libs": [], "pinned_symbol_libs": []},
         "meta": {"filename": f"{PROJECT}.kicad_pro", "version": 3},
-        # Nixie HV classes; clearances open (placeholders), set before layout
+        # Nixie HV classes (user, 2026-11-06): clearance = the smallest copper gap already inside the
+        # parts each class lands on. NCATH: HV5622 PQFP-44 pads, 0.8 mm pitch - 0.55 mm pad = 0.25 mm.
+        # NHV: IN-14 footprint, square 1.4 mm anode pad to the round 1.4 mm decimal-point pads beside
+        # it on the 11 mm lead circle = 1.156 mm (KiCad DRC), rounded down so the part passes its own
+        # DRC. Follows the IN-14 pad size.
         "net_settings": {
             "classes": [
                 {"name": "Default", "clearance": 0.2, "track_width": 0.25, "via_diameter": 0.6, "via_drill": 0.3,
                  "priority": 2147483647, "bus_width": 12, "line_style": 0, "wire_width": 6},
-                nc("NHV"), nc("NCATH")],
+                nc("NHV", 1.15), nc("NCATH", 0.25)],
             "meta": {"version": 4}, "net_colors": None, "netclass_assignments": None,
             "netclass_patterns": [
                 {"netclass": "NHV", "pattern": "NIX_HV"},
-                {"netclass": "NHV", "pattern": "NIX_HV_MOD"},
                 {"netclass": "NHV", "pattern": "*_ANODE"},
                 {"netclass": "NCATH", "pattern": "*T?_K?"},
                 {"netclass": "NCATH", "pattern": "*DP_K"},

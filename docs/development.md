@@ -140,6 +140,33 @@ pass 8). What the pieces do:
   Mounting-hole references are hidden; on this board C108, C303, L101 and R214 have no legal
   spot and are labelled on the Fab layer only.
 
+### Nixie PCB: placement and Freerouting
+
+```sh
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/gen_nixie_pcb.py         # place, write nixie.kicad_pcb + .kicad_dru
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/freeroute_nixie.py 40    # DSN -> Freerouting -> SES, zone fill, DRC
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/silk.py hardware/nixie/nixie.kicad_pcb
+```
+
+* `gen_nixie_pcb.py` follows `gen_pcb.py`: anchors for the tubes (B.Cu, flipped), anode
+  resistors, HV5622s and their bypass caps, the RP2040-Zero, the HV module landing and the harness
+  pads; the constructive placer for the rest.
+* `freeroute_nixie.py` drives **Freerouting 2.5.0** headless (user install in
+  `%LOCALAPPDATA%/freerouting`, own Java runtime; set `FREEROUTING` elsewhere). Clearances come from
+  the net classes in `nixie.kicad_pro`, which the DSN export carries; no custom DRC rules are needed
+  for routing (the Nixie classes are plain clearances, hardware.md "Clearance rules"). Logs and
+  intermediate files go to `build/` (ignored).
+* KiCad 10.0.5 quirks handled in the scripts: `pcbnew.SaveBoard()` rewrites `nixie.kicad_pro` from
+  the board's own net settings, so `gen_nixie_pcb.py` sets the net classes on the board
+  (`NETCLASSES`); `pcbnew.ImportSpecctraSES()` returns False on Freerouting 2.5.0 sessions, so
+  `freeroute_nixie.py` reads the session itself. GND is routed as tracks (the pours are removed
+  for the export and filled afterwards); Freerouting's neck-downs under 0.16 mm are widened to
+  0.16 mm, the board's DRC minimum (fab 0.1524 mm). Tie holes, mounting holes and a 0.6 mm edge
+  band are keep-out rule areas, since board-only NPTH footprints do not reach the DSN.
+* **First routing (2026-11-06):** 150 × 80 mm placement, all nets routed by Freerouting (0
+  unrouted, 0 violations), KiCad DRC 0 errors and 0 unconnected pads with schematic parity, after
+  `silk.py` (C309, TP104, TP105 references hidden).
+
 ### Fab outputs
 
 PCBWay Gerbers (plain RS-274X, `--no-x2`) and separate plated / unplated drill files into
