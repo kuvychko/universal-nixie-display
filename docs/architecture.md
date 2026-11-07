@@ -9,7 +9,7 @@ Power distribution, board boundaries and ownership. Derived from
 |---|---|---|---|---|
 | 1 | ESP32-2432S028R display board ("CYD", 2.8" ILI9341, landscape) | Purchased, existing (same as nanovolt-divider) | ESP32 | UI and protocol against simulated controller status |
 | 2 | Dekatron controller/PSU | Custom PCB (first deliverable) | RP2040-Zero daughterboard | USB console and built-in diagnostics, no ESP32 or Nixies |
-| 3 | Nixie controller/mount, with the front-panel rotary encoder and the Nixie HV module's 12 V switch | Custom PCB | RP2040-Zero daughterboard, 74HC595 chain for the tube lines | Local diagnostic sequence or USB console with purchased HV module |
+| 3 | Nixie controller/mount, with the front-panel rotary encoder and the Nixie HV module's 12 V switch | Custom PCB | RP2040-Zero daughterboard, 3 × HV5622 high-voltage shift registers for the tube lines | Local diagnostic sequence or USB console with purchased HV module |
 | 3a | Optional time modules: DS3231 RTC (ZS-042) and ES100 WWVB receiver | Purchased modules, harnesses soldered to the Nixie board | — | The display runs without them |
 | 4 | Nixie HV module | Purchased | — | Dummy-load characterization |
 
@@ -22,7 +22,7 @@ Exact board revisions are recorded in [hardware.md](hardware.md#board-revisions)
 | 12 V | External isolated adapter | Nixie HV module, dekatron board | Input protection and switch: open (hardware.md) |
 | ~450 V nominal | Dekatron board HV converter | A101 anode/bias network, bleeder | Topology open: direct boost, boost + multiplier, or flyback |
 | ~170-180 V | Purchased Nixie module | IN-14 anodes, DP switches | Qualified in Phase 2 |
-| 5 V | Buck on dekatron board | ESP32 display, K155ID1s, RP2040s | Capacity set by the power budget; optional output connector |
+| 5 V | Buck on dekatron board | ESP32 display, RP2040s | Capacity set by the power budget; optional output connector |
 | 3.3 V | Local regulators | Logic, I2C | Per module |
 
 USB-C on the display board carries host data/programming. USB alone need not light the tubes.

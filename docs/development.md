@@ -56,7 +56,7 @@ unused LM66100 ST pins tied to GND as their datasheet asks (U102-U104, 2026-10-0
 ### Nixie board generator
 
 `tools/gen_nixie_schematics.py` writes `hardware/nixie/` (power, logic and tubes sheets, project
-symbols K155ID1 / IN-14 / RP2040-Zero / Q_PMOS_GSD, the RP2040-Zero footprint, `bom.csv`). It
+symbols HV5622 / IN-14 / RP2040-Zero, the RP2040-Zero footprint, `bom.csv`). It
 imports the dekatron generator's core and points its project globals at the Nixie project. The
 sheets use the label-stub style (`Sheet.part`); values not yet sourced are written `_open_`.
 `hardware/nixie/lib/nixie.pretty/IN-14.kicad_mod` is maintained by hand.

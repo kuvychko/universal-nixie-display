@@ -584,13 +584,13 @@ Estimates for sizing; each has its basis, and measurement replaces it in 1D.
 | ESP32 display board | 5 V | 350 mA | ~115 mA measured with backlight at 100 % (mischianti.org CYD page); ESP32 Wi-Fi transmit adds up to ~240 mA if Wi-Fi is enabled. **Measure on the actual board** |
 | RP2040-Zero, dekatron board | 5 V | 50 mA | RP2040 plus its on-board WS2812 LED, which firmware keeps dim or off |
 | RP2040-Zero, Nixie board | 5 V | 50 mA | Same |
-| K155ID1 × 6 | 5 V | 150 mA | ≤ 25 mA each as SN74141 equivalent; **confirm K155ID1 data** |
-| Nixie board expanders, dekatron logic | 5 V | 30 mA | Allowance |
-| **5 V total** | | **≈ 630 mA** | Buck rated **2 A** (> 3× margin, covers Wi-Fi bursts and estimate error) |
-| 5 V buck input | 12 V | 0.31 A | 630 mA × 5 V / 85 % |
+| Nixie board logic, dekatron logic | 5 V | 30 mA | Allowance |
+| **5 V total** | | **≈ 480 mA** | Buck rated **2 A** (> 4× margin, covers Wi-Fi bursts and estimate error). Was 630 mA with six K155ID1s (150 mA), dropped 2026-11-06 |
+| 5 V buck input | 12 V | 0.24 A | 480 mA × 5 V / 85 % |
+| Nixie board HV5622 × 3, CD40109B | 12 V | < 1 mA | 100 µA quiescent each (datasheet); up to 15 mA each only while clocking at 8 MHz |
 | HV converter | 12 V | 0.08 A | D3 at 75 % efficiency |
 | Purchased Nixie HV module | 12 V | 0.39 A | 18.6 mA (6 digits, 12 points) × 175 V / 70 % measured efficiency (calculated); 0.329 A measured at 175 V, 15.9 mA |
-| **12 V total** | | **≈ 0.78 A** | Adapter: **12 V, 2 A regulated**, 2.1 mm centre-positive (still protected against reversal) |
+| **12 V total** | | **≈ 0.71 A** | Adapter: **12 V, 2 A regulated**, 2.1 mm centre-positive (still protected against reversal) |
 
 5 V buck (nominal setpoint **4.9 V**, see D6): a 12 V → 5 V synchronous buck IC rated 2 A with ≥ 28 V input rating, chosen in 1B
 (e.g. TPS54202-class in SOT-23-6, which is easy to hand-solder). Its output feeds this board's
@@ -636,7 +636,7 @@ entries, see `docs/development.md`). How it behaves per feed:
 **Residual case (accepted, mitigated):** the Zero's VBUS and VSYS are one net, so no diode on our
 side can stop *our* rail from feeding a host whose VBUS is lower than ours while both are
 connected. Mitigation: set the 5 V rail to **4.9 V nominal**, inside the K155ID1 supply range
-(4.75-5.25 V) and below a typical host VBUS (5.0-5.1 V), so the host normally wins and our ideal
+(4.75-5.25 V; the K155ID1s were dropped 2026-11-06, the setpoint stays) and below a typical host VBUS (5.0-5.1 V), so the host normally wins and our ideal
 diode blocks. Verify in 1D by measuring current in the `5V_MCU` feed with the Zero's USB attached.
 
 **No isolator required.** The instrument must be safe and correct with a plain USB cable to the
@@ -1061,20 +1061,28 @@ review of failure modes and the bring-up procedure.
 
 ## Nixie controller/mount
 
-Phase 2. Six IN-14 tubes, six K155ID1, current limiting, separate HV switches for decimal points,
-blanking. Static drive preferred. Six BCD decoders need 24 signals plus DP and blanking, more than
+Phase 2. Six IN-14 tubes, current limiting, decimal points, blanking (plan §4 named six K155ID1s;
+replaced by three HV5622s, decision below). Static drive preferred. Six BCD decoders need 24 signals plus DP and blanking, more than
 an RP2040-Zero exposes comfortably.
 
-**Decision (user, 2026-10-26): RP2040-Zero + a 74HC595 chain.** An expander-only board (no MCU)
+**Decision (user, 2026-10-26): RP2040-Zero + shift registers.** An expander-only board (no MCU)
 was considered and dropped: the encoder would lose detents when polled over I2C, and frames could
 not be applied atomically. The RP2040 keeps the encoder (see [Encoder](#encoder)) and drives the
-BCD and decimal-point lines through the shift registers; their latch applies a whole frame at once
-and their OE gives a global blank. Open: register count, OE pull-up (dark while the RP2040 is in
-reset), and whether every K155ID1 blanks on an out-of-range code or anode blanking is needed for
-blanking in operation (plan §4).
+tube lines through latched shift registers, so a whole frame applies at once.
 
-**Board scope (user, 2026-10-26):** the RP2040-Zero, the 74HC595 chain, the K155ID1s, the six
-IN-14s (soldered to the back side of the board with their spacers), the encoder interface and the
+**Decision (user, 2026-11-06): 3 × HV5622 instead of 6 × K155ID1 + 5 × 74HCT595 + 12 decimal-point
+transistors.** The HV5622 is a 32-channel shift register with latches and 220 V open-drain
+outputs: it drives every digit cathode and decimal point directly. Reasons: the K155ID1's off
+outputs must stay ≤ 55 V (unmeasured with this module, and fixing it means a resistor or zener
+network on every cathode); the user's K155ID1s are old and untested; fewer parts (BOM 129 → 85
+parts) and a smaller logic area. Cost: three chips at about $7-8.30 each (third-party snapshots
+of Mouser listings, 2026-11-06; the user confirmed HV5622PG-G in stock at Mouser the same day), a 12 V logic supply and a
+level shifter. Package: PQFP-44 at 0.8 mm pitch (HV5622PG-G), chosen by the user over the PLCC
+(HV5622PJ-G). The HV5122 / HV5222 (same family, no latches, and an active-low "all on" strobe
+input) were rejected. Global blanking: the HV5622's `BL`.
+
+**Board scope (user, 2026-10-26; drivers changed 2026-11-06):** the RP2040-Zero, the three HV5622
+tube drivers and their level shifter, the six IN-14s (soldered to the back side of the board with their spacers), the encoder interface and the
 Nixie HV module's 12 V switch. The encoder (on the front panel), the RTC and the WWVB receiver are
 wired to it on harnesses (see [Encoder](#encoder) and [Time sources](#time-sources)).
 
@@ -1130,10 +1138,10 @@ passes it on to the module:
 
 * High side: a P-channel MOSFET in the +12 V line, its gate driven from a Nixie RP2040 GPIO
   through an NPN or N-MOSFET level shifter. The module's ground is not switched: it is the HV
-  return the tubes and K155ID1s share.
+  return the tubes and HV5622s share.
 * **Off by default:** a gate pull-up to 12 V holds the P-FET off, and a pull-down on the driver's
   input keeps it off while the RP2040 is in reset or being flashed. With the module unpowered
-  there is no Nixie HV, so startup is dark whatever the K155ID1s do with undefined codes.
+  there is no Nixie HV, so startup is dark whatever the drivers' latches hold.
 * Soft turn-on (RC on the P-FET gate) to limit the module's input-capacitor inrush within the
   `NIX_12V` branch's resettable fuse.
 * **Values (simulation, 2026-11-06):** Q101 **Infineon IPD50P04P4L-11** (DPAK, as the dekatron
@@ -1175,10 +1183,10 @@ passes it on to the module:
 
 ### Nixie board electrical design (Phase 1A, draft 2026-10-26)
 
-Packages: SOIC, SOT-23, SC-70, DIP and 0805/1206 only. No exposed-pad or fine-pitch HTSSOP parts:
-U106 on the dekatron board was the one part that was hard to hand-solder (user, 2026-10-26).
-Exception: Q101 in DPAK (2026-11-06), the same package and part as the dekatron board's Q101, for
-its thermal mass in the soft start.
+Packages: leaded parts only, no exposed pads at ≤ 0.65 mm pitch: U106 on the dekatron board (LM5156,
+0.65 mm HTSSOP with exposed pad) was the one part that was hard to hand-solder (user, 2026-10-26).
+Leaded 0.65-0.8 mm parts are fine (user, 2026-11-06: 0.65 mm went well on the dekatron board).
+Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft start.
 
 * **5 V** arrives on `NIX_LV` from the dekatron board, which already feeds it through an ideal
   diode (U104, LM66100). The Nixie RP2040-Zero's USB therefore cannot back-feed the dekatron
@@ -1186,37 +1194,76 @@ its thermal mass in the soft start.
   host's VBUS) applies here as on the dekatron board.
 * **12 V switch** for the Nixie HV module: see above. IPD50P04P4L-11, 47k / 47k / 3.3 µF from
   simulation of the measured module.
-* **Shift registers: 5 × 74HCT595** (SOIC-16) at 5 V, 40 bits: 24 BCD (4 per K155ID1) + 12
-  decimal points (both per tube, user 2026-10-26) + 4 spare. HCT, not HC: its 2.0 V input
-  threshold takes the RP2040's 3.3 V signals, and its outputs drive the K155ID1's TTL inputs. OE
-  pulled up to 3V3 (10k: it must win against the RP2040's reset pull-down, D7) so the outputs are
-  off while the RP2040 is in reset; the latch applies a whole frame.
-* **6 × K155ID1** (DIP-16), one per tube. From the chipdip data sheet
-  (`docs/datasheets/k155id1/`, local copy; SN74141 equivalent):
-  * Pins: inputs X1 (weight 1) 3, X2 6, X3 7, X4 4; +5 V pin 5, GND pin 12; outputs 0-16, 1-15,
-    2-8, 3-9, 4-13, 5-14, 6-11, 7-10, 8-1, 9-2 (the text list repeats "V5" at pin 11, a typo:
-    the symbol shows 6).
-  * **Codes 10-15 are not displayed** (no output on). So with OE high the inputs float to TTL
-    high, code 15, and the tube is dark: this settles the blanking question in the data sheet's
-    terms; check on the user's chips at bring-up. Startup is dark regardless (12 V switch off).
-  * Supply 5 V ± 5 % (4.9 V nominal rail, D6), ≤ 25 mA each; input low current −1.6 mA (pin 3),
-    −3.2 mA (pins 4, 6, 7), within a 74HCT595 output.
-  * Off-state output ≤ 60 V (abs max). The data sheet's application note: to avoid ghost
-    digits the off outputs should stay ≤ 55 V, limited by external resistors / zeners or a
-    resistor-biased diode matrix; running the internal clamp zeners above 60 V cuts the IC's life
-    to 500 h. Measure the off-cathode voltage with the module's real output in Phase 2 and add
-    limiting if needed (_open_).
-  * Body 238.16: 2.5 mm metric pitch; the 2.54 mm DIP-16 footprint takes it.
+* **Tube drivers: 3 × Microchip HV5622PG-G** (decision below), PQFP-44 10 × 10 mm, 0.8 mm pitch,
+  no exposed pad; datasheet DS20005854A (`docs/datasheets/hv5622.pdf`):
+  * 32 open-drain outputs each, **220 V** recommended maximum (230 V absolute), 100 mA sink;
+    off-state leakage ≤ 10 µA. Each chip drives two tubes: outputs 1-10 and 13-22 the digit
+    cathodes, 11-12 and 23-24 the decimal points, 25-32 spare (96 outputs, 72 used). Output order
+    may be permuted in layout; firmware owns the map.
+  * 32-bit shift register (data shifts on the falling `CLK` edge) and 32 latches: `LE` high loads
+    the latches, so a whole 96-bit frame applies at once. Chain U201 → U202 → U203 by `DATA OUT`.
+  * **Dark by default:** `BL` low with `POL` high turns every output off (Table 3-2). `POL` is tied
+    to VDD; `BL` is pulled down on both sides of the level shifter (below). The 12 V switch also
+    keeps the Nixie HV off while the RP2040 is in reset.
+  * Logic supply **VDD 10.8-13.2 V** (abs max 15 V); inputs need **V_IH ≥ VDD − 2 V**, so the
+    RP2040's 3.3 V lines go through a level shifter. Power-up order per Table 3-1: ground, VDD,
+    then inputs to a known state; the shifter's outputs follow VDD, and `BL` is held low.
+  * **HV limit:** the module's output must stay ≤ 220 V. Its trimmer reached 204 V on the bench;
+    its maximum will not be measured: the module may have no internal overvoltage protection, so
+    the user will not turn it further (2026-11-06). Treat the trimmer range as able to exceed
+    220 V. Protection: (1) set the trimmer to 175 V on the bench, then fix it (glue or varnish)
+    before the module goes into the clock; (2) firmware: the RP2040 reads `NIX_HV_SENSE` (scale
+    to 278 V) and drops `NIX12_EN` above **200 V** (user, 2026-11-06), which also
+    catches a module fault. The firmware check is not a hardware guarantee; a comparator on the
+    divider that pulls the 12 V switch off is an option if that is wanted (not in the schematic).
+    An off cathode cannot rise above the HV rail, so 220 V outputs remove the K155ID1's off-state
+    concern below.
+  * Adjacent output pins are 0.8 mm apart and can differ by up to the HV rail when one cathode is
+    lit and its neighbour off; the part is rated for it. Layout: fan the cathode traces out to the
+    `NCATH` clearance straight from the pads (D13-style rules, values _open_).
+* **Level shifter: TI CD40109B** (U302, datasheet SCHS099B): four non-inverting low-to-high
+  shifters, VCC and VDD 3-18 V each, no supply-sequencing restriction. VCC = 3V3, VDD = the 12 V
+  logic rail, enables tied to 3V3. `DRV_DATA` / `DRV_CLK` / `DRV_LE` / `DRV_BL` from the RP2040
+  become `DRV12_*`. Propagation 300-600 ns at VCC 5 V / VDD 10 V (the datasheet does not
+  characterize VCC 3.3 V; thresholds scale with VCC): clock the chain at ≤ 1 MHz, 96 bits in
+  ≈ 0.1 ms. Pull-downs: R301 10k on `DRV_BL` (RP2040 in reset) and R310 100k on `DRV12_BL` (3V3
+  absent: the enables then put U302's outputs in high impedance). Part **CD40109BNSRE4**, SOP-16
+  (TI NS0016A: 5.2-5.4 × 10.0-10.4 mm body, 7.4-8.2 mm lead span, 1.27 mm pitch, no exposed pad;
+  user's choice, 2026-11-06, available and plentiful); footprint KiCad
+  `SO-16_5.3x10.2mm_P1.27mm`. KiCad's symbol is the TSSOP `CD40109BPW`, same pinout.
+* **12 V logic rail** `+12V_LOGIC`: R309 470 Ω from `+12V_IN`, D301 MMSZ5243B (13 V: 12.35-13.65 V,
+  500 mW), C305 10 µF 25 V. The HV5622's 15 V VDD maximum is below the 24 V TVS clamp on the 12 V
+  input (D4: every 12 V consumer must be rated above the clamp, or protected). At the clamp the
+  zener carries (24 − 13.65) / 470 ≈ 22 mA (0.3 W) and R309 0.23 W. Normal load ≈ 0.45 mA average
+  (3 × 100 µA quiescent HV5622, CD40109B, R310) → ≈ 0.2 V drop; the shift bursts come from C305
+  and the 0.1 µF at each chip. With ≈ 11.6-11.8 V at `+12V_IN`, VDD ≈ 11.4-11.6 V, above the
+  10.8 V minimum.
+* **Decimal points:** driven by the HV5622s directly; each needs only its series resistor
+  (R2n1/R2n2), because the point shares the tube's 12k anode resistor with the digits. **150k,
+  starting value** (user, 2026-11-06), to be checked on a tube at bring-up
+  ([bringup.md](bringup.md#nixie-subsystem-phase-2)): the right value depends on the point's
+  maintaining voltage, which the IN-14 data here does not give (data sheet ≤ 0.3 mA). Basis: the
+  IN-12B figures below imply ≈ 131 V across a lit point; at 175 V through 12k + 150k that gives
+  ≈ 0.27 mA for the point alone and ≈ 0.09 mA with a digit lit (the anode node then sits near
+  145 V), so the point will look dimmer beside a digit. Nearest published design (2026-11-06):
+  axtar Nixie-Calculator, IN-12 display board Rev 2 (github.com/axtar/Nixie-Calculator,
+  `Schematics/`): IN-12B with HV5622 drivers, 15k anode and **82k DP cathode resistor** (R30-R43),
+  same topology as here. Its author reports, at 170 V (neonixie-l, "IN-12B decimal point",
+  2025-09-12): DP alone 0.401 mA, DP with a digit lit 0.143 mA (the shared anode resistor dims
+  the point). Different tube, so a starting point only.
 * **HV setpoint 175 V, anode resistor 12 kΩ per tube** (user, 2026-11-01): R = (175 V − 145 V) /
   2.5 mA (IN-14 typical maintaining voltage), about 75 mW, 1/4 W leaded part. 175 V is 5 V above
   the IN-14's maximum ignition voltage (≤ 170 V): check strike on all six tubes, and the operating
   point on a real tube, in Phase 2.
-* **Decimal points: 12 × MMBTA42** (300 V, SOT-23, as the dekatron guide drivers, D8), low side
-  on each point's cathode, with a series resistor (data sheet ≤ 0.3 mA) and a base resistor and
-  pull-down so a floating 595 output leaves the point off. Values _open_.
+* **K155ID1 (dropped 2026-11-06, kept for the record).** From the chipdip data sheet
+  (`docs/datasheets/k155id1/`): codes 10-15 not displayed; 5 V ± 5 %, ≤ 25 mA each; off-state
+  output ≤ 60 V (abs max), and the application note asks for ≤ 55 V on the off outputs (external
+  resistors / zeners or a diode matrix), since running the internal clamp zeners above 60 V cuts
+  the IC's life to 500 h. That limit, still unmeasured with the module, and the user's untested
+  old K155ID1s are why the board moved to HV5622s.
 * **HV monitor** (user, 2026-10-26; values user, 2026-11-01): 1 MΩ HHV-50 over 12 kΩ to an RP2040
-  ADC, ratio 84.3, so 3.3 V at about 278 V (above the 204 V measured; the trimmer's maximum is not
-  yet measured). Reports whether the module is running and when its output has decayed after
+  ADC, ratio 84.3, so 3.3 V at about 278 V (above the 204 V measured; the trimmer's maximum will
+  not be measured, see HV limit). Also the input of the firmware overvoltage cut-off. Reports whether the module is running and when its output has decayed after
   switch-off. The same 1 MΩ gave below 30 V in about 2-3 s on the bench, and draws about 31 mW at
   175 V.
 * Main I2C pull-ups stay on the dekatron board (one pair for the bus).
@@ -1231,9 +1278,9 @@ its thermal mass in the soft start.
 | GP4 / GP5 | `WWVB_SDA` / `WWVB_SCL` | I2C0 controller, ES100 only; pull-ups here |
 | GP6 | `WWVB_EN` | Pull-down: ES100 in shutdown while unplugged or in reset |
 | GP7 | `WWVB_IRQ` | Pull-up; the edge is timestamped |
-| GP8 | `SR_OE` | 595 output enable, pull-up (outputs off in reset) |
-| GP9 | `SR_LATCH` | 595 RCLK |
-| GP10 / GP11 | `SR_CLK` / `SR_DATA` | SPI1 SCK / TX |
+| GP8 | `DRV_BL` | HV5622 blanking via U302; pull-down (tubes off in reset) |
+| GP9 | `DRV_LE` | HV5622 latch enable via U302 |
+| GP10 / GP11 | `DRV_CLK` / `DRV_DATA` | SPI1 SCK / TX via U302; the HV5622 shifts on the falling clock edge |
 | GP13 / GP14 / GP15 | `ENC_A` / `ENC_B` / `ENC_SW` | Pull-ups and debounce filter values _open_ |
 | GP16 | WS2812 | On the module |
 | GP26 | `NIX_HV_SENSE` | ADC0, HV monitor |
@@ -1247,12 +1294,11 @@ core); routing with FreeRouting (Specctra DSN/SES) instead of the dekatron board
 `route_pcb.py` (proposed, 2026-10-26).
 
 **Schematic draft (2026-10-26):** `hardware/nixie/` (power, logic, tubes sheets), ERC clean.
-Values marked `_open_` in the schematics and `bom.csv`: C101 (+5V bulk), the twelve decimal-point series resistors, encoder pull-ups and debounce caps
-(R302-R304, C308-C310), ES100 pull resistors (R305-R308). Values carried over with their basis:
-10k / 47k base resistors (D8), 0.1 µF bypass and 10 µF module bulk (as the dekatron board),
-100 nF ADC reservoir and BAT54S clamp (as the dekatron ADC inputs), SR_OE pull-up 10k (above).
-Shift-register bit map: U302-U304 carry the BCD lines (two tubes each), U305-U306 the decimal
-points, U306 QE-QH spare.
+Values marked `_open_` in the schematics and `bom.csv`: C101 (+5V bulk), encoder pull-ups and debounce caps (R302-R304, C308-C310), ES100
+pull resistors (R305-R308). Values carried over with their basis: 0.1 µF bypass and 10 µF module
+bulk (as the dekatron board), 100 nF ADC reservoir and BAT54S clamp (as the dekatron ADC inputs).
+Redrawn for the HV5622 drivers 2026-11-06 (tubes and logic sheets), ERC clean. Decimal-point series
+resistors (R211-R262) 150k as a starting value, checked at bring-up (2026-11-06).
 
 ### Time sources
 

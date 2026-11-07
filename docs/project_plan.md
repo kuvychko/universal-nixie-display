@@ -29,10 +29,10 @@ Terminology: interpret “12DAC” as 12 VDC. “CYS” refers here to the user'
 |---|---|---|
 | ESP32 display board | UI, encoder, presets, time source, SCPI-style host interface, coordinated display frames | UI and protocol work against simulated controller status |
 | Dekatron controller/PSU | 12 V input, local low-voltage conversion, HV conversion and bias, guide drivers, index sensing, local timing | RP2040 USB console and built-in diagnostics with no ESP32 or Nixies connected |
-| Nixie controller/mount | Six tubes, six K155ID1 drivers, current limiting, decimal-point switches, blanking, digital control | Local diagnostic sequence or USB console with purchased HV module |
+| Nixie controller/mount | Six tubes, six K155ID1 drivers (replaced by three HV5622s, 2026-11-06: hardware.md), current limiting, decimal-point switches, blanking, digital control | Local diagnostic sequence or USB console with purchased HV module |
 | Purchased Nixie PSU | 12 V to approximately 170–180 V | Dummy-load characterization before integration |
 
-Recommended initial controller arrangement: one RP2040-Zero per custom controller board. The Nixie board uses a 74HC595 chain behind its MCU to obtain enough outputs (decided 2026-10-26; an expander-only board without an MCU was considered and dropped, see hardware.md "Nixie controller/mount"). Six statically driven BCD decoders alone require 24 signals; do not assume all required signals fit directly on a Zero module. Static tube drive is the initial preference; multiplexing is not required.
+Recommended initial controller arrangement: one RP2040-Zero per custom controller board. The Nixie board uses latched shift registers behind its MCU to obtain enough outputs (decided 2026-10-26; three HV5622s since 2026-11-06; an expander-only board without an MCU was considered and dropped, see hardware.md "Nixie controller/mount"). Six statically driven BCD decoders alone require 24 signals; do not assume all required signals fit directly on a Zero module. Static tube drive is the initial preference; multiplexing is not required.
 
 The local MCUs are peripheral controllers, not competing application brains. They own time-sensitive sequences and hardware state; the ESP32 owns what the instrument should display.
 
@@ -48,7 +48,7 @@ Before PCB layout, resolve:
 
 - 12 V input protection, current budget, power switch, HV enable defaults, and rail test points.
 - USB VBUS isolation or power selection for both normal ESP32 use and standalone RP2040 debugging. Prevent parallel USB/external supplies from feeding one another; inspect the actual boards' schematics. USB-C denotes a connector, not an assumption of USB-PD or native USB support.
-- 5 V K155ID1 supply and verified logic compatibility; decimal points require separate HV switching channels. Evaluate global or per-tube anode blanking rather than assuming all out-of-range BCD codes safely blank every driver.
+- 5 V K155ID1 supply and verified logic compatibility; decimal points require separate HV switching channels. Evaluate global or per-tube anode blanking rather than assuming all out-of-range BCD codes safely blank every driver. (2026-11-06: the drivers are now HV5622s on a 12 V logic rail with a global blanking input; see hardware.md.)
 - Default-dark Nixie startup and a defined dekatron startup state while MCUs reset or are being flashed.
 - Rated resistors/capacitors/connectors, adequate PCB spacing, inaccessible HV nodes, and discharge paths. Record measured discharge time; printed plastic is not a substitute for PCB clearances.
 - Probe ratings for HV measurements and ground-referenced test connections.

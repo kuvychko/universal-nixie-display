@@ -26,7 +26,7 @@
 	  (property "Sheetfile" "tubes.kicad_sch" (at 200 70.5846 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left top)))
 	  (instances (project "nixie" (path "/342c77a5-28ce-53e1-b1ae-2a73c7a137ed" (page "4"))))
 	)
-	(text "Sheets: power, logic, tubes. Inter-sheet nets are global labels. Values marked _open_ wait for the Nixie HV module measurements (docs/hardware.md)." (exclude_from_sim no) (at 40 100 0) (effects (font (size 2 2)) (justify left bottom)) (uuid "3337cf89-ea9f-549e-a5eb-9f83ee2bf69f"))
+	(text "Sheets: power, logic, tubes. Inter-sheet nets are global labels. Values marked _open_ are listed in docs/hardware.md (Nixie board electrical design)." (exclude_from_sim no) (at 40 100 0) (effects (font (size 2 2)) (justify left bottom)) (uuid "3337cf89-ea9f-549e-a5eb-9f83ee2bf69f"))
 	(sheet_instances (path "/" (page "1")))
 	(embedded_fonts no)
 )

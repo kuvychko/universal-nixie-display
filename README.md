@@ -86,7 +86,7 @@ bring-up rework: 470 pF at the converter's current-sense pin.*
 
 ```
  12 VDC adapter ──┬──────────────► purchased Nixie HV module (~170-180 V) ──► Nixie controller/mount
-                  │                                                           (6× IN-14, 6× K155ID1, RP2040-Zero)
+                  │                                                           (6× IN-14, 3× HV5622, RP2040-Zero)
                   └──► dekatron controller/PSU ──► A101 (HV, bias, guide drive, index sense, RP2040-Zero)
                          │ 5 V buck out
                          ▼

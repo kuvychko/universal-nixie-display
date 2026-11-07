@@ -36,6 +36,9 @@ revision as it is used.
 | `ipd70r1k4p7s.pdf` | Infineon IPD70R1K4P7S, 700 V CoolMOS P7 (HV boost switch) | https://www.infineon.com/dgdl/Infineon-IPD70R1K4P7S-DataSheet-v02_02-EN.pdf?fileId=5546d462602a9dc801607f84c5fe3fea | Rev. 2.2, 2019-08-09 |
 | `ipd50p04p4l-11.pdf` | Infineon IPD50P04P4L-11, −40 V P-channel (reverse-polarity protection; Nixie module switch Q101) | https://www.infineon.com/assets/row/public/documents/10/49/infineon-ipd50p04p4l-11-datasheet-en.pdf | Rev. 1.1, 2019-07-04 |
 | `littelfuse_1812l.pdf` | Littelfuse 1812L PolySwitch PPTC series (1812L075/33DR, Nixie module branch) | littelfuse.com, 1812L Series datasheet (supplied by the user) | Revised GD. 06/10/24 |
+| `hv5622.pdf` | Microchip HV5622, 32-channel serial-to-parallel converter, 220 V open-drain outputs (Nixie tube drivers) | https://ww1.microchip.com/downloads/en/DeviceDoc/20005854A.pdf | DS20005854A, 2017 |
+| `hv5122_hv5222.pdf` | Microchip HV5122 / HV5222 (considered for the tube drivers, rejected: no latches) | https://ww1.microchip.com/downloads/en/DeviceDoc/20005418B.pdf | DS20005418B, 2015 |
+| `cd40109b.pdf` | TI CD40109B quad low-to-high level shifter (3.3 V to the HV5622's 12 V logic) | https://www.ti.com/lit/ds/symlink/cd40109b.pdf | SCHS099B, Jan 2003 |
 | `yageo_hhv.pdf` | Yageo HHV metal glaze high-voltage resistors (HHV-25 1600 V, HHV-50 3500 V; replaced Vishay HVR25 / HVR37) | https://yageogroup.com/content/datasheet/asset/file/YAGEO-HHV_DATASHEET | V.3, 2024-04-03 |
 | `lm66100.pdf` | TI LM66100 ideal diode (CE to VOUT for always-on reverse-current blocking, §8.3.2) | https://www.ti.com/lit/ds/symlink/lm66100.pdf | SLVSEZ8A, Jun 2019 |
 | `tps54202.pdf` | TPS54202 2 A buck (original 5 V buck; backordered 2026-10-08) | https://www.ti.com/lit/gpn/tps54202 | SLVSD26C, Feb 2026 |

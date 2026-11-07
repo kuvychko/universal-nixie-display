@@ -6,10 +6,10 @@ Writes into hardware/nixie/:
   nixie.kicad_pro             project file (written once; KiCad owns it afterwards)
   nixie.kicad_sch             root sheet
   power.kicad_sch             harness landings, Nixie HV module 12 V switch, HV monitor
-  logic.kicad_sch             RP2040-Zero, 74HCT595 chain, encoder / RTC / ES100 landings
-  tubes.kicad_sch             6 x (K155ID1, IN-14, anode resistor, two decimal-point drivers)
+  logic.kicad_sch             RP2040-Zero, CD40109B level shifter, 12 V logic rail, encoder / RTC / ES100
+  tubes.kicad_sch             3 x HV5622 (two tubes each), 6 x (IN-14, anode resistor, two DP resistors)
   sym-lib-table / fp-lib-table
-  lib/nixie.kicad_sym         project symbols (K155ID1, IN-14, RP2040-Zero)
+  lib/nixie.kicad_sym         project symbols (HV5622, IN-14, RP2040-Zero)
   lib/nixie.pretty/RP2040-Zero_Castellated.kicad_mod   (IN-14.kicad_mod is maintained by hand)
   bom.csv
 
@@ -59,10 +59,9 @@ FP_WIRE1 = gs.FP_WIRE1
 FP_WIRE2 = gs.FP_WIRE2
 FP_WIRE4 = gs.FP_WIRE4
 FP_WIRE6 = gs.FP_WIRE6
-FP_SOIC16 = "Package_SO:SOIC-16_3.9x9.9mm_P1.27mm"
-# K155ID1 body (238.16-1/-2) has a 2.5 mm metric pitch; the 2.54 mm DIP footprint takes it (0.28 mm
-# accumulated over 8 pins, absorbed by the leads)
-FP_DIP16 = "Package_DIP:DIP-16_W7.62mm"
+FP_SOP16_NS = "Package_SO:SO-16_5.3x10.2mm_P1.27mm"   # TI NS0016A SOP: 5.2-5.4 mm body, 7.4-8.2 mm span
+FP_PQFP44 = "Package_QFP:Microchip_PQFP-44_10x10mm_P0.8mm"   # HV5622PG-G, 10 x 10 mm body, no exposed pad
+FP_SOD123 = gs.FP_SOD123
 FP_IN14 = "nixie:IN-14"
 FP_ZERO = "nixie:RP2040-Zero_Castellated"
 
@@ -73,29 +72,32 @@ FP_ZERO = "nixie:RP2040-Zero_Castellated"
 
 _pin, _sprop = gs._pin, gs._sprop
 
-# K155ID1 (= SN74141), from the chipdip data sheet (docs/datasheets/k155id1/): inputs X1 (weight 1)
-# pin 3, X2 pin 6, X3 pin 7, X4 pin 4; +U pin 5, common pin 12; outputs per the graphic symbol:
-# 0-16, 1-15, 2-8, 3-9, 4-13, 5-14, 6-11, 7-10, 8-1, 9-2 (the text list repeats "V5" at pin 11:
-# a typo, the symbol shows 6). Codes 10-15 light no output.
-K155_OUT = {"0": "16", "1": "15", "2": "8", "3": "9", "4": "13", "5": "14", "6": "11", "7": "10",
-            "8": "1", "9": "2"}
-K155_IN = [("X1", "3"), ("X2", "6"), ("X3", "7"), ("X4", "4")]
+# HV5622 (Microchip DS20005854A, 44-lead PQFP, Table 2-1): pins 1-22 = HVOUT22..HVOUT1,
+# 23 DATA OUT, 24-26 NC, 27 POL, 28 CLK, 29 VSS, 30 VDD, 31 LE, 32 DATA IN, 33 BL, 34 NC,
+# 35-44 = HVOUT32..HVOUT23. Truth table (Table 3-2): BL low with POL high = all outputs off;
+# LE high loads the latches from the shift register; data shifts on the falling CLK edge.
+HV5622_OUT = {k: str(23 - k) if k <= 22 else str(67 - k) for k in range(1, 33)}
 
 
-def k155id1_symbol_text() -> str:
-    pins = [_pin("input", -10.16, 7.62 - i * 5.08, 0, name, num) for i, (name, num) in enumerate(K155_IN)]
-    pins += [_pin("open_collector", 10.16, 11.43 - int(d) * 2.54, 180, d, num) for d, num in K155_OUT.items()]
-    pins += [_pin("power_in", 0, 17.78, 270, "VCC", "5"), _pin("power_in", 0, -17.78, 90, "GND", "12")]
-    return f'''(symbol "K155ID1" (exclude_from_sim no) (in_bom yes) (on_board yes)
-	{_sprop("Reference", "U", 2.54, 16.51)}
-	{_sprop("Value", "K155ID1", 2.54, -16.51)}
-	{_sprop("Footprint", FP_DIP16, 0, 0, True)}
-	{_sprop("Datasheet", "docs/datasheets/k155id1/k155id1_chipdip.pdf", 0, 0, True)}
-	{_sprop("Description", "BCD to decimal Nixie driver, 60 V open-collector outputs (SN74141 equivalent), DIP-16", 0, 0, True)}
-	(symbol "K155ID1_0_1"
-		(rectangle (start -7.62 15.24) (end 7.62 -15.24) (stroke (width 0.254) (type default)) (fill (type background)))
+def hv5622_symbol_text() -> str:
+    pins = [_pin("open_collector", 12.7, 40.64 - (k - 1) * 2.54, 180, f"HVOUT{k}", num)
+            for k, num in HV5622_OUT.items()]
+    pins += [_pin("output", 12.7, -43.18, 180, "DOUT", "23")]
+    pins += [_pin("input", -12.7, 10.16 - i * 5.08, 0, name, num)
+             for i, (name, num) in enumerate((("DIN", "32"), ("CLK", "28"), ("~{LE}", "31"), ("~{BL}", "33"),
+                                               ("~{POL}", "27")))]
+    pins += [_pin("no_connect", -12.7, -20.32 - i * 2.54, 0, "NC", num) for i, num in enumerate(("24", "25", "26", "34"))]
+    pins += [_pin("power_in", 0, 48.26, 270, "VDD", "30"), _pin("power_in", 0, -50.8, 90, "VSS", "29")]
+    return f'''(symbol "HV5622" (exclude_from_sim no) (in_bom yes) (on_board yes)
+	{_sprop("Reference", "U", 2.54, 46.99)}
+	{_sprop("Value", "HV5622", 2.54, -49.53)}
+	{_sprop("Footprint", FP_PQFP44, 0, 0, True)}
+	{_sprop("Datasheet", "docs/datasheets/hv5622.pdf", 0, 0, True)}
+	{_sprop("Description", "32-channel serial-to-parallel converter, 220 V open-drain outputs, latches, VDD 12 V, 44-lead PQFP", 0, 0, True)}
+	(symbol "HV5622_0_1"
+		(rectangle (start -10.16 45.72) (end 10.16 -48.26) (stroke (width 0.254) (type default)) (fill (type background)))
 	)
-	(symbol "K155ID1_1_1"
+	(symbol "HV5622_1_1"
 		{" ".join(pins)}
 	)
 	(embedded_fonts no)
@@ -132,7 +134,7 @@ def zero_symbol_text() -> str:
 
 def project_symbol_lib_text(lib: gs.SymbolLib) -> str:
     return ('(kicad_symbol_lib (version 20251024) (generator "nixie-gen") (generator_version "10.0")\n'
-            + k155id1_symbol_text() + "\n" + in14_symbol_text() + "\n" + zero_symbol_text() + "\n)\n")
+            + hv5622_symbol_text() + "\n" + in14_symbol_text() + "\n" + zero_symbol_text() + "\n)\n")
 
 
 # --------------------------------------------------------------------------------------
@@ -147,6 +149,7 @@ class Sheet(gs.Sheet):
 
 R, C, CP, TP = "Device:R", "Device:C", "Device:C_Polarized", "Connector:TestPoint"
 NPN = "Transistor_BJT:Q_NPN_BEC"
+DZ = "Device:D_Zener"
 
 
 def note(sh, head, detail, x, y):
@@ -219,29 +222,22 @@ def build_power(lib) -> Sheet:
     return sh
 
 
-LOGIC_GLOBALS = {"SDA", "SCL", "NIX_SPARE", "NIX12_EN", "NIX_HV_SENSE"} | {
-    f"T{n}_{s}" for n in range(1, TUBES + 1) for s in ("X1", "X2", "X3", "X4", "LDP", "RDP")}
-
-# Shift-register bit map: U302-U304 carry the BCD lines (two tubes each), U305-U306 the decimal
-# points; U306 QE-QH spare. Firmware owns the mapping (frames are latched whole).
-SR_OUTS = ["QA", "QB", "QC", "QD", "QE", "QF", "QG", "QH"]
-SR_BITS = [[f"T{t}_X{b}" for t in (1, 2) for b in range(1, 5)],
-           [f"T{t}_X{b}" for t in (3, 4) for b in range(1, 5)],
-           [f"T{t}_X{b}" for t in (5, 6) for b in range(1, 5)],
-           [f"T{t}_{d}" for t in (1, 2, 3, 4) for d in ("LDP", "RDP")],
-           [f"T{t}_{d}" for t in (5, 6) for d in ("LDP", "RDP")] + ["NC"] * 4]
+DRV = ("DATA", "CLK", "LE", "BL")           # RP2040 -> CD40109B -> HV5622 lines
+LOGIC_GLOBALS = {"SDA", "SCL", "NIX_SPARE", "NIX12_EN", "NIX_HV_SENSE", "+12V_IN", "+12V_LOGIC"} | {
+    f"DRV12_{s}" for s in DRV}
 
 
 def build_logic(lib) -> Sheet:
     sh = Sheet("logic", "logic.kicad_sch", U("file:logic"), "A2", lib, f"/{ROOT_UUID}/{LOGIC_UUID}",
-               global_nets=LOGIC_GLOBALS, title="Logic: RP2040-Zero, 74HCT595 chain, encoder / RTC / ES100 landings")
+               global_nets=LOGIC_GLOBALS,
+               title="Logic: RP2040-Zero, level shifter, encoder, time modules")
 
     note(sh, "RP2040-Zero (pin map: docs/hardware.md)", "Castellated, soldered by its edge pads; powered from "
          "+5V (NIX_LV)", 20.32, 22.86)
     nets = {"5V": "+5V", "GND": "GND", "3V3": "+3V3",
             "GP0": "NIX12_EN", "GP1": "NIX_SPARE", "GP2": "SDA", "GP3": "SCL", "GP4": "WWVB_SDA",
-            "GP5": "WWVB_SCL", "GP6": "WWVB_EN", "GP7": "WWVB_IRQ", "GP8": "SR_OE", "GP9": "SR_LATCH",
-            "GP10": "SR_CLK", "GP11": "SR_DATA", "GP12": "GP12", "GP13": "ENC_A", "GP14": "ENC_B",
+            "GP5": "WWVB_SCL", "GP6": "WWVB_EN", "GP7": "WWVB_IRQ", "GP8": "DRV_BL", "GP9": "DRV_LE",
+            "GP10": "DRV_CLK", "GP11": "DRV_DATA", "GP12": "GP12", "GP13": "ENC_A", "GP14": "ENC_B",
             "GP15": "ENC_SW", "GP26": "NIX_HV_SENSE", "GP27": "GP27", "GP28": "GP28", "GP29": "GP29"}
     sh.part("nixie:RP2040-Zero", "U301", "RP2040-Zero", 101.6, 86.36, nets, textpos=(-12.7, -27.5),
             footprint=FP_ZERO, fields=F("Nixie controller MCU", "RP2040-Zero", "Waveshare", "headerless, castellated"))
@@ -249,27 +245,39 @@ def build_logic(lib) -> Sheet:
             fields=F("+5V bulk at the module (as dekatron C301)", rating="16 V tantalum"))
     sh.part(C, "C302", "0.1uF", 45.72, 58.42, {"1": "+3V3", "2": "GND"}, footprint=FP_C,
             fields=F("3V3 bypass (as dekatron C302)", rating="50 V X7R"))
-    note(sh, "TEST PADS", "Spare GPIOs, 3V3, shift-register lines", 20.32, 165.1)
-    for i, net in enumerate(("GP12", "GP27", "GP28", "GP29", "+3V3", "SR_DATA", "SR_CLK", "SR_LATCH", "SR_OE")):
+    note(sh, "TEST PADS", "Spare GPIOs, 3V3, 12 V logic, driver lines (3.3 V side)", 20.32, 165.1)
+    for i, net in enumerate(("GP12", "GP27", "GP28", "GP29", "+3V3", "+12V_LOGIC", "DRV_DATA", "DRV_CLK",
+                             "DRV_LE", "DRV_BL")):
         tp(sh, f"TP{301 + i}", net, 25.4 + i * 15.24, 182.88)
 
-    note(sh, "SHIFT REGISTERS: 5 x 74HCT595 at 5 V", "HCT: 2.0 V input threshold takes 3.3 V logic; outputs "
-         "drive the K155ID1 TTL inputs. OE pulled up to 3V3 (outputs off in reset; K155ID1 inputs then float "
-         "high = code 15 = dark)", 172.72, 22.86)
-    sh.part(R, "R301", "10k", 182.88, 50.8, {"1": "+3V3", "2": "SR_OE"}, footprint=FP_R,
-                fields=F("SR_OE pull-up: outputs off in reset; 10k against the RP2040's reset pull-down"))
-    for k in range(5):
-        ref = f"U{302 + k}"
-        nets = {"VCC": "+5V", "GND": "GND", "~{SRCLR}": "+5V", "SRCLK": "SR_CLK", "RCLK": "SR_LATCH",
-                "~{OE}": "SR_OE", "SER": "SR_DATA" if k == 0 else f"SR_Q{k}",
-                "QH'": f"SR_Q{k + 1}" if k < 4 else "NC"}
-        for o, net in zip(SR_OUTS, SR_BITS[k]):
-            nets[o] = net
-        x = 215.9 + k * 63.5
-        sh.part("74xx:74HCT595", ref, "74HCT595", x, 81.28, nets, footprint=FP_SOIC16,
-                fields=F(f"Shift register {k + 1} of 5", "74HCT595", rating="SOIC-16"))
-        sh.part(C, f"C{303 + k}", "0.1uF", x - 20.32, 116.84, {"1": "+5V", "2": "GND"}, footprint=FP_C,
-                fields=F(f"{ref} bypass", rating="50 V X7R"))
+    note(sh, "LEVEL SHIFTER: CD40109B, 3.3 V -> 12 V", "HV5622 inputs need V_IH >= VDD - 2 V. Enables tied to "
+         "3V3. DRV_BL pulled down: all tube outputs off while the RP2040 is in reset (BL low, POL high)",
+         172.72, 22.86)
+    sh.part("Logic_LevelTranslator:CD40109BPW", "U302", "CD40109B", 215.9, 81.28,
+            {"1": "+3V3", "16": "+12V_LOGIC", "8": "GND", "2": "+3V3", "7": "+3V3", "9": "+3V3", "15": "+3V3",
+             "3": "DRV_DATA", "4": "DRV12_DATA", "6": "DRV_CLK", "5": "DRV12_CLK",
+             "10": "DRV_LE", "11": "DRV12_LE", "14": "DRV_BL", "13": "DRV12_BL"},
+            footprint=FP_SOP16_NS, fields=F("3.3 V -> 12 V for the HV5622 inputs", "CD40109BNSRE4", "TI",
+                                            "VCC/VDD 3-18 V, SOP-16 (NS) 5.3 mm"))
+    sh.part(C, "C303", "0.1uF", 195.58, 116.84, {"1": "+12V_LOGIC", "2": "GND"}, footprint=FP_C,
+            fields=F("U302 VDD bypass", rating="50 V X7R"))
+    sh.part(C, "C304", "0.1uF", 210.82, 116.84, {"1": "+3V3", "2": "GND"}, footprint=FP_C,
+            fields=F("U302 VCC bypass", rating="50 V X7R"))
+    sh.part(R, "R301", "10k", 241.3, 116.84, {"1": "DRV_BL", "2": "GND"}, footprint=FP_R,
+            fields=F("DRV_BL pull-down: tubes blank while the RP2040 is in reset"))
+    sh.part(R, "R310", "100k", 256.54, 116.84, {"1": "DRV12_BL", "2": "GND"}, footprint=FP_R,
+            fields=F("DRV12_BL pull-down: tubes blank while 3V3 is absent (U302 outputs then high-impedance)"))
+
+    note(sh, "12 V LOGIC RAIL", "HV5622 / CD40109B VDD. HV5622 VDD abs max 15 V, below the 24 V TVS clamp on "
+         "the 12 V input: series resistor and 13 V zener (12.35-13.65 V)", 345.44, 22.86)
+    sh.part(R, "R309", "470", 355.6, 63.5, {"1": "+12V_IN", "2": "+12V_LOGIC"}, footprint=FP_R,
+            fields=F("12 V logic rail series resistor: ~0.2 V at ~0.45 mA average; 0.23 W at the 24 V clamp",
+                     rating="1206, 0.25 W"))
+    sh.part(DZ, "D301", "MMSZ5243B", 370.84, 81.28, {"1": "+12V_LOGIC", "2": "GND"}, angle=90,
+            footprint=FP_SOD123, fields=F("12 V logic rail clamp", "MMSZ5243B", rating="13 V, 500 mW, SOD-123"))
+    sh.part(C, "C305", "10uF", 386.08, 81.28, {"1": "+12V_LOGIC", "2": "GND"}, footprint=FP_C,
+            fields=F("12 V logic reservoir: shift bursts", rating="25 V X7R"))
+    sh.flag("+12V_LOGIC", 401.32, 101.6)
 
     note(sh, "ENCODER (front panel, harness)", "Panel-mount encoder wired to J301; pull-ups and debounce "
          "RC values open", 172.72, 139.7)
@@ -301,43 +309,49 @@ def build_logic(lib) -> Sheet:
     return sh
 
 
-TUBES_GLOBALS = {"NIX_HV"} | {f"T{n}_{s}" for n in range(1, TUBES + 1) for s in ("X1", "X2", "X3", "X4", "LDP", "RDP")}
+TUBES_GLOBALS = {"NIX_HV", "+12V_LOGIC"} | {f"DRV12_{s}" for s in DRV}
+CHIPS = 3                                   # HV5622, two tubes each
+
+
+def tube_outputs(n):
+    """HV5622 outputs for one tube, in order: digit cathodes 0-9, then the decimal-point drives."""
+    return [f"T{n}_K{d}" for d in range(10)] + [f"T{n}_LDP_D", f"T{n}_RDP_D"]
 
 
 def build_tubes(lib) -> Sheet:
     sh = Sheet("tubes", "tubes.kicad_sch", U("file:tubes"), "A2", lib, f"/{ROOT_UUID}/{TUBES_UUID}",
-               global_nets=TUBES_GLOBALS, title="Tubes: K155ID1 drivers, IN-14s, anode resistors, decimal points")
-    note(sh, "SIX TUBE CHANNELS", "Tube 1 at the left as seen by the viewer. Anode resistor and decimal-point "
-         "series resistors open until the Nixie module's output is measured (R = (V_HV - 145 V) / I)", 20.32, 22.86)
-    for n in range(1, TUBES + 1):
-        x0 = 20.32 + (n - 1) % 3 * 190.5          # 3 x 2 grid, tube 1 top left
-        y0 = (n - 1) // 3 * 167.64
-        note(sh, f"TUBE {n}", "", x0, y0 + 40.64)
-        # nets keyed by pin number: the digit names "0"-"9" collide with pin numbers
-        sh.part("nixie:K155ID1", f"U{200 + n}", "K155ID1", x0 + 25.4, y0 + 86.36,
-                {**{num: f"T{n}_{name}" for name, num in K155_IN},
-                 **{num: f"T{n}_K{d}" for d, num in K155_OUT.items()}, "5": "+5V", "12": "GND"},
-                     footprint=FP_DIP16, fields=F(f"Tube {n} BCD decoder", "K155ID1", rating="DIP-16, 60 V outputs"))
-        sh.part(C, f"C{200 + n}", "0.1uF", x0 + 7.62, y0 + 127.0, {"1": "+5V", "2": "GND"}, footprint=FP_C,
-                fields=F(f"U{200 + n} bypass", rating="50 V X7R"))
-        sh.part("nixie:IN-14", f"N{n}", "IN-14", x0 + 76.2, y0 + 86.36,
-                {"1": f"T{n}_ANODE", "2": f"T{n}_LDP_K", "13": f"T{n}_RDP_K", "12": f"T{n}_K0",
-                 **{str(d + 2): f"T{n}_K{d}" for d in range(1, 10)}},
-                footprint=FP_IN14, fields=F(f"Tube {n}", "IN-14"))
-        sh.part(R, f"R{200 + 10 * n}", "12k", x0 + 99.06, y0 + 50.8, {"1": "NIX_HV", "2": f"T{n}_ANODE"},
-                footprint=FP_AX0207, fields=F(f"Tube {n} anode resistor: (175 V - 145 V) / 2.5 mA, 75 mW", rating="1/4 W"))
-        for j, dp in enumerate(("LDP", "RDP")):
-            y = y0 + 144.78 + j * 33.02
-            base = 200 + 10 * n + 1 + 3 * j
-            sh.part(NPN, f"Q{200 + 2 * n - 1 + j}", "MMBTA42", x0 + 76.2, y,
-                    {"1": f"T{n}_{dp}_B", "2": "GND", "3": f"T{n}_{dp}_C"}, footprint=FP_SOT23,
-                    fields=F(f"Tube {n} {dp} driver", "MMBTA42", rating="300 V NPN"))
-            sh.part(R, f"R{base}", "10k", x0 + 50.8, y + 5.08, {"1": f"T{n}_{dp}", "2": f"T{n}_{dp}_B"},
-                    footprint=FP_R, fields=F(f"Tube {n} {dp} base (as D8)"))
-            sh.part(R, f"R{base + 1}", "47k", x0 + 63.5, y + 15.24, {"1": f"T{n}_{dp}_B", "2": "GND"},
-                    footprint=FP_R, fields=F(f"Tube {n} {dp} base pull-down: point off with the 595 outputs off (D8)"))
-            sh.part(R, f"R{base + 2}", OPEN, x0 + 99.06, y - 15.24, {"1": f"T{n}_{dp}_C", "2": f"T{n}_{dp}_K"},
-                    footprint=FP_R, fields=F(f"Tube {n} {dp} series resistor (data sheet: point <= 0.3 mA)"))
+               global_nets=TUBES_GLOBALS, title="Tubes: HV5622 drivers, IN-14s, resistors")
+    note(sh, "TUBE DRIVERS: 3 x HV5622 (220 V open drain)", "Tube 1 at the left as seen by the viewer. Chain "
+         "U201 -> U202 -> U203, 96 bits latched whole (LE). Outputs 1-12 tube a, 13-24 tube b, 25-32 spare. "
+         "Output order may be swapped in layout (firmware owns the map)", 20.32, 22.86)
+    for k in range(CHIPS):
+        x0 = 20.32 + k * 190.5
+        ta, tb = 2 * k + 1, 2 * k + 2
+        outs = tube_outputs(ta) + tube_outputs(tb) + ["NC"] * 8
+        nets = {HV5622_OUT[i + 1]: net for i, net in enumerate(outs)}
+        nets.update({"30": "+12V_LOGIC", "29": "GND", "27": "+12V_LOGIC", "28": "DRV12_CLK", "31": "DRV12_LE",
+                     "33": "DRV12_BL", "32": "DRV12_DATA" if k == 0 else f"DRV12_D{k}",
+                     "23": f"DRV12_D{k + 1}" if k < CHIPS - 1 else "NC"})
+        sh.part("nixie:HV5622", f"U{201 + k}", "HV5622", x0 + 30.48, 132.08, nets, footprint=FP_PQFP44,
+                fields=F(f"Tube {ta}/{tb} cathode and decimal-point driver", "HV5622PG-G", "Microchip",
+                         "220 V outputs, PQFP-44 0.8 mm"))
+        sh.part(C, f"C{201 + k}", "0.1uF", x0 + 7.62, 195.58, {"1": "+12V_LOGIC", "2": "GND"}, footprint=FP_C,
+                fields=F(f"U{201 + k} VDD bypass", rating="50 V X7R"))
+        for j, n in enumerate((ta, tb)):
+            y0 = 66.04 + j * 121.92
+            note(sh, f"TUBE {n}", "", x0 + 88.9, y0 - 25.4)
+            sh.part("nixie:IN-14", f"N{n}", "IN-14", x0 + 132.08, y0 + 20.32,
+                    {"1": f"T{n}_ANODE", "2": f"T{n}_LDP_K", "13": f"T{n}_RDP_K", "12": f"T{n}_K0",
+                     **{str(d + 2): f"T{n}_K{d}" for d in range(1, 10)}},
+                    footprint=FP_IN14, fields=F(f"Tube {n}", "IN-14"))
+            sh.part(R, f"R{200 + 10 * n}", "12k", x0 + 160.02, y0 - 10.16, {"1": "NIX_HV", "2": f"T{n}_ANODE"},
+                    footprint=FP_AX0207,
+                    fields=F(f"Tube {n} anode resistor: (175 V - 145 V) / 2.5 mA, 75 mW", rating="1/4 W"))
+            for i, dp in enumerate(("LDP", "RDP")):
+                sh.part(R, f"R{200 + 10 * n + 1 + i}", "150k", x0 + 99.06 + i * 12.7, y0 + 60.96,
+                        {"1": f"T{n}_{dp}_D", "2": f"T{n}_{dp}_K"}, footprint=FP_R,
+                        fields=F(f"Tube {n} {dp} series resistor: starting value, point <= 0.3 mA; "
+                                 "check at bring-up"))
     return sh
 
 
@@ -346,8 +360,8 @@ def build_root(lib) -> Sheet:
     sh.sheet("power", "power.kicad_sch", POWER_UUID, 40, 40, 60, 30, page="2")
     sh.sheet("logic", "logic.kicad_sch", LOGIC_UUID, 120, 40, 60, 30, page="3")
     sh.sheet("tubes", "tubes.kicad_sch", TUBES_UUID, 200, 40, 60, 30, page="4")
-    sh.text("Sheets: power, logic, tubes. Inter-sheet nets are global labels. Values marked _open_ wait "
-            "for the Nixie HV module measurements (docs/hardware.md).", 40, 100, 2)
+    sh.text("Sheets: power, logic, tubes. Inter-sheet nets are global labels. Values marked _open_ are "
+            "listed in docs/hardware.md (Nixie board electrical design).", 40, 100, 2)
     return sh
 
 
@@ -378,7 +392,7 @@ def project_json() -> str:
                 {"netclass": "NHV", "pattern": "*_ANODE"},
                 {"netclass": "NCATH", "pattern": "*T?_K?"},
                 {"netclass": "NCATH", "pattern": "*DP_K"},
-                {"netclass": "NCATH", "pattern": "*DP_C"},
+                {"netclass": "NCATH", "pattern": "*DP_D"},
             ]},
         "pcbnew": {"last_paths": {}, "page_layout_descr_file": ""},
         "schematic": {"legacy_lib_dir": "", "legacy_lib_list": []},
