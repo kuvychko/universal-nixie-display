@@ -13,8 +13,10 @@ dependencies = []
 docs = [
     "mkdocs-material>=9.5,<10",
 ]
-# Bench tools: tools/hv_bringup.py
+# Bench tools: tools/hv_bringup.py, tools/rectify_scope_photo.py
 bench = [
+    "numpy>=2,<3",
+    "pillow>=11,<14",
     "pyserial>=3.5,<4",
 ]
 
