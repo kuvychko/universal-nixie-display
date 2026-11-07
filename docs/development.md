@@ -154,7 +154,8 @@ pass 8). What the pieces do:
 * `freeroute_nixie.py` drives **Freerouting 2.5.0** headless (user install in
   `%LOCALAPPDATA%/freerouting`, own Java runtime; set `FREEROUTING` elsewhere). Clearances come from
   the net classes in `nixie.kicad_pro`, which the DSN export carries; no custom DRC rules are needed
-  for routing (the Nixie classes are plain clearances, hardware.md "Clearance rules"). Logs and
+  for routing (the Nixie classes are plain clearances, hardware.md "Clearance rules"); the one
+  custom rule in `nixie.kicad_dru` only lets KiCad DRC accept the IN-14's own 1.156 mm pad gaps. Logs and
   intermediate files go to `build/` (ignored).
 * KiCad 10.0.5 quirks handled in the scripts: `pcbnew.SaveBoard()` rewrites `nixie.kicad_pro` from
   the board's own net settings, so `gen_nixie_pcb.py` sets the net classes on the board
@@ -164,7 +165,7 @@ pass 8). What the pieces do:
   0.16 mm, the board's DRC minimum (fab 0.1524 mm). Tie holes, mounting holes and a 0.6 mm edge
   band are keep-out rule areas, since board-only NPTH footprints do not reach the DSN.
 * Freerouting vs KiCad DRC: its rounding left 2-3 µm clearance slivers, so every DSN clearance
-  under 1 mm gets +10 µm (`CLEARANCE_MARGIN_UM`; not NHV, whose 1.15 mm is the IN-14's own pad gap);
+  gets +10 µm (`CLEARANCE_MARGIN_UM`);
   it spaces vias of every class by the Default clearance, so the DSN gets a `via_via` rule at the
   NCATH clearance. GND pads left with one thermal spoke (KiCad wants two) are read from the DRC
   report and switched to a solid connection, then the zones are refilled.
@@ -174,7 +175,8 @@ pass 8). What the pieces do:
   unrouted, 0 violations), KiCad DRC 0 errors and 0 unconnected pads with schematic parity, after
   `silk.py` (C309, TP104, TP105 references hidden). Moving the HV5622s forward to 25 mm and
   assigning their outputs from the geometry (hardware.md, `HV_MAP`) cut the cathode tracks
-  (`NCATH`) from 2444 mm and 73 vias to ≈ 1300 mm and ≈ 57-61 vias.
+  (`NCATH`) from 2444 mm and 73 vias to ≈ 1300 mm and ≈ 57-61 vias. Shrunk to 150 × 70 mm
+  (logic block 10 mm forward, 2026-11-07): still 0 errors, 0 unconnected.
 
 ### Fab outputs
 

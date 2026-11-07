@@ -12,7 +12,7 @@ does for the dekatron board:
     the HV monitor at the left edge;
   * the remaining parts by the constructive placer of gen_pcb.py;
   * GND pours on both layers behind the driver row.
-Clearances come from the net classes in nixie.kicad_pro (NCATH 0.25 mm, NHV 1.15 mm; hardware.md
+Clearances come from the net classes in nixie.kicad_pro (NCATH 0.25 mm, NHV 1.25 mm; hardware.md
 "Clearance rules"), so Freerouting reads them from the exported DSN.
 Once the board is edited in KiCad the .kicad_pcb is the source of truth.
 
@@ -36,7 +36,8 @@ SHARE = os.environ.get("KICAD_FOOTPRINTS", r"C:\Program Files\KiCad\10.0\share\k
 PROJ_LIB = os.path.join(HW, "lib", "nixie.pretty")
 
 OX, OY = 50.0, 50.0           # board origin on the KiCad sheet
-W, H = 150.0, 80.0            # first pass; shrink after routing ("compact, decide later", user 2026-11-06)
+W, H = 150.0, 70.0            # compact ("decide later", user 2026-11-06); first pass was 150 x 80
+LOGIC_Y0 = 40.0               # front of the logic block, just behind the driver row
 
 TUBE_PITCH = 24.0             # 19 mm glass + 5 mm (user, 2026-11-06)
 TUBE_Y = 12.0                 # tube centre from the front edge: proposal (glass radius 9.5 + 2.5 mm)
@@ -45,12 +46,16 @@ CHIP_Y = 25.0                 # HV5622 centre: between its two tubes, just behin
 TUBE_ROT = 0                  # after Flip(): anode (pin 1) toward the back, front toward the front edge (checked by pad coordinates)
 
 DRU = """(version 1)
-# Net-class clearances live in nixie.kicad_pro (NCATH 0.25 mm, NHV 1.15 mm, Default 0.2 mm; KiCad
-# applies the larger value between two classes). Only fab minima here.
+# Net-class clearances live in nixie.kicad_pro (NCATH 0.25 mm, NHV 1.25 mm, Default 0.2 mm; KiCad
+# applies the larger value between two classes). Here: fab minima, and the IN-14 footprint's own
+# pads, 1.156 mm apart (square anode pad to the decimal-point pads), below NHV.
 (rule "Fab minimum (PCBWay standard, ordered at 6/6 mil)"
   (constraint track_width (min 0.1524mm))
   (constraint hole_size (min 0.2mm))
   (constraint annular_width (min 0.15mm)))
+(rule "IN-14 own pads (hardware.md Clearance rules)"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.memberOfFootprint('N?') && B.memberOfFootprint('N?')")
+  (constraint clearance (min 1.15mm)))
 """
 
 # --------------------------------------------------------------------------------------
@@ -58,10 +63,10 @@ DRU = """(version 1)
 # --------------------------------------------------------------------------------------
 REG = {
     "TUBE":  (0, 0, W, 40),            # decimal-point resistors, between and behind tubes
-    "DRV":   (14, 29, W - 2, 50),      # HV5622 bypass
-    "HVMON": (0, 24, 16, 62),          # HV module output, divider, clamp
-    "PWR":   (0, 50, 40, H),           # 12 V switch
-    "LOGIC": (40, 50, W, H),           # level shifter, 12 V logic rail, MCU support, harness parts
+    "DRV":   (14, 29, W - 2, LOGIC_Y0),  # HV5622 bypass
+    "HVMON": (0, 24, 18, LOGIC_Y0 + 8),   # HV module output, divider, clamp
+    "PWR":   (0, LOGIC_Y0, 40, H),        # 12 V switch
+    "LOGIC": (40, LOGIC_Y0, W, H),        # level shifter, 12 V logic rail, MCU support, harness parts
 }
 
 GROUP = {}
@@ -92,9 +97,9 @@ for k in range(6):
 for k in range(3):
     ANCHOR[f"U{201 + k}"] = (TUBE_X0 + TUBE_PITCH / 2 + 2 * k * TUBE_PITCH, CHIP_Y, 270, "F")
 ANCHOR.update({
-    "U301": (W - 12.5, 59.0, 270, "F"),    # RP2040-Zero, USB-C at the right edge
-    "U302": (75.0, 58.0, 0, "F"),          # level shifter, middle: CLK / LE / BL bus to all three chips
-    "Q101": (14.0, 66.0, 0, "F"),
+    "U301": (W - 12.5, LOGIC_Y0 + 9.0, 270, "F"),   # RP2040-Zero, USB-C at the right edge
+    "U302": (75.0, LOGIC_Y0 + 8.0, 0, "F"),         # level shifter, middle: CLK / LE / BL bus to all three chips
+    "Q101": (14.0, LOGIC_Y0 + 16.0, 0, "F"),
     # harness wire pads (pad 1 at the origin, pads along +x at 4.8 mm), back edge
     "J102": (10.0, H - 3.0, 0, "F"),         # 12V_IN
     "J103": (22.0, H - 3.0, 0, "F"),        # 12V_MODULE
@@ -104,7 +109,8 @@ ANCHOR.update({
     "J101": (110.0, H - 3.0, 0, "F"),       # NIX_LV
     # HV module output on the left edge, pads downward (rotation 270: +x -> +y)
     "J104": (3.0, 30.0, 270, "F"),
-    "R105": (11.0, 36.0, 270, "F"),          # HV divider top (DIN0411, 15.24 mm): NIX_HV pad at the top
+    "R105": (20.0, 39.0, 180, "F"),          # HV divider top (DIN0411, 15.24 mm), lying behind the HV
+                                             # landing: NIX_HV pad (1) on the right, next to R210's
 })
 
 def tie_for(ref, x, y, rot, n):
@@ -128,7 +134,7 @@ KEEPOUT = [(TUBE_X0 + k * TUBE_PITCH - 7.0, TUBE_Y - 7.0, TUBE_X0 + k * TUBE_PIT
 # gen_nixie_schematics.py). pcbnew.SaveBoard() rewrites nixie.kicad_pro from the board's own net
 # settings, so they are set here on the board, or the save would drop them.
 #   name: (clearance, track width, via diameter, via drill), mm
-NETCLASSES = {"Default": (0.2, 0.25, 0.6, 0.3), "NHV": (1.15, 0.3, 0.8, 0.4), "NCATH": (0.25, 0.3, 0.8, 0.4)}
+NETCLASSES = {"Default": (0.2, 0.25, 0.6, 0.3), "NHV": (1.25, 0.3, 0.8, 0.4), "NCATH": (0.25, 0.3, 0.8, 0.4)}
 NETCLASS_PATTERNS = [("NIX_HV", "NHV"), ("*_ANODE", "NHV"), ("*T?_K?", "NCATH"), ("*DP_K", "NCATH"),
                      ("*DP_D", "NCATH")]
 
@@ -429,7 +435,8 @@ def main():
         b.Add(z)
 
     # GND pours behind the tube row only: the cathode fan-out in front stays pour-free
-    lv = [(16, 50), (W - 0.5, 50), (W - 0.5, H - 0.5), (0.5, H - 0.5), (0.5, 62), (16, 62)]
+    y0, y1 = LOGIC_Y0, REG["HVMON"][3]
+    lv = [(16, y0), (W - 0.5, y0), (W - 0.5, H - 0.5), (0.5, H - 0.5), (0.5, y1), (16, y1)]
     zone("GND", pcbnew.B_Cu, lv, "GND_B")
     zone("GND", pcbnew.F_Cu, lv, "GND_F")
 

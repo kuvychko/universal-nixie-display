@@ -4,7 +4,7 @@
     "C:/Program Files/KiCad/10.0/bin/python.exe" tools/freeroute_nixie.py [passes]
 
 1. exports hardware/nixie/nixie.kicad_pcb to build/nixie.dsn (net-class clearances and widths come
-   from nixie.kicad_pro: NCATH 0.25 mm, NHV 1.15 mm);
+   from nixie.kicad_pro: NCATH 0.25 mm, NHV 1.25 mm);
 2. runs Freerouting headless on it (build/nixie.ses, log in build/freerouting.log);
 3. imports the session into the board, refills the zones, saves with LF line endings;
 4. runs KiCad DRC (report in build/nixie_drc.rpt) and prints its summary.
@@ -107,9 +107,8 @@ def main():
     if not pcbnew.ExportSpecctraDSN(b, dsn):
         raise SystemExit("DSN export failed")
     txt = open(dsn, encoding="utf-8").read()
-    # (not on NHV: the IN-14's own pads are 1.156 mm apart, just above its 1.15 mm)
-    txt = re.sub(r"\(clearance (\d+)\)", lambda m: "(clearance %d)" % (
-        int(m.group(1)) + (CLEARANCE_MARGIN_UM if int(m.group(1)) < 1000 else 0)), txt)
+    # (the IN-14's own pads, 1.156 mm apart, then show as fixed pin-to-pin violations in the log)
+    txt = re.sub(r"\(clearance (\d+)\)", lambda m: "(clearance %d)" % (int(m.group(1)) + CLEARANCE_MARGIN_UM), txt)
     # Freerouting spaces vias of every net class by the structure (Default) clearance; NCATH needs more
     txt = txt.replace("(clearance 50 (type smd_smd))", "(clearance 50 (type smd_smd))\n      "
                       "(clearance %d (type via_via))" % (250 + CLEARANCE_MARGIN_UM), 1)

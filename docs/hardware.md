@@ -1099,7 +1099,9 @@ wired to it on harnesses (see [Encoder](#encoder) and [Time sources](#time-sourc
   pinout. **Equal row pitch 24 mm** (19 mm glass + 5 mm between envelopes; user, 2026-11-06: a
   universal display, so no HH MM SS grouping). Tube centres 12 mm from the front edge (layout
   proposal); tube height above the cover _open_.
-* **Outline:** compact, set after routing (user, 2026-11-06); first pass 150 × 80 mm. **Four M3
+* **Outline:** compact, set after routing (user, 2026-11-06): **150 × 70 mm** (2026-11-07; first
+  pass 150 × 80). Width is set by six tubes at 24 mm plus the corner holes; at 65 mm deep the
+  RP2040-Zero meets a corner hole and Q101 the 12 V harness ties. **Four M3
   holes at the corners** (user, 2026-11-06), as the dekatron board.
 * **Driver placement** (2026-11-06, from routing trials): each HV5622 sits between its two tubes,
   centre 25 mm from the front edge, just behind the lead rings; each tube's 12k anode resistor
@@ -1292,12 +1294,21 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
 * **Clearance rules** (user, 2026-11-06): each class gets the smallest copper gap already inside
   the parts it lands on, since a wider rule cannot make the board safer than its own parts.
   `NCATH` (cathodes, decimal-point drives) **0.25 mm**: HV5622 PQFP-44 pads, 0.8 mm pitch − 0.55 mm
-  pad (KiCad `Microchip_PQFP-44_10x10mm_P0.8mm`). `NHV` (`NIX_HV`, anodes) **1.15 mm**: the IN-14
-  footprint's square 1.4 mm anode pad to the round decimal-point pads beside it, 1.156 mm by KiCad
-  DRC (1.4 mm pads on the 11 mm lead circle), rounded down so the part passes its own DRC; it follows the IN-14 pad size, still to be checked against
-  the spacers. Between classes KiCad applies the larger value. Set in `nixie.kicad_pro`; plain
-  net-class clearances, so Freerouting reads them directly. Below the IPC-2221B B2 figure for
-  151-300 V (1.25 mm, D13) for cathodes, as on the reference design (0.15-0.2 mm).
+  pad (KiCad `Microchip_PQFP-44_10x10mm_P0.8mm`). `NHV` (`NIX_HV`, anodes) **1.25 mm**, the
+  IPC-2221B B2 figure for 151-300 V (D13; user, 2026-11-07, after the HV trace review: routed HV
+  track had run 1.15-1.2 mm from a 12 V data line for ≈ 21 mm, and tracks are not bound by the
+  tube's pads). The IN-14 footprint's own pads keep **1.15 mm** by a rule in `nixie.kicad_dru`:
+  square 1.4 mm anode pad to the round decimal-point pads beside it, 1.156 mm by KiCad DRC (1.4 mm
+  pads on the 11 mm lead circle), rounded down so the part passes its own DRC; it follows the IN-14
+  pad size, still to be checked against the spacers. Between classes KiCad applies the larger
+  value. Classes set in `nixie.kicad_pro`, so Freerouting reads them directly (it logs the IN-14
+  pad pairs as fixed pin-to-pin violations). `NCATH` is below B2, as on the reference design
+  (0.15-0.2 mm).
+* **HV trace** (review 2026-11-07, 150 × 70 mm routing): `NIX_HV` runs ≈ 190 mm from the module
+  landing (J104, left edge) past the divider R105 along the anode-resistor row behind the
+  drivers, no vias; each tube's anode track is 5.3 mm. Nearest foreign copper ≥ 1.25 mm everywhere
+  (GND, `DRV12_D1`, `DRV12_LE` at 1.25-1.5 mm). Width 0.3 mm (`NHV` class; one 0.225 mm neck at
+  J104 from Freerouting) for ≤ 6 × 2.5 mA plus the divider; current is not the limit.
 * **HV monitor** (user, 2026-10-26; values user, 2026-11-01): 1 MΩ HHV-50 over 12 kΩ to an RP2040
   ADC, ratio 84.3, so 3.3 V at about 278 V (above the 204 V measured; the trimmer's maximum will
   not be measured, see HV limit). Also the input of the firmware overvoltage cut-off. Reports whether the module is running and when its output has decayed after
@@ -1363,7 +1374,7 @@ disagree, the datasheet wins.
 | **Dimming** | Not planned before this check | **PWM on BL**, 20 kHz, duty 40-255 of 255 | **Adopted** (user, 2026-11-06): see Dimming above |
 | HV output fusing | PTC on the module's 12 V input only | 40 mA fast fuse in series with the HV output | **Not adopted** (user, 2026-11-06): no fuse with a ≥ 300 V DC rating at this current; see No HV output fuse |
 | HV setpoint | Trimmer set to 175 V and fixed | Own PSU: trimmer, or a fixed resistor for a fixed voltage | **Kept the trimmer**, glued (user, 2026-11-06) |
-| Cathode clearance | `NCATH` rule _open_ | Board defaults: 0.2 mm (driver) and 0.15 mm (display); cathode tracks 0.41 mm (driver) and 0.64 mm (display); HV tracks 1.0-1.5 mm | Ours: `NCATH` 0.25 mm, `NHV` 1.15 mm, from the parts' own gaps (Clearance rules above) |
+| Cathode clearance | `NCATH` rule _open_ | Board defaults: 0.2 mm (driver) and 0.15 mm (display); cathode tracks 0.41 mm (driver) and 0.64 mm (display); HV tracks 1.0-1.5 mm | Ours: `NCATH` 0.25 mm from the driver's own pad gap, `NHV` 1.25 mm (IPC B2; IN-14 pads 1.15 mm) (Clearance rules above) |
 
 ### Time sources
 

@@ -390,14 +390,14 @@ def project_json() -> str:
         "meta": {"filename": f"{PROJECT}.kicad_pro", "version": 3},
         # Nixie HV classes (user, 2026-11-06): clearance = the smallest copper gap already inside the
         # parts each class lands on. NCATH: HV5622 PQFP-44 pads, 0.8 mm pitch - 0.55 mm pad = 0.25 mm.
-        # NHV: IN-14 footprint, square 1.4 mm anode pad to the round 1.4 mm decimal-point pads beside
-        # it on the 11 mm lead circle = 1.156 mm (KiCad DRC), rounded down so the part passes its own
-        # DRC. Follows the IN-14 pad size.
+        # NHV: 1.25 mm, IPC-2221B B2 for 151-300 V (user, 2026-11-07); the IN-14 footprint's own pads
+        # (square anode pad to the decimal-point pads, 1.156 mm) get 1.15 mm by a rule in
+        # nixie.kicad_dru (gen_nixie_pcb.py).
         "net_settings": {
             "classes": [
                 {"name": "Default", "clearance": 0.2, "track_width": 0.25, "via_diameter": 0.6, "via_drill": 0.3,
                  "priority": 2147483647, "bus_width": 12, "line_style": 0, "wire_width": 6},
-                nc("NHV", 1.15), nc("NCATH", 0.25)],
+                nc("NHV", 1.25), nc("NCATH", 0.25)],
             "meta": {"version": 4}, "net_colors": None, "netclass_assignments": None,
             "netclass_patterns": [
                 {"netclass": "NHV", "pattern": "NIX_HV"},
