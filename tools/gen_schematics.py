@@ -523,6 +523,9 @@ class Sheet:
         Every pin must be mapped, except pins of type no_connect."""
         lib, name = lib_id.split(":", 1)
         self.lib.get(lib, name)
+        if ref in ORDERED:                                 # as in place(): the parts list wins
+            fields = dict(fields or {})
+            fields["Manufacturer"], fields["MPN"] = ORDERED[ref]
         x, y = snap(x), snap(y)
         pins = [p for p in self.lib.pins(lib_id) if p["unit"] in (0, 1)]
         ends = [xf(p["x"], p["y"], x, y, angle, mirror) for p in pins]

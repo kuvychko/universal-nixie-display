@@ -744,7 +744,15 @@ their meaning (plan §8). A cumulative count lets the ESP32 poll without losing 
 **Mounting (user, 2026-10-26):** the encoder itself sits on the front panel, to the right of the
 TFT (plan §2), as a panel-mount part (threaded bushing and nut) needing no board of its own. A
 harness soldered to the Nixie board carries A, B, the push switch and GND to it; pull-ups and any
-debounce filter sit on the Nixie board. Part and values _open_.
+debounce filter sit on the Nixie board. **Part: Bourns PEC11R** with push switch (user,
+2026-11-07; `docs/datasheets/pec11r.pdf`): 2-bit quadrature, contacts 10 mA at 5 V DC, bounce
+≤ 2.0 ms at 15 RPM, 60 RPM max., M7 bushing with nut and washer. Ordering code (terminals,
+detents, shaft length) _open_ until the panel and knob are drawn. Filter on the Nixie board, per
+the data sheet's "Suggested Filter Circuit" (the data sheet's ratings are measured with it): 10k
+pull-up at the encoder pin (R302-R304, to 3V3: RP2040 inputs), 10k series to the RP2040 input
+(R311-R313), 0.01 µF at the input (C308-C310); the push switch gets the same filter (the data sheet
+shows none for it). The data sheet says hand soldering "not recommended": the harness wires go on
+quickly, with the encoder body kept cool.
 
 The display module's IO19, IO23 and IO35 stay unused (free for later), and microSD stays omitted
 (plan §8).
@@ -1340,7 +1348,7 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
 | GP8 | `DRV_BL` | HV5622 blanking via U302; pull-down (tubes off in reset); PWM for dimming |
 | GP9 | `DRV_LE` | HV5622 latch enable via U302 |
 | GP10 / GP11 | `DRV_CLK` / `DRV_DATA` | SPI1 SCK / TX via U302; the HV5622 shifts on the falling clock edge |
-| GP13 / GP14 / GP15 | `ENC_A` / `ENC_B` / `ENC_SW` | Pull-ups and debounce filter values _open_ |
+| GP13 / GP14 / GP15 | `ENC_A` / `ENC_B` / `ENC_SW` | PEC11R filter: 10k pull-up, 10k series, 0.01 µF (Encoder above) |
 | GP16 | WS2812 | On the module |
 | GP26 | `NIX_HV_SENSE` | ADC0, HV monitor |
 
@@ -1353,11 +1361,24 @@ core); routing with FreeRouting (Specctra DSN/SES) instead of the dekatron board
 `route_pcb.py` (proposed, 2026-10-26).
 
 **Schematic draft (2026-10-26):** `hardware/nixie/` (power, logic, tubes sheets), ERC clean.
-Values marked `_open_` in the schematics and `bom.csv`: C101 (+5V bulk), encoder pull-ups and debounce caps (R302-R304, C308-C310), ES100
-pull resistors (R305-R308). Values carried over with their basis: 0.1 µF bypass and 10 µF module
+Values marked `_open_` in the schematics and `bom.csv`: ES100 pull resistors (R305-R308): 1206
+pads, values chosen at assembly from the kit or left unfitted, depending on what the ES100 carrier
+already has (user, 2026-11-07). Decided 2026-11-07: C101 (+5V bulk at the harness landing) 10 µF
+16 V tantalum, the same part as C301 (user: "a reasonable one"); the encoder filter (above). Values carried over with their basis: 0.1 µF bypass and 10 µF module
 bulk (as the dekatron board), 100 nF ADC reservoir and BAT54S clamp (as the dekatron ADC inputs).
 Redrawn for the HV5622 drivers 2026-11-06 (tubes and logic sheets), ERC clean. Decimal-point series
 resistors (R211-R262) 150k as a starting value, checked at bring-up (2026-11-06).
+
+**Parts list (2026-11-07):** `NIXIE_PARTS` in `tools/gen_nixie_schematics.py` gives the
+manufacturer part numbers written into the schematics, `bom.csv` and the board's footprint fields:
+the exact MPNs already ordered for the dekatron board wherever the Nixie part has the same value,
+rating and footprint (0.1 µF bypass, 10 µF tantalum, BAT54S, IPD50P04P4L-11, 12k 1 %), plus the
+Nixie-only parts (HV5622PG-G, CD40109BNSRE4, RP2040-Zero, HHV-50FT-52-1M); the encoder filter's
+0.01 µF is the dekatron board's 12063C103JAT2A (25 V X7R). Kit resistors stay
+generic 1206 by value. Still to pick at ordering: MMBT3904, MMSZ5243B, 3.3 µF and 10 µF 25 V X7R
+1206, and the 12k MRS25 anode resistors (`MRS25000C1202FCT00` by the ordered 40.2k's pattern, to
+verify). `hardware/nixie/order_scratch.csv` (untracked, as the dekatron board's was) groups the
+parts by line for the order, with an `ORDERED` column to fill in, plus the off-board encoder.
 
 #### Cross-check against a published HV5622 design (2026-11-06)
 

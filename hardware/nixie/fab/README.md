@@ -1,8 +1,9 @@
 # Nixie module — fabrication outputs
 
-Generated 2026-11-07 from `hardware/nixie/nixie.kicad_pcb` (KiCad 10.0.5) at commit 90b917a,
-byte for byte; **not yet ordered**. Plain RS-274X Gerbers (no X2 attributes) and separate plated
-and unplated Excellon drill files.
+Generated 2026-11-07 from `hardware/nixie/nixie.kicad_pcb` (KiCad 10.0.5) as committed together
+with this README revision (encoder filter per the PEC11R data sheet, part numbers), byte for byte;
+**not yet ordered**. Plain RS-274X Gerbers (no X2 attributes) and separate plated and unplated
+Excellon drill files.
 
 To order, zip the ten files from `nixie-F_Cu.gtl` to `nixie-NPTH.drl` in the table below and
 upload the zip (zips are git-ignored).
@@ -14,7 +15,7 @@ upload the zip (zips are git-ignored).
 | `nixie-F_Silkscreen.gto`, `nixie-B_Silkscreen.gbo` | Silkscreen (mask openings subtracted); the bottom one carries the tube outlines |
 | `nixie-F_Paste.gtp` | Top paste: needed only if a stencil is ordered (no SMD parts on side B) |
 | `nixie-Edge_Cuts.gm1` | Board outline |
-| `nixie-PTH.drl`, `nixie-NPTH.drl` | Excellon, mm: plated (773 holes) and unplated (18 holes: 1.6 mm cable-tie and 3.2 mm mounting holes) |
+| `nixie-PTH.drl`, `nixie-NPTH.drl` | Excellon, mm: plated (801 holes) and unplated (18 holes: 1.6 mm cable-tie and 3.2 mm mounting holes) |
 | `nixie-PTH-drl_map.pdf`, `nixie-NPTH-drl_map.pdf`, `nixie-drill_report.txt`, `nixie-job.gbrjob` | Drill maps, drill summary and Gerber job file (not uploaded) |
 
 ## Order settings
@@ -38,6 +39,5 @@ The board meets PCBWay's published standard capabilities
 - legend text at least 0.8 mm high with a 0.15 mm stroke (here 0.8-1.0 mm text, 0.15 mm stroke).
 
 At generation: KiCad DRC at all severities 0 violations, 0 unconnected pads, 0 footprint errors,
-with schematic parity. References C309, TP104 and TP105 are not on the silkscreen (no legal spot;
-still on the fab layer). These files are committed byte-exact; do not edit them by hand —
+with schematic parity; every reference is on the silkscreen. These files are committed byte-exact; do not edit them by hand —
 regenerate from the board (`docs/development.md`).

@@ -38,7 +38,24 @@ PROJECT = "nixie"
 # The shared Sheet code reads these module globals: point them at this project.
 gs.PROJECT = PROJECT
 gs.NS = uuid.UUID("7c41d2a8-5e9b-4c3f-8a6d-1f2e3b4c5d6e")
-gs.ORDERED = {}                     # no frozen BOM yet
+# Design-time part numbers (2026-11-07), applied to every symbol like the dekatron board's frozen
+# BOM: the exact MPNs already ordered for the dekatron board (hardware/dekatron/Cart_Oct08_0432PM.xls)
+# wherever the Nixie part has the same value, rating and footprint, plus the Nixie-only parts.
+# Not listed: kit resistors (generic 1206, by value), _open_ values, part numbers still to be picked
+# at ordering, wire pads and test pads. Replace with the Nixie order once it is placed.
+NIXIE_PARTS = [
+    ("Yageo", "CC1206JPX7R9BB104", "C103 C201 C202 C203 C302 C303 C304"),   # 0.1 uF 50 V X7R 1206
+    ("KYOCERA AVX", "F911C106MAAAJ6", "C101 C301"),                         # 10 uF 16 V tantalum, case A
+    ("KYOCERA AVX", "12063C103JAT2A", "C308 C309 C310"),                    # 0.01 uF 1206 (dekatron C117)
+    ("Taiwan Semiconductor", "BAT54S RFG", "D101"),
+    ("Infineon", "IPD50P04P4L11ATMA2", "Q101"),
+    ("Yageo", "HHV-50FT-52-1M", "R105"),
+    ("Panasonic", "ERJ-8ENF1202V", "R106"),                                 # 12k 1 % 1206
+    ("Microchip", "HV5622PG-G", "U201 U202 U203"),
+    ("Waveshare", "RP2040-Zero", "U301"),
+    ("Texas Instruments", "CD40109BNSRE4", "U302"),
+]
+gs.ORDERED = {ref: (mfr, mpn) for mfr, mpn, refs in NIXIE_PARTS for ref in refs.split()}
 gs.ROOT_UUID = ROOT_UUID = gs.U("sheet:root")
 U = gs.U
 POWER_UUID = U("sheet:power")
@@ -183,8 +200,8 @@ def build_power(lib) -> Sheet:
     sh.flag("GND", 35.56, 160.02)
     sh.flag("+12V_IN", 45.72, 160.02)
     sh.flag("NIX_HV", 55.88, 160.02)
-    sh.part(CP, "C101", OPEN, 76.2, 63.5, {"1": "+5V", "2": "GND"}, footprint=FP_TANT_A,
-            fields=F("+5V bulk at the harness landing (value open)"))
+    sh.part(CP, "C101", "10uF", 76.2, 63.5, {"1": "+5V", "2": "GND"}, footprint=FP_TANT_A,
+            fields=F("+5V bulk at the harness landing (user 2026-11-07: as C301)", rating="16 V tantalum"))
 
     note(sh, "NIXIE HV MODULE 12 V SWITCH", "High side, off by default (R101 holds Q101 off; R104 holds Q102 off in "
          "reset). Soft start into the module's 470 uF: hardware/nixie/simulation/nix12_switch.cir", 106.68, 22.86)
@@ -279,17 +296,20 @@ def build_logic(lib) -> Sheet:
             fields=F("12 V logic reservoir: shift bursts", rating="25 V X7R"))
     sh.flag("+12V_LOGIC", 401.32, 101.6)
 
-    note(sh, "ENCODER (front panel, harness)", "Panel-mount encoder wired to J301; pull-ups and debounce "
-         "RC values open", 172.72, 139.7)
+    note(sh, "ENCODER (front panel, harness)", "Bourns PEC11R wired to J301 (user, 2026-11-07). Filter per "
+         "its data sheet (Suggested Filter Circuit): 10k pull-up, 10k series, 0.01 uF; the push switch "
+         "the same", 172.72, 139.7)
     sh.part("Connector_Generic:Conn_01x04", "J301", "ENCODER", 187.96, 172.72,
-            {"1": "ENC_A", "2": "ENC_B", "3": "ENC_SW", "4": "GND"}, footprint=FP_WIRE4,
-            fields=F("Harness to the panel-mount encoder: A, B, switch, common"))
+            {"1": "ENC_A_RAW", "2": "ENC_B_RAW", "3": "ENC_SW_RAW", "4": "GND"}, footprint=FP_WIRE4,
+            fields=F("Harness to the panel-mount encoder (PEC11R): A, B, switch, common C and switch 2"))
     for i, net in enumerate(("ENC_A", "ENC_B", "ENC_SW")):
         x = 215.9 + i * 25.4
-        sh.part(R, f"R{302 + i}", OPEN, x, 165.1, {"1": "+3V3", "2": net}, footprint=FP_R,
-                fields=F(f"{net} pull-up"))
-        sh.part(C, f"C{308 + i}", OPEN, x + 10.16, 180.34, {"1": net, "2": "GND"}, footprint=FP_C,
-                fields=F(f"{net} debounce"))
+        sh.part(R, f"R{302 + i}", "10k", x, 165.1, {"1": "+3V3", "2": net + "_RAW"}, footprint=FP_R,
+                fields=F(f"{net} pull-up (PEC11R suggested filter)"))
+        sh.part(R, f"R{311 + i}", "10k", x + 7.62, 165.1, {"1": net + "_RAW", "2": net}, footprint=FP_R,
+                fields=F(f"{net} series: filter discharge through 10k, not the contact (PEC11R suggested filter)"))
+        sh.part(C, f"C{308 + i}", "0.01uF", x + 15.24, 180.34, {"1": net, "2": "GND"}, footprint=FP_C,
+                fields=F(f"{net} debounce, 0.1 ms with the series 10k (PEC11R suggested filter)", rating="25 V X7R"))
 
     note(sh, "TIME MODULES (optional, harnesses)", "RTC (ZS-042) on the main bus; ES100 on its private bus. "
          "Pull resistors here so an unplugged module leaves defined levels", 297.18, 139.7)
