@@ -163,9 +163,12 @@ pass 8). What the pieces do:
   `freeroute_nixie.py` reads the session itself. GND is routed as tracks (the pours are removed
   for the export and filled afterwards); Freerouting's neck-downs under 0.16 mm are widened to
   0.16 mm, the board's DRC minimum (fab 0.1524 mm). Tie holes, mounting holes and a 0.6 mm edge
-  band are keep-out rule areas, since board-only NPTH footprints do not reach the DSN.
-* Freerouting vs KiCad DRC: its rounding left 2-3 µm clearance slivers, so every DSN clearance
-  gets +10 µm (`CLEARANCE_MARGIN_UM`);
+  band are keep-out rule areas, since board-only NPTH footprints do not reach the DSN. The DSN
+  export turns every rule area into a full keepout, so fill-only rule areas (no pour in the tube
+  lead rings) are removed for the export along with the pours.
+* Freerouting vs KiCad DRC: its rounding left 2-3 µm clearance slivers, and widening its
+  neck-downs to 0.16 mm takes up to 17.5 µm a side, so every DSN clearance gets +20 µm
+  (`CLEARANCE_MARGIN_UM`; +10 left slivers, +25 left a GND connection unrouted);
   it spaces vias of every class by the Default clearance, so the DSN gets a `via_via` rule at the
   NCATH clearance. GND pads left with one thermal spoke (KiCad wants two) are read from the DRC
   report and switched to a solid connection, then the zones are refilled.
@@ -176,7 +179,9 @@ pass 8). What the pieces do:
   `silk.py` (C309, TP104, TP105 references hidden). Moving the HV5622s forward to 25 mm and
   assigning their outputs from the geometry (hardware.md, `HV_MAP`) cut the cathode tracks
   (`NCATH`) from 2444 mm and 73 vias to ≈ 1300 mm and ≈ 57-61 vias. Shrunk to 150 × 70 mm
-  (logic block 10 mm forward, 2026-11-07): still 0 errors, 0 unconnected.
+  (logic block 10 mm forward, 2026-11-07): still 0 errors, 0 unconnected. GND pours then
+  extended to the whole board on both layers, except inside the tube lead rings: 0 errors, 0
+  unconnected.
 
 ### Fab outputs
 

@@ -24,7 +24,7 @@ BUILD = os.path.join(ROOT, "build")
 FREEROUTING = os.environ.get("FREEROUTING",
                              os.path.join(os.environ.get("LOCALAPPDATA", ""), "freerouting", "freerouting.exe"))
 KICAD_CLI = os.environ.get("KICAD_CLI", r"C:\Program Files\KiCad\10.0\bin\kicad-cli.exe")
-CLEARANCE_MARGIN_UM = 10     # added to every DSN clearance: Freerouting's rounding left 2-3 um slivers
+CLEARANCE_MARGIN_UM = 20     # added to every DSN clearance: Freerouting rounding (2-3 um) and widening its neck-downs to 0.16 mm (25 left a net unrouted)
 
 
 def import_ses(b, path):
@@ -101,7 +101,10 @@ def main():
         b.Remove(t)
     # GND pours: Freerouting treats an exported zone as a plane that connects everything on it, which
     # left islands after the fill. Route GND as tracks instead and put the pours back afterwards.
-    pours = [z for z in b.Zones() if not z.GetIsRuleArea()]
+    # Fill-only rule areas (no pour in the tube lead rings) leave too: the DSN export turns every rule
+    # area into a full keepout, which would shut the router out of the rings.
+    pours = [z for z in b.Zones() if not z.GetIsRuleArea()
+             or not (z.GetDoNotAllowTracks() or z.GetDoNotAllowVias())]
     for z in pours:
         b.Remove(z)
     if not pcbnew.ExportSpecctraDSN(b, dsn):

@@ -1309,6 +1309,10 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
   drivers, no vias; each tube's anode track is 5.3 mm. Nearest foreign copper ≥ 1.25 mm everywhere
   (GND, `DRV12_D1`, `DRV12_LE` at 1.25-1.5 mm). Width 0.3 mm (`NHV` class; one 0.225 mm neck at
   J104 from Freerouting) for ≤ 6 × 2.5 mA plus the divider; current is not the limit.
+* **GND pours** (2026-11-07): both layers, whole board, zone clearance 0.3 mm (net classes raise
+  it: 1.25 mm to `NHV`). None inside the tube lead rings (radius 7.5 mm): the hand-soldered tube
+  leads keep their own spacing, and the pour would only leave slivers between the cathode tracks
+  there.
 * **HV monitor** (user, 2026-10-26; values user, 2026-11-01): 1 MΩ HHV-50 over 12 kΩ to an RP2040
   ADC, ratio 84.3, so 3.3 V at about 278 V (above the 204 V measured; the trimmer's maximum will
   not be measured, see HV limit). Also the input of the firmware overvoltage cut-off. Reports whether the module is running and when its output has decayed after

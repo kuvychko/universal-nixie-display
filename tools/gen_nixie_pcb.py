@@ -11,7 +11,7 @@ does for the dekatron board:
     harness wire pads along the back edge with cable-tie holes (D14), the HV module output and
     the HV monitor at the left edge;
   * the remaining parts by the constructive placer of gen_pcb.py;
-  * GND pours on both layers behind the driver row.
+  * GND pours on both layers over the whole board.
 Clearances come from the net classes in nixie.kicad_pro (NCATH 0.25 mm, NHV 1.25 mm; hardware.md
 "Clearance rules"), so Freerouting reads them from the exported DSN.
 Once the board is edited in KiCad the .kicad_pcb is the source of truth.
@@ -434,9 +434,9 @@ def main():
         z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
         b.Add(z)
 
-    # GND pours behind the tube row only: the cathode fan-out in front stays pour-free
-    y0, y1 = LOGIC_Y0, REG["HVMON"][3]
-    lv = [(16, y0), (W - 0.5, y0), (W - 0.5, H - 0.5), (0.5, H - 0.5), (0.5, y1), (16, y1)]
+    # GND pours over the whole board, both layers (2026-11-07): KiCad keeps the larger of the zone
+    # and net-class clearance, so cathodes stay 0.25 mm and HV 1.25 mm from the pour
+    lv = [(0.5, 0.5), (W - 0.5, 0.5), (W - 0.5, H - 0.5), (0.5, H - 0.5)]
     zone("GND", pcbnew.B_Cu, lv, "GND_B")
     zone("GND", pcbnew.F_Cu, lv, "GND_F")
 
@@ -456,6 +456,26 @@ def main():
     for x, y in ((ux - 11.0, uy - 8.0), (ux + 11.0, uy - 8.0), (ux + 11.0, uy + 8.0), (ux - 11.0, uy + 8.0)):
         ol.Append(pcbnew.FromMM(x + OX), pcbnew.FromMM(y + OY))
     b.Add(ra)
+
+    # no pour inside the tube lead rings: the hand-soldered leads keep their own spacing, and the
+    # pour would only leave slivers between the cathode fan-out tracks there. Radius: lead circle
+    # 5.5 mm + pad 0.7 mm + 1.3 mm. Tracks and vias stay allowed, so nothing reaches the DSN.
+    for k in range(6):
+        cx, cy = TUBE_X0 + k * TUBE_PITCH, TUBE_Y
+        ta = pcbnew.ZONE(b)
+        ta.SetIsRuleArea(True)
+        ta.SetDoNotAllowZoneFills(True)
+        for allow in (ta.SetDoNotAllowVias, ta.SetDoNotAllowTracks, ta.SetDoNotAllowPads,
+                      ta.SetDoNotAllowFootprints):
+            allow(False)
+        ta.SetLayerSet(pcbnew.LSET.AllCuMask())
+        ta.SetZoneName(f"no_pour_N{k + 1}")
+        ol = ta.Outline()
+        ol.NewOutline()
+        for i in range(32):
+            a = 2 * math.pi * i / 32
+            ol.Append(pcbnew.FromMM(cx + 7.5 * math.cos(a) + OX), pcbnew.FromMM(cy + 7.5 * math.sin(a) + OY))
+        b.Add(ta)
 
     b.GetDesignSettings().SetCopperLayerCount(2)
     # DRC minimum track width: the fab's 0.1524 mm, rounded up to the 0.16 mm that
