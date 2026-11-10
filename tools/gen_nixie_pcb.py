@@ -4,12 +4,14 @@ Bootstrap PCB generator for the Nixie board (Phase 2 layout, first pass). Run wi
     "C:/Program Files/KiCad/10.0/bin/python.exe" tools/gen_nixie_pcb.py
 Writes hardware/nixie/nixie.kicad_pcb (unrouted) and nixie.kicad_dru, the same way as gen_pcb.py
 does for the dekatron board:
-  * board outline, four M3 corner holes (user, 2026-11-06);
+  * board outline, four M3 corner holes (user, 2026-11-06) and a pair at the middle of the long
+    edges against flexing (user, 2026-11-10);
   * six IN-14s on B.Cu along the front edge (y = 0), equal 24 mm pitch: 19 mm glass + 5 mm gap
     (user, 2026-11-06, "universal display", no HH MM SS grouping); tube 1 at the viewer's left;
-  * the three HV5622s behind their tube pairs, the RP2040-Zero at the right edge (USB-C outward),
-    harness wire pads along the back edge with cable-tie holes (D14), the HV module output and
-    the HV monitor at the left edge;
+  * the three HV5622s behind their tube pairs; the RP2040-Zero right of tube 6 (USB-C outward) on
+    a long, shallow board (user, 2026-11-10); the 12 V switch and the level shifter in the gaps
+    between the drivers; harness wire pads along the back edge with cable-tie holes (D14), the HV
+    module output and the HV monitor at the left edge;
   * the remaining parts by the constructive placer of gen_pcb.py;
   * GND pours on both layers over the whole board.
 Clearances come from the net classes in nixie.kicad_pro (NCATH 0.25 mm, NHV 1.25 mm; hardware.md
@@ -36,8 +38,9 @@ SHARE = os.environ.get("KICAD_FOOTPRINTS", r"C:\Program Files\KiCad\10.0\share\k
 PROJ_LIB = os.path.join(HW, "lib", "nixie.pretty")
 
 OX, OY = 50.0, 50.0           # board origin on the KiCad sheet
-W, H = 150.0, 70.0            # compact ("decide later", user 2026-11-06); first pass was 150 x 80
-LOGIC_Y0 = 40.0               # front of the logic block, just behind the driver row
+W, H = 164.0, 53.0            # long and shallow (user, 2026-11-10): the RP2040-Zero moves right of
+                              # tube 6, the logic into the gaps between the drivers; was 150 x 70
+BAND_Y = H - 3.0              # harness wire pads along the back edge
 
 TUBE_PITCH = 24.0             # 19 mm glass + 5 mm (user, 2026-11-06)
 TUBE_Y = 12.0                 # tube centre from the front edge: proposal (glass radius 9.5 + 2.5 mm)
@@ -63,10 +66,13 @@ DRU = """(version 1)
 # --------------------------------------------------------------------------------------
 REG = {
     "TUBE":  (0, 0, W, 40),            # decimal-point resistors, between and behind tubes
-    "DRV":   (14, 29, W - 2, LOGIC_Y0),  # HV5622 bypass
-    "HVMON": (0, 24, 18, LOGIC_Y0 + 8),   # HV module output, divider, clamp
-    "PWR":   (0, LOGIC_Y0, 40, H),        # 12 V switch
-    "LOGIC": (40, LOGIC_Y0, W, H),        # level shifter, 12 V logic rail, MCU support, harness parts
+    "DRV":   (14, 29, 138, 40),        # HV5622 bypass
+    "HVMON": (0, 22, 22, H),           # HV module output, divider, clamp: left end
+    "PWR":   (22, 22, 71, H),          # 12 V switch: gap between U201 and U202, band behind
+    "LOGIC": (86, 22, 112, H),         # level shifter, 12 V logic rail: gap between U202 and U203, band
+    "MCU":   (145, 7, W, H),           # RP2040-Zero support, encoder filter, ES100 pulls: right end
+    "ENC":   (76, 39, 130, H),         # encoder filter by its harness pads (J301)
+    "BAND":  (0, 39, W, H),            # 5 V harness landing, by the back-edge wire pads
 }
 
 GROUP = {}
@@ -76,9 +82,11 @@ for refs, g in (
     ("U201 U202 U203 C201 C202 C203", "DRV"),
     ("J104 R105 R106 D101 C103 TP103", "HVMON"),
     ("J102 J103 Q101 Q102 R101 R102 R103 R104 C102 TP101 TP102", "PWR"),
-    ("J101 C101 TP104 TP105 U301 C301 C302 U302 C303 C304 C305 R301 R309 R310 D301 J301 J302 J303 "
-     "R302 R303 R304 R311 R312 R313 C308 C309 C310 R305 R306 R307 R308 TP301 TP302 TP303 TP304 TP305 TP306 TP307 "
-     "TP308 TP309 TP310", "LOGIC"),
+    ("U302 C303 C304 C305 R301 R309 R310 D301", "LOGIC"),
+    ("R302 R303 R304 R311 R312 R313 C308 C309 C310", "ENC"),
+    ("U301 C301 C302 R305 R306 R307 R308 "
+     "TP301 TP302 TP303 TP304 TP305", "MCU"),
+    ("J101 J301 J302 J303 C101 TP104 TP105 TP306 TP307 TP308 TP309 TP310", "BAND"),
 ):
     for r in refs.split():
         GROUP[r] = g
@@ -97,16 +105,19 @@ for k in range(6):
 for k in range(3):
     ANCHOR[f"U{201 + k}"] = (TUBE_X0 + TUBE_PITCH / 2 + 2 * k * TUBE_PITCH, CHIP_Y, 270, "F")
 ANCHOR.update({
-    "U301": (W - 12.5, LOGIC_Y0 + 9.0, 270, "F"),   # RP2040-Zero, USB-C at the right edge
-    "U302": (75.0, LOGIC_Y0 + 8.0, 0, "F"),         # level shifter, middle: CLK / LE / BL bus to all three chips
-    "Q101": (14.0, LOGIC_Y0 + 16.0, 0, "F"),
-    # harness wire pads (pad 1 at the origin, pads along +x at 4.8 mm), back edge
-    "J102": (10.0, H - 3.0, 0, "F"),         # 12V_IN
-    "J103": (22.0, H - 3.0, 0, "F"),        # 12V_MODULE
-    "J301": (34.0, H - 3.0, 0, "F"),        # ENCODER
-    "J302": (56.0, H - 3.0, 0, "F"),        # RTC
-    "J303": (78.0, H - 3.0, 0, "F"),        # WWVB
-    "J101": (110.0, H - 3.0, 0, "F"),       # NIX_LV
+    # RP2040-Zero right of tube 6 and toward the back (user, 2026-11-10), USB-C at the right edge,
+    # clear of the back-right corner hole
+    "U301": (W - 12.5, 31.5, 270, "F"),
+    "U302": (99.0, 28.5, 0, "F"),           # level shifter between U202 and U203
+    "Q101": (50.0, 29.0, 0, "F"),           # 12 V switch between U201 and U202
+    # harness wire pads (pad 1 at the origin, pads along +x at 4.8 mm), back edge, either side of
+    # the middle hole H6
+    "J102": (24.0, BAND_Y, 0, "F"),         # 12V_IN
+    "J103": (34.0, BAND_Y, 0, "F"),         # 12V_MODULE
+    "J101": (45.0, BAND_Y, 0, "F"),         # NIX_LV
+    "J301": (82.0, BAND_Y, 0, "F"),         # ENCODER
+    "J302": (102.0, BAND_Y, 0, "F"),        # RTC
+    "J303": (122.0, BAND_Y, 0, "F"),        # WWVB
     # HV module output on the left edge, pads downward (rotation 270: +x -> +y)
     "J104": (3.0, 30.0, 270, "F"),
     "R105": (20.0, 39.0, 180, "F"),          # HV divider top (DIN0411, 15.24 mm), lying behind the HV
@@ -123,11 +134,16 @@ def tie_for(ref, x, y, rot, n):
 NPADS = {"J101": 6, "J102": 2, "J103": 2, "J104": 2, "J301": 4, "J302": 4, "J303": 6}
 TIES = {r: tie_for(r, *ANCHOR[r][:3], NPADS[r]) for r in NPADS}
 
-HOLES = ((4, 4), (W - 4, 4), (4, H - 4), (W - 4, H - 4))     # M3, non-plated, corners
+# M3, non-plated: four corners, plus a pair at the middle of the long edges against flexing (user,
+# 2026-11-10), at x = 75 between tubes 3 and 4 (the middle of the tube row)
+HOLES = ((4, 4), (W - 4, 4), (4, H - 4), (W - 4, H - 4), (75, 4), (75, H - 4))
 
 # F-side keep-outs: the tube lead rings (pads on both sides), so the placer leaves them clear
 KEEPOUT = [(TUBE_X0 + k * TUBE_PITCH - 7.0, TUBE_Y - 7.0, TUBE_X0 + k * TUBE_PITCH + 7.0, TUBE_Y + 7.0)
            for k in range(6)]
+# HV lane behind the drivers (y 35-39): NIX_HV runs from the module landing past every anode
+# resistor's back pad (y 33) with 1.25 mm clearance; the placer keeps parts out of it
+KEEPOUT.append((14, 35, 137, 39))
 
 
 # Net classes (hardware.md "Clearance rules"; same values as project_json() in
@@ -371,7 +387,8 @@ def main():
     todo = [r for r in comps if r not in fps]
     failed = []
     while todo:
-        todo.sort(key=lambda r: -conn_count(r))
+        # the two pockets between the drivers first: the band behind them is shared
+        todo.sort(key=lambda r: (GROUP[r] not in ("PWR", "LOGIC"), -conn_count(r)))
         ref = todo.pop(0)
         reg = REG[GROUP[ref]]
         tgt = [pt for (r, _), n in pin_net.items() if r == ref and n in placed_pads for pt in placed_pads[n]]

@@ -2912,7 +2912,7 @@
 	  (property "Datasheet" "" (at 330.2 86.36 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Description" "Unpolarized capacitor" (at 330.2 86.36 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Function" "NIX_HV_SENSE ADC sampling reservoir (as the dekatron ADC inputs)" (at 330.2 86.36 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
-	  (property "Rating" "25 V X7R" (at 330.2 86.36 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
+	  (property "Rating" "50 V X7R" (at 330.2 86.36 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "Manufacturer" "Yageo" (at 330.2 86.36 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (property "MPN" "CC1206JPX7R9BB104" (at 330.2 86.36 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)) (justify left)))
 	  (pin "1" (uuid "a28b54c6-f51b-50ca-96b1-6aa92eba53a2"))

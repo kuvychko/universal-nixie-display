@@ -183,7 +183,13 @@ pass 8). What the pieces do:
   extended to the whole board on both layers, except inside the tube lead rings, and stitched
   with targeted vias (`targeted_stitch()`, `TARGET_R` 3 mm around SMD GND pads and signal vias)
   plus `pcb_io.stitch()` (the dekatron board's 2.5 mm grid) after the first fill: ≈ 515 vias,
-  0 errors, 0 unconnected.
+  0 errors, 0 unconnected. Re-laid out at 164 × 53 mm (2026-11-10, user: RP2040-Zero right of tube 6,
+  the 12 V switch and level shifter in the gaps between the drivers, two mid-edge M3 holes). The
+  first try at 50 mm deep left `NIX_HV` unrouted (the pocket parts blocked its path past the
+  anode resistors); a part-free HV lane behind the drivers (y 35-39) fixed it. Result: `NCATH`
+  1383 mm / 58 vias, `NHV` 193 mm / 0 vias, other nets 3033 mm / 378 vias including stitching
+  (4461 mm / 668 at 150 × 70); DRC at all severities 0 with schematic parity after `silk.py`
+  (R306 reference hidden).
 
 ### Fab outputs
 
@@ -197,7 +203,7 @@ kicad-cli pcb export drill --format excellon --excellon-units mm --excellon-sepa
 ```
 
 The Nixie module the same way: replace `dekatron` by `nixie` in both commands
-(`hardware/nixie/fab/`, generated 2026-11-07, not yet ordered).
+(`hardware/nixie/fab/`, generated 2026-11-10, not yet ordered).
 
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.
 

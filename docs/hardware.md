@@ -1107,10 +1107,14 @@ wired to it on harnesses (see [Encoder](#encoder) and [Time sources](#time-sourc
   pinout. **Equal row pitch 24 mm** (19 mm glass + 5 mm between envelopes; user, 2026-11-06: a
   universal display, so no HH MM SS grouping). Tube centres 12 mm from the front edge (layout
   proposal); tube height above the cover _open_.
-* **Outline:** compact, set after routing (user, 2026-11-06): **150 × 70 mm** (2026-11-07; first
-  pass 150 × 80). Width is set by six tubes at 24 mm plus the corner holes; at 65 mm deep the
-  RP2040-Zero meets a corner hole and Q101 the 12 V harness ties. **Four M3
-  holes at the corners** (user, 2026-11-06), as the dekatron board.
+* **Outline:** compact, set after routing (user, 2026-11-06): **164 × 50 mm** (2026-11-10: longer
+  and shallower, user; 150 × 70 on 2026-11-07, 150 × 80 first pass). The RP2040-Zero sits right of
+  tube 6, toward the back, USB-C at the right edge; the 12 V switch (Q101) and the level shifter
+  (U302) fill the gaps between the drivers; the encoder filter sits by its harness pads (J301);
+  the harness wire pads stay along the back edge. Depth is set by the tubes, the drivers and the
+  wire-pad band; the RP2040-Zero ends just clear of the back-right corner hole. **M3 holes:** four
+  at the corners (user, 2026-11-06), as the dekatron board, plus a pair at the middle of the long
+  edges against flexing (user, 2026-11-10), at x = 75 mm, between tubes 3 and 4.
 * **Driver placement** (2026-11-06, from routing trials): each HV5622 sits between its two tubes,
   centre 25 mm from the front edge, just behind the lead rings; each tube's 12k anode resistor
   stands behind that tube (side A, clear of its courtyard). With the chips at 40 mm the cathode
@@ -1312,11 +1316,12 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
   value. Classes set in `nixie.kicad_pro`, so Freerouting reads them directly (it logs the IN-14
   pad pairs as fixed pin-to-pin violations). `NCATH` is below B2, as on the reference design
   (0.15-0.2 mm).
-* **HV trace** (review 2026-11-07, 150 × 70 mm routing): `NIX_HV` runs ≈ 190 mm from the module
-  landing (J104, left edge) past the divider R105 along the anode-resistor row behind the
-  drivers, no vias; each tube's anode track is 5.3 mm. Nearest foreign copper ≥ 1.25 mm everywhere
-  (GND, `DRV12_D1`, `DRV12_LE` at 1.25-1.5 mm). Width 0.3 mm (`NHV` class; one 0.225 mm neck at
-  J104 from Freerouting) for ≤ 6 × 2.5 mA plus the divider; current is not the limit.
+* **HV trace** (164 × 53 mm routing, 2026-11-10): `NIX_HV` runs ≈ 193 mm from the module
+  landing (J104, left edge) past the divider R105 along the anode-resistor row, in a lane kept
+  free of parts behind the drivers (y 35-39 mm; the 12 V switch and the level shifter sit in front
+  of it), no vias. Clearance ≥ 1.25 mm to all foreign copper by DRC (`NHV` class). Width 0.3 mm
+  for ≤ 6 × 2.5 mA plus the divider; current is not the limit. (150 × 70 mm routing, review
+  2026-11-07: ≈ 190 mm, no vias, nearest foreign copper 1.25-1.5 mm.)
 * **GND pours** (2026-11-07): both layers, whole board, zone clearance 0.3 mm (net classes raise
   it: 1.25 mm to `NHV`). None inside the tube lead rings (radius 7.5 mm): the hand-soldered tube
   leads keep their own spacing, and the pour would only leave slivers between the cathode tracks
@@ -1376,8 +1381,8 @@ rating and footprint (0.1 µF bypass, 10 µF tantalum, BAT54S, IPD50P04P4L-11, 1
 Nixie-only parts (HV5622PG-G, CD40109BNSRE4, RP2040-Zero, HHV-50FT-52-1M); the encoder filter's
 0.01 µF is the dekatron board's 12063C103JAT2A (25 V X7R). Kit resistors stay
 generic 1206 by value. Still to pick at ordering: MMBT3904, MMSZ5243B, 3.3 µF and 10 µF 25 V X7R
-1206, and the 12k MRS25 anode resistors (`MRS25000C1202FCT00` by the ordered 40.2k's pattern, to
-verify). `hardware/nixie/order_scratch.csv` (untracked, as the dekatron board's was) groups the
+1206. The 12k MRS25 anode resistors R210-R260 are `MRS25000C1202FRP00` (user's order,
+2026-11-10; same resistor as the `FCT00` first guessed, different packaging suffix). `hardware/nixie/order_scratch.csv` (untracked, as the dekatron board's was) groups the
 parts by line for the order, with an `ORDERED` column to fill in, plus the off-board encoder.
 
 #### Cross-check against a published HV5622 design (2026-11-06)

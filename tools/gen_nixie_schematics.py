@@ -51,6 +51,7 @@ NIXIE_PARTS = [
     ("Infineon", "IPD50P04P4L11ATMA2", "Q101"),
     ("Yageo", "HHV-50FT-52-1M", "R105"),
     ("Panasonic", "ERJ-8ENF1202V", "R106"),                                 # 12k 1 % 1206
+    ("Vishay", "MRS25000C1202FRP00", "R210 R220 R230 R240 R250 R260"),     # 12k MRS25 anode (Nixie order)
     ("Microchip", "HV5622PG-G", "U201 U202 U203"),
     ("Waveshare", "RP2040-Zero", "U301"),
     ("Texas Instruments", "CD40109BNSRE4", "U302"),
@@ -231,7 +232,7 @@ def build_power(lib) -> Sheet:
     sh.part("Diode:BAT54S", "D101", "BAT54S", 302.26, 71.12, {"1": "GND", "2": "+3V3", "3": "NIX_HV_SENSE"},
             fields=F("NIX_HV_SENSE clamp to 3V3 / GND", "BAT54S", rating="30 V Schottky pair"))
     sh.part(C, "C103", "100nF", 330.2, 86.36, {"1": "NIX_HV_SENSE", "2": "GND"}, footprint=FP_C,
-            fields=F("NIX_HV_SENSE ADC sampling reservoir (as the dekatron ADC inputs)", rating="25 V X7R"))
+            fields=F("NIX_HV_SENSE ADC sampling reservoir (as the dekatron ADC inputs)", rating="50 V X7R"))
 
     note(sh, "TEST PADS", "Supplies and the switched 12 V", 218.44, 132.08)
     for i, net in enumerate(("+12V_IN", "+12V_SW", "NIX_HV", "+5V", "GND")):
@@ -374,7 +375,8 @@ def build_tubes(lib) -> Sheet:
                     footprint=FP_IN14, fields=F(f"Tube {n}", "IN-14"))
             sh.part(R, f"R{200 + 10 * n}", "12k", x0 + 160.02, y0 - 10.16, {"1": "NIX_HV", "2": f"T{n}_ANODE"},
                     footprint=FP_AX0207,
-                    fields=F(f"Tube {n} anode resistor: (175 V - 145 V) / 2.5 mA, 75 mW", rating="1/4 W"))
+                    fields=F(f"Tube {n} anode resistor: (175 V - 145 V) / 2.5 mA, 75 mW",
+                             rating="MRS25: 0.6 W, 350 V, 1 %, 50 ppm/K"))
             for i, dp in enumerate(("LDP", "RDP")):
                 sh.part(R, f"R{200 + 10 * n + 1 + i}", "150k", x0 + 99.06 + i * 12.7, y0 + 60.96,
                         {"1": f"T{n}_{dp}_D", "2": f"T{n}_{dp}_K"}, footprint=FP_R,

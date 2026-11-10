@@ -1,7 +1,8 @@
 # Nixie module — fabrication outputs
 
-Generated 2026-11-07 from `hardware/nixie/nixie.kicad_pcb` (KiCad 10.0.5) as committed together
-with this README revision (encoder filter per the PEC11R data sheet, part numbers), byte for byte;
+Generated 2026-11-10 from `hardware/nixie/nixie.kicad_pcb` (KiCad 10.0.5) as committed together
+with this README revision (164 × 53 mm layout with two mid-edge M3 holes; anode resistor part
+number), byte for byte;
 **not yet ordered**. Plain RS-274X Gerbers (no X2 attributes) and separate plated and unplated
 Excellon drill files.
 
@@ -15,7 +16,7 @@ upload the zip (zips are git-ignored).
 | `nixie-F_Silkscreen.gto`, `nixie-B_Silkscreen.gbo` | Silkscreen (mask openings subtracted); the bottom one carries the tube outlines |
 | `nixie-F_Paste.gtp` | Top paste: needed only if a stencil is ordered (no SMD parts on side B) |
 | `nixie-Edge_Cuts.gm1` | Board outline |
-| `nixie-PTH.drl`, `nixie-NPTH.drl` | Excellon, mm: plated (801 holes) and unplated (18 holes: 1.6 mm cable-tie and 3.2 mm mounting holes) |
+| `nixie-PTH.drl`, `nixie-NPTH.drl` | Excellon, mm: plated (569 holes) and unplated (20 holes: 14 × 1.6 mm cable-tie and 6 × 3.2 mm mounting holes) |
 | `nixie-PTH-drl_map.pdf`, `nixie-NPTH-drl_map.pdf`, `nixie-drill_report.txt`, `nixie-job.gbrjob` | Drill maps, drill summary and Gerber job file (not uploaded) |
 
 ## Order settings
@@ -23,7 +24,7 @@ upload the zip (zips are git-ignored).
 | Setting | Value |
 |---|---|
 | Layers | 2 |
-| Size | 150 × 70 mm |
+| Size | 164 × 53 mm |
 | Material / thickness | FR-4, 1.6 mm |
 | Copper | 1 oz outer |
 | Min track / spacing | 6 / 6 mil ordered; the board's minimum track is 0.16 mm and minimum spacing 0.2 mm (cathode nets 0.25 mm, HV nets 1.25 mm by the design rules; the IN-14 footprint's own pads 1.156 mm) |
@@ -39,5 +40,6 @@ The board meets PCBWay's published standard capabilities
 - legend text at least 0.8 mm high with a 0.15 mm stroke (here 0.8-1.0 mm text, 0.15 mm stroke).
 
 At generation: KiCad DRC at all severities 0 violations, 0 unconnected pads, 0 footprint errors,
-with schematic parity; every reference is on the silkscreen. These files are committed byte-exact; do not edit them by hand —
+with schematic parity; every reference is on the silkscreen except R306 (no free spot; on the
+Fab layer). These files are committed byte-exact; do not edit them by hand —
 regenerate from the board (`docs/development.md`).
