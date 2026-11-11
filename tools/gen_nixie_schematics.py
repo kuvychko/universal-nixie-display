@@ -46,7 +46,7 @@ gs.NS = uuid.UUID("7c41d2a8-5e9b-4c3f-8a6d-1f2e3b4c5d6e")
 # Not listed: kit resistors (generic 1206, by value), _open_ values, part numbers still to be picked
 # at ordering, wire pads and test pads. Replace with the Nixie order once it is placed.
 NIXIE_PARTS = [
-    ("Yageo", "CC1206JPX7R9BB104", "C103 C201 C202 C203 C302 C303 C304"),   # 0.1 uF 50 V X7R 1206
+    ("Yageo", "CC1206JPX7R9BB104", "C103 C104 C201 C202 C203 C302 C303 C304"),  # 0.1 uF 50 V X7R 1206
     ("KYOCERA AVX", "F911C106MAAAJ6", "C101 C301"),                         # 10 uF 16 V tantalum, case A
     ("KYOCERA AVX", "12063C103JAT2A", "C308 C309 C310"),                    # 0.01 uF 1206 (dekatron C117)
     ("Taiwan Semiconductor", "BAT54S RFG", "D101"),
@@ -236,7 +236,7 @@ def rail(sh, *pts):
         sh.w(a, b)
 
 
-POWER_GLOBALS = {"SDA", "SCL", "NIX_SPARE", "NIX12_EN", "NIX_HV", "NIX_HV_SENSE", "+12V_IN"}
+POWER_GLOBALS = {"SDA", "SCL", "NIX_SPARE", "NIX12_EN", "NIX12_SENSE", "NIX_HV", "NIX_HV_SENSE", "+12V_IN"}
 
 
 def build_power(lib) -> Sheet:
@@ -317,6 +317,27 @@ def build_power(lib) -> Sheet:
     tp(sh, "TP102", "+12V_SW", (215.9, 83.82))
     mark(sh, (236.22, 83.82), "+12V_SW")
 
+    # ---- switched 12 V sense (below the switch) -------------------------------------------------
+    note(sh, "SWITCHED 12 V SENSE", "Divider to ADC1 (GP27), as the dekatron VIN_SENSE: 1.29 V at 12 V, "
+         "2.57 V at the 24 V clamp. Tells a switch fault from a module fault when NIX_HV is missing "
+         "(user, 2026-11-11).", 132.08, 132.08, 95)
+    y0 = 152.4
+    mark(sh, (144.78, y0), "+12V_SW", "L")
+    st, sb = v2(sh, R, "R107", "100k", 152.4, y0, FP_R, F("+12V_SW sense divider, upper (1.29 V at 12 V)"))
+    sh.w((144.78, y0), st)
+    n1, n2, n3 = (152.4, sb[1] + 2.54), (165.1, sb[1] + 2.54), (180.34, sb[1] + 2.54)
+    sh.w(sb, n1)
+    rail(sh, n1, n2, n3)
+    mark(sh, n3, "NIX12_SENSE")
+    lt, lb = v2(sh, R, "R108", "12k", 152.4, n1[1] + 5.08, FP_R,
+                F("+12V_SW sense divider, lower (2.57 V at 24 V)", rating="1 %"))
+    sh.w(n1, lt)
+    sh.gnd(lb)
+    ct, cb = v2(sh, C, "C104", "100nF", 165.1, n1[1] + 5.08, FP_C,
+                F("NIX12_SENSE ADC sampling reservoir (as the dekatron ADC inputs)", rating="50 V X7R"))
+    sh.w(n2, ct)
+    sh.gnd(cb)
+
     # ---- HV monitor (right) -------------------------------------------------------------------
     note(sh, "NIXIE HV MONITOR", "Divider to ADC0: 3.3 V at about 278 V. R105 is also the bleeder (below "
          "30 V in about 2-3 s, measured). BAT54S clamp and reservoir as on the dekatron ADC inputs.",
@@ -350,8 +371,8 @@ def build_power(lib) -> Sheet:
 
 
 DRV = ("DATA", "CLK", "LE", "BL")           # RP2040 -> CD40109B -> HV5622 lines
-LOGIC_GLOBALS = {"SDA", "SCL", "NIX_SPARE", "NIX12_EN", "NIX_HV_SENSE", "+12V_IN", "+12V_LOGIC"} | {
-    f"DRV12_{s}" for s in DRV}
+LOGIC_GLOBALS = {"SDA", "SCL", "NIX_SPARE", "NIX12_EN", "NIX12_SENSE", "NIX_HV_SENSE", "+12V_IN",
+                 "+12V_LOGIC", "DRV12_DOUT"} | {f"DRV12_{s}" for s in DRV}
 
 
 def build_logic(lib) -> Sheet:
@@ -365,8 +386,8 @@ def build_logic(lib) -> Sheet:
     nets = {"5V": "+5V", "GND": "GND", "3V3": "+3V3",
             "GP0": "NIX12_EN", "GP1": "NIX_SPARE", "GP2": "SDA", "GP3": "SCL", "GP4": "WWVB_SDA",
             "GP5": "WWVB_SCL", "GP6": "WWVB_EN", "GP7": "WWVB_IRQ", "GP8": "DRV_BL", "GP9": "DRV_LE",
-            "GP10": "DRV_CLK", "GP11": "DRV_DATA", "GP12": "GP12", "GP13": "ENC_A", "GP14": "ENC_B",
-            "GP15": "ENC_SW", "GP26": "NIX_HV_SENSE", "GP27": "GP27", "GP28": "GP28", "GP29": "GP29"}
+            "GP10": "DRV_CLK", "GP11": "DRV_DATA", "GP12": "DRV_DOUT", "GP13": "ENC_A", "GP14": "ENC_B",
+            "GP15": "ENC_SW", "GP26": "NIX_HV_SENSE", "GP27": "NIX12_SENSE", "GP28": "GP28", "GP29": "GP29"}
     sh.part("nixie:RP2040-Zero", "U301", "RP2040-Zero", 73.66, 71.12, nets, textpos=(-12.7, -27.5),
             footprint=FP_ZERO, fields=F("Nixie controller MCU", "RP2040-Zero", "Waveshare", "headerless, castellated"))
     sh.part(CP, "C301", "10uF", 106.68, 39.37, {"1": "+5V", "2": "GND"}, footprint=FP_TANT_A,
@@ -377,7 +398,8 @@ def build_logic(lib) -> Sheet:
     # ---- level shifter (top middle) -------------------------------------------------------------
     note(sh, "LEVEL SHIFTER: CD40109B, 3.3 V -> 12 V", "HV5622 inputs need V_IH >= VDD - 2 V. Enables tied "
          "to 3V3. DRV_BL pulled down: all tube outputs off while the RP2040 is in reset (BL low, POL "
-         "high). R310: the same while 3V3 is absent.", 142.24, 22.86, 105)
+         "high). R310: the same while 3V3 is absent. Readback: U203 DOUT (DRV12_DOUT) to GP12 (SPI1 RX) through "
+         "R314 / R315 (user, 2026-11-11).", 142.24, 22.86, 105)
     u = sh.place("Logic_LevelTranslator:CD40109BPW", "U302", "CD40109B", 193.04, 68.58, footprint=FP_SOP16_NS,
                  textpos=(10.16, 12.7),
                  fields=F("3.3 V -> 12 V for the HV5622 inputs", "CD40109BNSRE4", "TI",
@@ -413,6 +435,17 @@ def build_logic(lib) -> Sheet:
                     F("DRV12_BL pull-down: tubes blank while 3V3 is absent (U302 outputs then high-impedance)"))
     lead(sh, r10t, "DRV12_BL", 0, -2.54, "R")
     sh.gnd(r10b)
+    yd = 114.3                                           # DOUT readback divider, 12 V -> 3.3 V
+    mark(sh, (142.24, yd), "DRV12_DOUT", "L")
+    dl, dr = h2(sh, R, "R314", "100k", 147.32, yd, FP_R,
+                F("DRV12_DOUT readback divider, upper: 2.43-3.39 V at DOUT high (9.8-13.65 V)"))
+    sh.w((142.24, yd), dl)
+    dn = (162.56, yd)
+    rail(sh, dr, dn, (175.26, yd))
+    mark(sh, (175.26, yd), "DRV_DOUT")
+    d2t, d2b = v2(sh, R, "R315", "33k", 162.56, yd, FP_R,
+                  F("DRV12_DOUT readback divider, lower: <= 0.25 V at DOUT low (1 V max)"))
+    sh.gnd(d2b)
 
     # ---- 12 V logic rail (top right) ------------------------------------------------------------
     note(sh, "12 V LOGIC RAIL", "HV5622 / CD40109B VDD. The HV5622's VDD absolute maximum is 15 V, below the "
@@ -485,8 +518,8 @@ def build_logic(lib) -> Sheet:
             sh.gnd(pb)
 
     # ---- test pads (bottom right) ---------------------------------------------------------------
-    note(sh, "TEST PADS", "Spare GPIOs, 3V3, driver lines (3.3 V side)", 302.26, 132.08, 90)
-    for i, net in enumerate(("GP12", "GP27", "GP28", "GP29", "+3V3", "DRV_DATA", "DRV_CLK", "DRV_LE", "DRV_BL")):
+    note(sh, "TEST PADS", "Readback, 12 V sense, spare GPIOs, 3V3, driver lines (3.3 V side)", 302.26, 132.08, 90)
+    for i, net in enumerate(("DRV_DOUT", "NIX12_SENSE", "GP28", "GP29", "+3V3", "DRV_DATA", "DRV_CLK", "DRV_LE", "DRV_BL")):
         x, yy = 309.88 + (i // 5) * 40.64, 152.4 + (i % 5) * 12.7
         ref = f"TP{301 + i + (1 if i >= 5 else 0)}"      # TP306 (+12V_LOGIC) sits on the 12 V logic rail
         tp(sh, ref, net, (x, yy), textpos=(-12.7, -2.54))
@@ -495,7 +528,7 @@ def build_logic(lib) -> Sheet:
     return sh
 
 
-TUBES_GLOBALS = {"NIX_HV", "+12V_LOGIC"} | {f"DRV12_{s}" for s in DRV}
+TUBES_GLOBALS = {"NIX_HV", "+12V_LOGIC", "DRV12_DOUT"} | {f"DRV12_{s}" for s in DRV}
 CHIPS = 3                                   # HV5622, two tubes each
 
 
@@ -516,7 +549,8 @@ def build_tubes(lib) -> Sheet:
     sh = Sheet("tubes", "tubes.kicad_sch", U("file:tubes"), "A3", lib, f"/{ROOT_UUID}/{TUBES_UUID}",
                global_nets=TUBES_GLOBALS, title="Tubes: HV5622 drivers, IN-14s, resistors")
     note(sh, "TUBE DRIVERS: 3 x HV5622 (220 V open drain)", "Tube 1 at the left as seen by the viewer. Chain "
-         "U201 -> U202 -> U203 (DRV12_D1, DRV12_D2), 96 bits latched whole (LE). Outputs assigned from the "
+         "U201 -> U202 -> U203 (DRV12_D1, DRV12_D2), 96 bits latched whole (LE); U203 DOUT back to the RP2040 "
+         "(DRV12_DOUT, readback). Outputs assigned from the "
          "PCB geometry (HV_MAP in tools/gen_nixie_schematics.py, table in docs/hardware.md); HVOUT1-5 and "
          "30-32 spare. Firmware owns the map. Each tube: 12k anode resistor from NIX_HV, 150k in series "
          "with each decimal point.", 20.32, 22.86, 250)
@@ -535,10 +569,7 @@ def build_tubes(lib) -> Sheet:
                 sh.noconn(*u[num])
             else:
                 lead(sh, u[num], net, 2.54, 0)
-        if k < CHIPS - 1:
-            lead(sh, u["23"], f"DRV12_D{k + 1}", 2.54, 0)
-        else:
-            sh.noconn(*u["23"])
+        lead(sh, u["23"], f"DRV12_D{k + 1}" if k < CHIPS - 1 else "DRV12_DOUT", 2.54, 0)
         for num, net in (("32", "DRV12_DATA" if k == 0 else f"DRV12_D{k}"), ("28", "DRV12_CLK"),
                          ("31", "DRV12_LE"), ("33", "DRV12_BL"), ("27", "+12V_LOGIC")):
             lead(sh, u[num], net, -2.54, 0)

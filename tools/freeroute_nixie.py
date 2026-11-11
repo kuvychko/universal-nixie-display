@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """Route the Nixie board with Freerouting (user-installed, v2.5.0). Run with KiCad's Python:
 
-    "C:/Program Files/KiCad/10.0/bin/python.exe" tools/freeroute_nixie.py [passes]
+    "C:/Program Files/KiCad/10.0/bin/python.exe" tools/freeroute_nixie.py [passes] [--hv-from BOARD]
+
+--hv-from BOARD copies NIX_HV's tracks and vias from BOARD (a copy of an earlier routing with the same
+HV pad positions) into the board as locked copper before routing; the DSN exports them as protected
+wiring, so Freerouting routes everything else around a known-good HV path (2026-11-11: left to
+itself it took 280-390 mm with 2-4 vias where the 2026-11-10 routing had 193 mm and none).
 
 1. exports hardware/nixie/nixie.kicad_pcb to build/nixie.dsn (net-class clearances and widths come
    from nixie.kicad_pro: NCATH 0.25 mm, NHV 1.25 mm);
@@ -28,7 +33,7 @@ TARGET_R = 3.0               # mm: targeted GND stitching via within this of its
 CLEARANCE_MARGIN_UM = 20     # added to every DSN clearance: Freerouting rounding (2-3 um) and widening its neck-downs to 0.16 mm (25 left a net unrouted)
 
 
-def import_ses(b, path):
+def import_ses(b, path, skip=()):
     """Add the wires and vias of a Freerouting session to board b.
 
     pcbnew.ImportSpecctraSES() returns False on Freerouting 2.5.0 sessions in KiCad 10.0.5 (no
@@ -53,6 +58,8 @@ def import_ses(b, path):
 
     n_tracks = n_vias = 0
     for net in gs.find_all(gs.find(routes, "network_out"), "net"):
+        if gs.unq(net[1]) in skip:
+            continue
         ni = nets[gs.unq(net[1])]
         for w in gs.find_all(net, "wire"):
             p = gs.find(w, "path")
@@ -151,13 +158,38 @@ def drc():
     return rpt
 
 
+def copy_net(b, src_path, net):
+    """Copy one net's tracks and vias from board src_path into b, locked."""
+    src = pcbnew.LoadBoard(src_path)
+    ni = b.FindNet(net)
+    n = 0
+    for t in src.GetTracks():
+        if t.GetNetname() != net:
+            continue
+        c = t.Duplicate()
+        c.SetParent(b)
+        c.SetNet(ni)
+        c.SetLocked(True)
+        b.Add(c)
+        n += 1
+    return n
+
+
 def main():
-    passes = sys.argv[1] if len(sys.argv) > 1 else "40"
+    args = sys.argv[1:]
+    hv_from = None
+    if "--hv-from" in args:
+        i = args.index("--hv-from")
+        hv_from = args[i + 1]
+        del args[i:i + 2]
+    passes = args[0] if args else "40"
     os.makedirs(BUILD, exist_ok=True)
     dsn, ses = os.path.join(BUILD, "nixie.dsn"), os.path.join(BUILD, "nixie.ses")
     b = pcbnew.LoadBoard(BOARD)
     for t in list(b.GetTracks()):          # start from an unrouted board
         b.Remove(t)
+    if hv_from:
+        print(f"kept NIX_HV from {hv_from}: {copy_net(b, hv_from, 'NIX_HV')} tracks/vias, locked")
     # GND pours: Freerouting treats an exported zone as a plane that connects everything on it, which
     # left islands after the fill. Route GND as tracks instead and put the pours back afterwards.
     # Fill-only rule areas (no pour in the tube lead rings) leave too: the DSN export turns every rule
@@ -182,7 +214,7 @@ def main():
                        stdout=log, stderr=subprocess.STDOUT, check=False)
     if not os.path.exists(ses):
         raise SystemExit("Freerouting wrote no session; see build/freerouting.log")
-    print("imported %d track segments, %d vias" % import_ses(b, ses))
+    print("imported %d track segments, %d vias" % import_ses(b, ses, ("NIX_HV",) if hv_from else ()))
     # Freerouting necks tracks down at some pads (0.125-0.15 mm), below the 0.1524 mm fab minimum
     narrow = [t for t in b.GetTracks() if t.Type() == pcbnew.PCB_TRACE_T and t.GetWidth() < pcbnew.FromMM(0.16)]
     for t in narrow:
@@ -190,6 +222,12 @@ def main():
     print(f"widened {len(narrow)} neck-down segments to 0.16 mm")
     for z in pours:
         b.Add(z)
+    # First fill keeps every island: with island removal the stitcher only sees fragments a GND pad
+    # or track already reaches, and the vias that would join the rest are never placed (2026-11-11:
+    # 82 vias instead of ~300 after a re-route). Islands still unjoined after stitching go below.
+    gnd_pours = [z for z in b.Zones() if not z.GetIsRuleArea() and z.GetNetname() == "GND"]
+    for z in gnd_pours:
+        z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_NEVER)
     pcbnew.ZONE_FILLER(b).Fill(b.Zones())
     # GND stitching (user, 2026-11-07: 2.5 mm grid plus strategic placement): first a via beside
     # every SMD GND pad and every signal via, then pcb_io.stitch's 2.5 mm grid (as on the dekatron
@@ -200,8 +238,23 @@ def main():
     ns = pcb_io.stitch(b, lambda x, y: pcbnew.VECTOR2I(pcbnew.FromMM(x + pcb_io.OX), pcbnew.FromMM(y + pcb_io.OY)))
     print(f"{nt} targeted + {ns} grid GND stitching vias")
     ns += nt
-    if ns:
+    for z in gnd_pours:
+        z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
+    pcbnew.ZONE_FILLER(b).Fill(b.Zones())
+    # a via that only joined two floating islands is left on bare board once they are removed;
+    # drop it and refill until stable (dropping one can orphan another pair)
+    dropped = 0
+    while True:
+        fills = [z.GetFilledPolysList(z.GetLayer()) for z in gnd_pours]
+        stray = [v for v in b.GetTracks() if v.Type() == pcbnew.PCB_VIA_T and v.GetNetname() == "GND"
+                 and not all(f.Contains(v.GetPosition()) for f in fills)]
+        if not stray:
+            break
+        for v in stray:
+            b.Remove(v)
+        dropped += len(stray)
         pcbnew.ZONE_FILLER(b).Fill(b.Zones())
+    print(f"{ns - dropped} GND stitching vias kept ({dropped} dropped on unjoined islands)")
     save(b)
     rpt = drc()
     # pads whose second thermal spoke is blocked by a routed track (KiCad wants two): connect solid

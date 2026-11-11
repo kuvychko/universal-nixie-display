@@ -144,7 +144,7 @@ pass 8). What the pieces do:
 
 ```sh
 "C:/Program Files/KiCad/10.0/bin/python.exe" tools/gen_nixie_pcb.py         # place, write nixie.kicad_pcb + .kicad_dru
-"C:/Program Files/KiCad/10.0/bin/python.exe" tools/freeroute_nixie.py 40    # DSN -> Freerouting -> SES, zone fill, DRC
+"C:/Program Files/KiCad/10.0/bin/python.exe" tools/freeroute_nixie.py 100 --hv-from build/old_nixie.kicad_pcb   # DSN -> Freerouting -> SES, zone fill, DRC
 "C:/Program Files/KiCad/10.0/bin/python.exe" tools/silk.py hardware/nixie/nixie.kicad_pcb
 ```
 
@@ -190,6 +190,17 @@ pass 8). What the pieces do:
   1383 mm / 58 vias, `NHV` 193 mm / 0 vias, other nets 3033 mm / 378 vias including stitching
   (4461 mm / 668 at 150 × 70); DRC at all severities 0 with schematic parity after `silk.py`
   (R306 reference hidden).
+* Readback divider and 12 V sense added (2026-11-11, five parts): left to itself, Freerouting
+  then took `NIX_HV` 280-390 mm with 2-4 vias on three runs, whatever the new parts' region. So
+  `--hv-from` copies the previous routing's `NIX_HV` copper (same pad positions) in as locked
+  tracks, which the DSN exports as `(type fix)` wiring: save the board first
+  (`git show HEAD:hardware/nixie/nixie.kicad_pcb > build/old_nixie.kicad_pcb`), then
+  `gen_nixie_pcb.py`, then route. The re-route also showed the stitching starved: the first fill
+  removed every pour island no GND pad or track reached, so the stitcher never saw them (82 vias).
+  The first fill now keeps islands, the stitch runs, the refill removes islands, and vias left on
+  bare board are dropped until stable. Result: `NHV` 193 mm / 0 vias (kept), `NCATH` 1310 mm / 65
+  vias, other signal nets 3384 mm / 99 vias, 331 GND vias; DRC at all severities 0 with schematic
+  parity after `silk.py` (R308, TP302, TP303 references hidden: Fab layer only).
 
 ### Fab outputs
 
@@ -203,7 +214,7 @@ kicad-cli pcb export drill --format excellon --excellon-units mm --excellon-sepa
 ```
 
 The Nixie module the same way: replace `dekatron` by `nixie` in both commands
-(`hardware/nixie/fab/`, generated 2026-11-10, not yet ordered).
+(`hardware/nixie/fab/`, generated 2026-11-11, not yet ordered).
 
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.
 

@@ -1235,6 +1235,14 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
     | Drives | b K3 | b K4 | b K2 | b K5 | b K6 | b K1 | b K7 | b K8 | b LDP | b K9 | b K0 | b RDP |
   * 32-bit shift register (data shifts on the falling `CLK` edge) and 32 latches: `LE` high loads
     the latches, so a whole 96-bit frame applies at once. Chain U201 → U202 → U203 by `DATA OUT`.
+  * **Readback (user, 2026-11-11):** U203's `DATA OUT` (`DRV12_DOUT`) returns to GP12 (SPI1 RX)
+    through a kit 1206 divider, R314 100k over R315 33k (ratio 0.248). Basis: `DATA OUT` V_OH ≥
+    VDD − 1 V and V_OL ≤ 1 V at 100 µA (HV5622 DC characteristics); VDD 10.8 V minimum (recommended
+    operating conditions) up to 13.65 V (D301's maximum); RP2040 V_IH ≥ 2 V, V_IL ≤ 0.8 V, input at
+    most IOVDD + 0.3 V (Table 625). Result: high 2.43-3.39 V, low ≤ 0.25 V, ≈ 100 µA divider
+    load, ≈ 25 kΩ source impedance. Each frame clocked in returns the previous one on SPI RX, so
+    firmware can check the chain on every update. With 12 V present and 3V3 absent, at most
+    ≈ 0.1 mA flows into GP12's clamp (not covered by the RP2040 data sheet).
   * **Dark by default:** `BL` low with `POL` high turns every output off (Table 3-2). `POL` is tied
     to VDD; `BL` is pulled down on both sides of the level shifter (below). The 12 V switch also
     keeps the Nixie HV off while the RP2040 is in reset.
@@ -1320,7 +1328,8 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
   landing (J104, left edge) past the divider R105 along the anode-resistor row, in a lane kept
   free of parts behind the drivers (y 35-39 mm; the 12 V switch and the level shifter sit in front
   of it), no vias. Clearance ≥ 1.25 mm to all foreign copper by DRC (`NHV` class). Width 0.3 mm
-  for ≤ 6 × 2.5 mA plus the divider; current is not the limit. (150 × 70 mm routing, review
+  for ≤ 6 × 2.5 mA plus the divider; current is not the limit. The 2026-11-11 re-route (readback,
+  12 V sense) keeps this path as locked copper. (150 × 70 mm routing, review
   2026-11-07: ≈ 190 mm, no vias, nearest foreign copper 1.25-1.5 mm.)
 * **GND pours** (2026-11-07): both layers, whole board, zone clearance 0.3 mm (net classes raise
   it: 1.25 mm to `NHV`). None inside the tube lead rings (radius 7.5 mm): the hand-soldered tube
@@ -1338,6 +1347,10 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
   not be measured, see HV limit). Also the input of the firmware overvoltage cut-off. Reports whether the module is running and when its output has decayed after
   switch-off. The same 1 MΩ gave below 30 V in about 2-3 s on the bench, and draws about 31 mW at
   175 V.
+* **Switched 12 V sense** (user, 2026-11-11): `+12V_SW` (Q101's drain, the module's input) through
+  R107 100k over R108 12k (kit 1206, the dekatron `VIN_SENSE` divider) and C104 100 nF to ADC1
+  (GP27, `NIX12_SENSE`): 1.29 V at 12 V, 2.57 V at the 24 V TVS clamp. With the HV monitor it tells
+  a switch fault from a module fault, and shows the 12 V at the module's start-up.
 * Main I2C pull-ups stay on the dekatron board (one pair for the bus).
 
 **RP2040-Zero pin assignment (proposed):**
@@ -1355,7 +1368,10 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
 | GP10 / GP11 | `DRV_CLK` / `DRV_DATA` | SPI1 SCK / TX via U302; the HV5622 shifts on the falling clock edge |
 | GP13 / GP14 / GP15 | `ENC_A` / `ENC_B` / `ENC_SW` | PEC11R filter: 10k pull-up, 10k series, 0.01 µF (Encoder above) |
 | GP16 | WS2812 | On the module |
+| GP12 | `DRV_DOUT` | SPI1 RX: U203 `DATA OUT` readback through R314 / R315 (user, 2026-11-11) |
 | GP26 | `NIX_HV_SENSE` | ADC0, HV monitor |
+| GP27 | `NIX12_SENSE` | ADC1, switched 12 V sense (user, 2026-11-11) |
+| GP28 / GP29 | — | Spare, test pads TP303 / TP304 |
 
 **Harness landings** (D14 style, wires soldered to pads): `NIX_LV` from the dekatron board (5V,
 GND, SDA, SCL, GND, spare); 12 V in from `NIX_12V`; 12 V out to the module; HV in from the module;
@@ -1377,10 +1393,11 @@ resistors (R211-R262) 150k as a starting value, checked at bring-up (2026-11-06)
 **Parts list (2026-11-07):** `NIXIE_PARTS` in `tools/gen_nixie_schematics.py` gives the
 manufacturer part numbers written into the schematics, `bom.csv` and the board's footprint fields:
 the exact MPNs already ordered for the dekatron board wherever the Nixie part has the same value,
-rating and footprint (0.1 µF bypass, 10 µF tantalum, BAT54S, IPD50P04P4L-11, 12k 1 %), plus the
+rating and footprint (0.1 µF bypass and ADC reservoirs, 10 µF tantalum, BAT54S, IPD50P04P4L-11, 12k 1 %), plus the
 Nixie-only parts (HV5622PG-G, CD40109BNSRE4, RP2040-Zero, HHV-50FT-52-1M); the encoder filter's
 0.01 µF is the dekatron board's 12063C103JAT2A (25 V X7R). Kit resistors stay
-generic 1206 by value. Still to pick at ordering: MMBT3904, MMSZ5243B, 3.3 µF and 10 µF 25 V X7R
+generic 1206 by value (R107/R108 and R314/R315 added 2026-11-11 from the kit; C104 is one more
+0.1 µF than the seven ordered, from the dekatron leftovers). Still to pick at ordering: MMBT3904, MMSZ5243B, 3.3 µF and 10 µF 25 V X7R
 1206. The 12k MRS25 anode resistors R210-R260 are `MRS25000C1202FRP00` (user's order,
 2026-11-10; same resistor as the `FCT00` first guessed, different packaging suffix). `hardware/nixie/order_scratch.csv` (untracked, as the dekatron board's was) groups the
 parts by line for the order, with an `ORDERED` column to fill in, plus the off-board encoder.
