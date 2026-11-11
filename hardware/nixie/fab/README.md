@@ -28,7 +28,7 @@ upload the zip (zips are git-ignored).
 | Material / thickness | FR-4, 1.6 mm |
 | Copper | 1 oz outer |
 | Min track / spacing | 6 / 6 mil ordered; the board's minimum track is 0.16 mm and minimum spacing 0.2 mm (cathode nets 0.25 mm, HV nets 1.25 mm by the design rules; the IN-14 footprint's own pads 1.156 mm) |
-| Min hole | 0.30 mm (signal vias 0.6 / 0.3 mm); GND stitching vias 0.7 / 0.35 mm, cathode and HV vias 0.8 / 0.4 mm |
+| Min hole | 0.30 mm (signal vias 0.6 / 0.3 mm, also 7 of the 64 cathode vias); GND stitching vias 0.7 / 0.35 mm, the other cathode vias 0.8 / 0.4 mm; the HV net has no vias |
 | Surface finish | ENIG recommended (flat pads for the 0.8 mm-pitch PQFP-44 HV5622s); lead-free HASL also works |
 | Solder mask / silkscreen | Any colour. The board takes no clearance credit for solder mask |
 

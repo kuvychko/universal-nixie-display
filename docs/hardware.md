@@ -1329,7 +1329,7 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
   landing (J104, left edge) past the divider R105 along the anode-resistor row, in a lane kept
   free of parts behind the drivers (y 35-39 mm; the 12 V switch and the level shifter sit in front
   of it), no vias. Clearance ≥ 1.25 mm to all foreign copper by DRC (`NHV` class). Width 0.3 mm
-  for ≤ 6 × 2.5 mA plus the divider; current is not the limit. The 2026-11-11 re-route (readback,
+  (0.225 mm at a few pad entries, Freerouting neck-downs) for ≤ 6 × 2.5 mA plus the divider; current is not the limit. The 2026-11-11 re-route (readback,
   12 V sense) keeps this path as locked copper. (150 × 70 mm routing, review
   2026-11-07: ≈ 190 mm, no vias, nearest foreign copper 1.25-1.5 mm.)
 * **GND pours** (2026-11-07): both layers, whole board, zone clearance 0.3 mm (net classes raise
