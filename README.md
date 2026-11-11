@@ -82,6 +82,20 @@ reworks to the current sense and switching frequency ([docs/bringup.md](docs/bri
 *Render and board 1 as assembled by hand (2026-10-27). The yellow disc capacitor beside U106 is a
 bring-up rework: 470 pF at the converter's current-sense pin.*
 
+### Nixie controller/mount at a glance
+
+Six IN-14s, three HV5622 drivers and an RP2040 on one 164 x 53 mm board. Fabrication outputs
+generated 2026-11-10, **not yet ordered or built**.
+
+| What | File |
+|---|---|
+| Schematic (PDF, 3 sheets) | [hardware/nixie/docs/nixie-schematic.pdf](hardware/nixie/docs/nixie-schematic.pdf) |
+| Board renders | [top](hardware/nixie/docs/nixie-pcb-top.png), [bottom](hardware/nixie/docs/nixie-pcb-bottom.png) |
+| Bill of materials | [hardware/nixie/bom.csv](hardware/nixie/bom.csv) |
+| Gerbers and drill files | [hardware/nixie/fab/](hardware/nixie/fab/README.md) |
+
+<img src="hardware/nixie/docs/nixie-pcb-top.png" alt="3D render of the Nixie controller/mount board, top side: six IN-14 sockets in a row along the top edge, three HV5622 drivers between them, the RP2040 module footprint at the right and the harness and I2C connectors along the bottom edge" width="600">
+
 ## Architecture
 
 ```
@@ -118,7 +132,7 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | Path | Contents |
 |---|---|
 | `hardware/dekatron/` | Dekatron controller/PSU KiCad project; `simulation/` holds supply and drive/sense models |
-| `hardware/nixie/` | Nixie controller/mount KiCad project (planned, Phase 2) |
+| `hardware/nixie/` | Nixie controller/mount KiCad project (fab outputs generated, not yet ordered) |
 | `hardware/power/` | Purchased Nixie PSU specification and system power harness (planned, Phase 2) |
 | `hardware/lib/` | Shared symbols and footprints (planned; the dekatron board's own library is in `hardware/dekatron/lib/`) |
 | `firmware/display/` | ESP32 main application, PlatformIO (planned, Phase 3) |

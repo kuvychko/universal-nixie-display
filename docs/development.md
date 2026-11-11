@@ -218,6 +218,10 @@ kicad-cli pcb render --side top --quality high -w 1600 -h 1200 --background opaq
 kicad-cli pcb render --side bottom --quality high -w 1600 -h 1200 --background opaque -o hardware/dekatron/docs/dekatron-pcb-bottom.png hardware/dekatron/dekatron.kicad_pcb
 ```
 
+The Nixie board the same way into `hardware/nixie/docs/` (`nixie-schematic.pdf`,
+`nixie-pcb-top.png`, `nixie-pcb-bottom.png`), but render at `-w 2000 -h 800 --zoom 2.4` so the
+long, narrow board fills the frame.
+
 ### DRC baseline (2026-10-08, frozen BOM: TPS54302, IPD70R1K4P7S, tantalum C301, 0805 feedback pair; routing converged on pass 5)
 
 `kicad-cli pcb drc --severity-all --schematic-parity hardware/dekatron/dekatron.kicad_pcb`:
