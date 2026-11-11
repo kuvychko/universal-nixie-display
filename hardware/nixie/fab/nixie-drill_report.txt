@@ -1,5 +1,5 @@
 Drill report for nixie.kicad_pcb
-Created on 2026-11-11T11:32:58
+Created on 2026-11-11T11:54:38
 
 Copper Layer Stackup:
     =============================================================
@@ -10,15 +10,15 @@ Copper Layer Stackup:
 Drill file 'nixie-PTH.drl' contains
     plated through holes:
     =============================================================
-    T1  0.300mm  0.0118"  (115 holes))
-    T2  0.350mm  0.0138"  (324 holes))
-    T3  0.400mm  0.0157"  (56 holes))
+    T1  0.300mm  0.0118"  (98 holes))
+    T2  0.350mm  0.0138"  (361 holes))
+    T3  0.400mm  0.0157"  (57 holes))
     T4  0.700mm  0.0276"  (15 holes))
     T5  0.800mm  0.0315"  (90 holes))
     T6  1.150mm  0.0453"  (26 holes))
     T7  1.200mm  0.0472"  (2 holes))
 
-    Total plated holes count 628
+    Total plated holes count 649
 
 
 Drill file 'nixie-NPTH.drl' contains

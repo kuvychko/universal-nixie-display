@@ -16,7 +16,7 @@ upload the zip (zips are git-ignored).
 | `nixie-F_Silkscreen.gto`, `nixie-B_Silkscreen.gbo` | Silkscreen (mask openings subtracted); the bottom one carries the tube outlines |
 | `nixie-F_Paste.gtp` | Top paste: needed only if a stencil is ordered (no SMD parts on side B) |
 | `nixie-Edge_Cuts.gm1` | Board outline |
-| `nixie-PTH.drl`, `nixie-NPTH.drl` | Excellon, mm: plated (628 holes) and unplated (20 holes: 14 × 1.6 mm cable-tie and 6 × 3.2 mm mounting holes) |
+| `nixie-PTH.drl`, `nixie-NPTH.drl` | Excellon, mm: plated (649 holes) and unplated (20 holes: 14 × 1.6 mm cable-tie and 6 × 3.2 mm mounting holes) |
 | `nixie-PTH-drl_map.pdf`, `nixie-NPTH-drl_map.pdf`, `nixie-drill_report.txt`, `nixie-job.gbrjob` | Drill maps, drill summary and Gerber job file (not uploaded) |
 
 ## Order settings
@@ -40,6 +40,6 @@ The board meets PCBWay's published standard capabilities
 - legend text at least 0.8 mm high with a 0.15 mm stroke (here 0.8-1.0 mm text, 0.15 mm stroke).
 
 At generation: KiCad DRC at all severities 0 violations, 0 unconnected pads, 0 footprint errors,
-with schematic parity; every reference is on the silkscreen except R308, TP302 and TP303 (no free
-spot; on the Fab layer). These files are committed byte-exact; do not edit them by hand —
+with schematic parity; every reference is on the silkscreen except R306 and R314 (no free spot; on
+the Fab layer). These files are committed byte-exact; do not edit them by hand —
 regenerate from the board (`docs/development.md`).

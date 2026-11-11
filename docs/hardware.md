@@ -1148,8 +1148,9 @@ compiled from several sources, no text layer):
   2.63 mm between adjacent lead centres.
 * Footprint: `hardware/nixie/lib/nixie.pretty/IN-14.kicad_mod`, drawn as seen from the tube's
   top (the mirror of the bottom view) for flipping onto B.Cu; pin 1 square, front toward +Y and
-  marked. Drill 0.8 mm and pad 1.4 mm are proposed (1.2 mm copper gap between adjacent pads), to
-  be checked against the spacers and a 1:1 print with a tube before ordering. Courtyard Ø19.5 mm.
+  marked. Drill 0.8 mm and pad 1.4 mm (1.2 mm copper gap between adjacent pads). **Checked by the
+  user (2026-11-11):** a 1:1 print of the layout matches the IN-14's plastic lead spacer, lead
+  spacing and orientation both correct. Courtyard Ø19.5 mm.
 * Typical maintaining voltage 145 V; current 2.5 mA (decimal point 0.3 mA).
 * Side A facing down puts the RP2040-Zero's USB-C and BOOT button inside the enclosure: flashing
   needs service access from below or a USB extension (Phase 4).
@@ -1320,7 +1321,7 @@ Q101 is a DPAK, as the dekatron board's Q101, for its thermal mass in the soft s
   tube's pads). The IN-14 footprint's own pads keep **1.15 mm** by a rule in `nixie.kicad_dru`:
   square 1.4 mm anode pad to the round decimal-point pads beside it, 1.156 mm by KiCad DRC (1.4 mm
   pads on the 11 mm lead circle), rounded down so the part passes its own DRC; it follows the IN-14
-  pad size, still to be checked against the spacers. Between classes KiCad applies the larger
+  pad size (checked against the spacer on a 1:1 print, user 2026-11-11). Between classes KiCad applies the larger
   value. Classes set in `nixie.kicad_pro`, so Freerouting reads them directly (it logs the IN-14
   pad pairs as fixed pin-to-pin violations). `NCATH` is below B2, as on the reference design
   (0.15-0.2 mm).

@@ -109,6 +109,8 @@ ANCHOR.update({
     # clear of the back-right corner hole
     "U301": (W - 12.5, 31.5, 270, "F"),
     "U302": (99.0, 28.5, 0, "F"),           # level shifter between U202 and U203
+    "TP302": (146.0, 8.0, 0, "F"),          # NIX12_SENSE pad: the placer left it at the right edge,
+                                             # no room for its reference (2026-11-11)
     "Q101": (50.0, 29.0, 0, "F"),           # 12 V switch between U201 and U202
     # harness wire pads (pad 1 at the origin, pads along +x at 4.8 mm), back edge, either side of
     # the middle hole H6

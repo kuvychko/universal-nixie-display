@@ -198,9 +198,10 @@ pass 8). What the pieces do:
   `gen_nixie_pcb.py`, then route. The re-route also showed the stitching starved: the first fill
   removed every pour island no GND pad or track reached, so the stitcher never saw them (82 vias).
   The first fill now keeps islands, the stitch runs, the refill removes islands, and vias left on
-  bare board are dropped until stable. Result: `NHV` 193 mm / 0 vias (kept), `NCATH` 1310 mm / 65
-  vias, other signal nets 3384 mm / 99 vias, 331 GND vias; DRC at all severities 0 with schematic
-  parity after `silk.py` (R308, TP302, TP303 references hidden: Fab layer only).
+  bare board are dropped until stable. TP302 is anchored at (146, 8): placed freely it sat at the
+  right edge with no room for its reference. Result: `NHV` 193 mm / 0 vias (kept), `NCATH`
+  1314 mm / 64 vias, other signal nets 3172 mm / 84 vias, 368 GND vias; DRC at all severities 0
+  with schematic parity after `silk.py` (R306, R314 references hidden: Fab layer only).
 
 ### Fab outputs
 
