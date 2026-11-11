@@ -13,9 +13,10 @@ Writes into hardware/nixie/:
   lib/nixie.pretty/RP2040-Zero_Castellated.kicad_mod   (IN-14.kicad_mod is maintained by hand)
   bom.csv
 
-Reuses the core of tools/gen_schematics.py (parser, symbol loading, Sheet). Connectivity style:
-every pin gets a short stub ending in a net label, power symbol or no-connect (Sheet.part), so the
-netlist is exactly the `nets` dictionaries below. Values not yet sourced are written as OPEN
+Reuses the core of tools/gen_schematics.py (parser, symbol loading, Sheet). Drawing style (2026-11-10,
+for readability): small analog circuits are drawn with real wires (Sheet.place / w, junctions by
+Sheet.finish); module and driver pins end in short stubs with horizontal net labels; every named
+net keeps its label, so the netlist (and the routed board) is unchanged by layout edits. Values not yet sourced are written as OPEN
 ("_open_"); they come from the Nixie HV module measurements (docs/hardware.md, "Nixie board
 electrical design").
 
@@ -26,6 +27,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import textwrap
 import uuid
 
 import gen_schematics as gs
@@ -170,13 +172,68 @@ NPN = "Transistor_BJT:Q_NPN_BEC"
 DZ = "Device:D_Zener"
 
 
-def note(sh, head, detail, x, y):
+CHAR_W = 1.1            # mm per character of 1.27 mm schematic text (conservative), for wrapping notes
+
+
+def note(sh, head, detail, x, y, width=95.0):
+    """Section heading plus its explanation, wrapped to `width` mm so neighbouring notes never
+    run into each other."""
     sh.text(head, x, y, 2.0)
-    sh.text(detail, x, y + 4.32, 1.27)
+    if detail:
+        body = "\n".join(textwrap.wrap(detail, int(width / CHAR_W)))
+        sh.items.append(f'(text {q(body)} (exclude_from_sim no) (at {gs.fmt(x)} {gs.fmt(y + 1.27)} 0) '
+                        f'(effects (font (size 1.27 1.27)) (justify left top)) (uuid "{sh.key("txt")}"))')
 
 
-def tp(sh, ref, net, x, y):
-    sh.part(TP, ref, net, x, y, {"1": net}, footprint=FP_TP, fields=F(f"Test point {net}"))
+def mark(sh, pt, net, side="R"):
+    """End a wire at pt with the net's marker: GND / supply symbol, or a horizontal (global) label
+    whose text runs to the right ("R") or left ("L") of pt."""
+    if net == "GND":
+        sh.gnd(pt)
+    elif net in gs.POWER_NETS:
+        sh.pwr(net, pt)
+    elif net in sh.global_nets:
+        sh.gl(net, pt, 0 if side == "R" else 180)
+    else:
+        sh.nl(net, pt, 0 if side == "R" else 180)
+
+
+def lead(sh, pt, net, dx, dy, side=None):
+    """Wire from pt by (dx, dy), then the net's marker. Labels always read horizontally."""
+    end = (round(pt[0] + dx, 4), round(pt[1] + dy, 4))
+    sh.w(pt, end)
+    mark(sh, end, net, side or ("L" if dx < 0 else "R"))
+    return end
+
+
+def v2(sh, lib_id, ref, val, x, ytop, fp, fields, **kw):
+    """Two-pin part standing upright with pin 1 at (x, ytop); returns (pin 1, pin 2)."""
+    pm = sh.place(lib_id, ref, val, x, ytop + 3.81, footprint=fp, fields=fields, **kw)
+    return pm["1"], pm["2"]
+
+
+def h2(sh, lib_id, ref, val, xl, y, fp, fields):
+    """Two-pin part lying down with pin 1 at (xl, y), pin 2 to the right; returns (pin 1, pin 2)."""
+    pm = sh.place(lib_id, ref, val, xl + 3.81, y, angle=90, footprint=fp, fields=fields)
+    return pm["1"], pm["2"]
+
+
+def by_number(sh, lib_id, x, y, angle=0, mirror=None):
+    """Pin positions keyed by pin number only (place() also keys by name, and the IN-14's digit
+    names "0"-"9" collide with pin numbers)."""
+    return {p["number"]: gs.xf(p["x"], p["y"], x, y, angle, mirror)
+            for p in sh.lib.pins(lib_id) if p["unit"] in (0, 1)}
+
+
+def tp(sh, ref, net, pt, **kw):
+    """Test pad sitting on a wire point (pad above the point)."""
+    sh.place(TP, ref, net, pt[0], pt[1], footprint=FP_TP, fields=F(f"Test point {net}"), **kw)
+
+
+def rail(sh, *pts):
+    """Wire through a row of points (split at each, so the taps get junctions)."""
+    for a, b in zip(pts, pts[1:]):
+        sh.w(a, b)
 
 
 POWER_GLOBALS = {"SDA", "SCL", "NIX_SPARE", "NIX12_EN", "NIX_HV", "NIX_HV_SENSE", "+12V_IN"}
@@ -186,57 +243,109 @@ def build_power(lib) -> Sheet:
     sh = Sheet("power", "power.kicad_sch", U("file:power"), "A3", lib, f"/{ROOT_UUID}/{POWER_UUID}",
                global_nets=POWER_GLOBALS, title="Power: harness landings, Nixie HV module 12 V switch, HV monitor")
 
-    note(sh, "HARNESS LANDINGS (D14, soldered)", "NIX_LV and NIX_12V from the dekatron board; the module's "
-         "12 V input and HV output", 20.32, 22.86)
-    sh.part("Connector_Generic:Conn_01x06", "J101", "NIX_LV", 45.72, 58.42,
+    # ---- harness landings (left) ------------------------------------------------------------
+    note(sh, "HARNESS LANDINGS (D14, soldered)", "NIX_LV and NIX_12V come from the dekatron board; J103 "
+         "and J104 go to the Nixie HV module (its 12 V input and its HV output).", 20.32, 22.86, 90)
+    sh.part("Connector_Generic:Conn_01x06", "J101", "NIX_LV", 63.5, 50.8,
             {"1": "+5V", "2": "GND", "3": "SDA", "4": "SCL", "5": "GND", "6": "NIX_SPARE"}, footprint=FP_WIRE6,
             fields=F("Harness NIX_LV from the dekatron board (its J302; 5 V behind its ideal diode U104)"))
-    sh.part("Connector_Generic:Conn_01x02", "J102", "12V_IN", 45.72, 93.98, {"1": "+12V_IN", "2": "GND"},
+    sh.part("Connector_Generic:Conn_01x02", "J102", "12V_IN", 63.5, 81.28, {"1": "+12V_IN", "2": "GND"},
             footprint=FP_WIRE2, fields=F("12 V from the dekatron board's NIX_12V (J102, behind its PTC)"))
-    sh.part("Connector_Generic:Conn_01x02", "J103", "12V_MODULE", 45.72, 114.3, {"1": "+12V_SW", "2": "GND"},
+    sh.part("Connector_Generic:Conn_01x02", "J103", "12V_MODULE", 63.5, 96.52, {"1": "+12V_SW", "2": "GND"},
             footprint=FP_WIRE2, fields=F("Switched 12 V to the Nixie HV module input"))
-    sh.part("Connector_Generic:Conn_01x02", "J104", "HV_MODULE", 45.72, 134.62, {"1": "NIX_HV", "2": "GND"},
+    sh.part("Connector_Generic:Conn_01x02", "J104", "HV_MODULE", 63.5, 111.76, {"1": "NIX_HV", "2": "GND"},
             footprint=FP_WIRE2, fields=F("Nixie HV module output (~170 V) and its return"))
-    sh.flag("+5V", 25.4, 160.02)
-    sh.flag("GND", 35.56, 160.02)
-    sh.flag("+12V_IN", 45.72, 160.02)
-    sh.flag("NIX_HV", 55.88, 160.02)
-    sh.part(CP, "C101", "10uF", 76.2, 63.5, {"1": "+5V", "2": "GND"}, footprint=FP_TANT_A,
-            fields=F("+5V bulk at the harness landing (user 2026-11-07: as C301)", rating="16 V tantalum"))
 
-    note(sh, "NIXIE HV MODULE 12 V SWITCH", "High side, off by default (R101 holds Q101 off; R104 holds Q102 off in "
-         "reset). Soft start into the module's 470 uF: hardware/nixie/simulation/nix12_switch.cir", 106.68, 22.86)
-    sh.part("Transistor_FET:Q_PMOS_GDS", "Q101", "IPD50P04P4L-11", 152.4, 63.5,
-            {"1": "NIX12_G", "2": "+12V_SW", "3": "+12V_IN"}, footprint=gs.FP_DPAK,
-            fields=F("Nixie module 12 V high-side switch with soft start", "IPD50P04P4L-11", "Infineon",
-                     "-40 V, 17.2 mohm max at VGS -4.5 V, VGS +5/-16 V"))
-    sh.part(R, "R101", "47k", 127.0, 58.42, {"1": "+12V_IN", "2": "NIX12_G"}, footprint=FP_R,
-            fields=F("Q101 gate pull-up: off by default. With R102: VGS -6 V at 12 V, -12 V at the 24 V clamp"))
-    sh.part(C, "C102", "3.3uF", 114.3, 58.42, {"1": "+12V_IN", "2": "NIX12_G"}, footprint=FP_C,
-            fields=F("Q101 gate-source: soft turn-on with R101/R102; holds Q101 off on hot-plug", rating="25 V X7R"))
-    sh.part(R, "R102", "47k", 127.0, 93.98, {"1": "NIX12_G", "2": "NIX12_D"}, footprint=FP_R,
-            fields=F("Q101 gate series: sets the turn-on ramp with C102"))
-    sh.part(NPN, "Q102", "MMBT3904", 152.4, 99.06, {"1": "NIX12_B", "2": "GND", "3": "NIX12_D"},
-            footprint=FP_SOT23, fields=F("Level shifter for Q101's gate", "MMBT3904", rating="40 V NPN"))
-    sh.part(R, "R103", "10k", 127.0, 124.46, {"1": "NIX12_EN", "2": "NIX12_B"}, footprint=FP_R,
-            fields=F("Q102 base (as D8: 3.3 V drive)"))
-    sh.part(R, "R104", "47k", 114.3, 124.46, {"1": "NIX12_B", "2": "GND"}, footprint=FP_R,
-            fields=F("Q102 base pull-down: switch off while the RP2040 is in reset (D7)"))
+    note(sh, "+5V BULK, TEST PADS", "At the NIX_LV landing", 20.32, 132.08, 90)
+    t, b = v2(sh, CP, "C101", "10uF", 30.48, 152.4, FP_TANT_A,
+              F("+5V bulk at the harness landing (user 2026-11-07: as C301)", rating="16 V tantalum"))
+    top, bot = (t[0], t[1] - 5.08), (b[0], b[1] + 5.08)
+    sh.w(t, top)
+    sh.pwr("+5V", top)
+    rail(sh, t, (45.72, t[1]), (58.42, t[1]))
+    tp(sh, "TP104", "+5V", (45.72, t[1]))
+    sh.pflag((58.42, t[1]))
+    sh.w(b, bot)
+    sh.gnd(bot)
+    rail(sh, b, (45.72, b[1]), (58.42, b[1]))
+    tp(sh, "TP105", "GND", (45.72, b[1]))
+    sh.pflag((58.42, b[1]))
 
-    note(sh, "NIXIE HV MONITOR", "Divider to ADC0: 3.3 V at about 278 V. Also the bleeder (below 30 V in about "
-         "2-3 s, measured). BAT54S clamp and reservoir as the dekatron ADC inputs", 248.92, 22.86)
-    sh.part(R, "R105", "1M", 269.24, 55.88, {"1": "NIX_HV", "2": "NIX_HV_SENSE"}, footprint=FP_AX0411,
-            fields=F("HV monitor divider, upper; bleeder", "HHV-50FT-52-1M", rating="HHV-50: 0.5 W"))
-    sh.part(R, "R106", "12k", 269.24, 99.06, {"1": "NIX_HV_SENSE", "2": "GND"}, footprint=FP_R,
-            fields=F("HV monitor divider, lower", rating="1 %"))
-    sh.part("Diode:BAT54S", "D101", "BAT54S", 302.26, 71.12, {"1": "GND", "2": "+3V3", "3": "NIX_HV_SENSE"},
-            fields=F("NIX_HV_SENSE clamp to 3V3 / GND", "BAT54S", rating="30 V Schottky pair"))
-    sh.part(C, "C103", "100nF", 330.2, 86.36, {"1": "NIX_HV_SENSE", "2": "GND"}, footprint=FP_C,
-            fields=F("NIX_HV_SENSE ADC sampling reservoir (as the dekatron ADC inputs)", rating="50 V X7R"))
+    # ---- 12 V switch (middle) -----------------------------------------------------------------
+    note(sh, "NIXIE HV MODULE 12 V SWITCH", "High side, off by default: R101 holds Q101 off, R104 holds Q102 "
+         "off while the RP2040 is in reset. C102 with R101 / R102 sets a soft start into the module's "
+         "470 uF (hardware/nixie/simulation/nix12_switch.cir).", 132.08, 22.86, 95)
+    r0 = 58.42                                            # +12V_IN rail
+    mark(sh, (134.62, r0), "+12V_IN", "L")
+    rail(sh, (134.62, r0), (142.24, r0), (157.48, r0), (172.72, r0), (185.42, r0), (208.28, r0))
+    tp(sh, "TP101", "+12V_IN", (142.24, r0))
+    sh.pflag((157.48, r0), textpos=(-3.81, -6.35))
+    ct, cb = v2(sh, C, "C102", "3.3uF", 172.72, r0, FP_C,
+                F("Q101 gate-source: soft turn-on with R101/R102; holds Q101 off on hot-plug", rating="25 V X7R"))
+    rt, rb = v2(sh, R, "R101", "47k", 185.42, r0, FP_R,
+                F("Q101 gate pull-up: off by default. With R102: VGS -6 V at 12 V, -12 V at the 24 V clamp"))
+    q1 = sh.place("Transistor_FET:Q_PMOS_GDS", "Q101", "IPD50P04P4L-11", 205.74, 71.12, mirror="x",
+                  textpos=(5.08, -1.27),
+                  footprint=gs.FP_DPAK, fields=F("Nixie module 12 V high-side switch with soft start",
+                                                 "IPD50P04P4L-11", "Infineon",
+                                                 "-40 V, 17.2 mohm max at VGS -4.5 V, VGS +5/-16 V"))
+    g = (185.42, 71.12)                                   # gate node
+    sh.w(cb, (172.72, 71.12), g)
+    sh.w(rb, g)
+    sh.w(g, q1["G"])
+    sh.w(q1["S"], (208.28, r0))
+    sh.nl("NIX12_G", (190.5, 71.12))
+    r2t, r2b = v2(sh, R, "R102", "47k", 185.42, 78.74, FP_R, F("Q101 gate series: sets the turn-on ramp with C102"))
+    sh.w(g, r2t)
+    q2 = sh.place(NPN, "Q102", "MMBT3904", 182.88, 96.52, footprint=FP_SOT23,
+                  fields=F("Level shifter for Q101's gate", "MMBT3904", rating="40 V NPN"))
+    sh.w(r2b, q2["C"])
+    sh.nl("NIX12_D", (185.42, 88.9))
+    sh.gnd(q2["E"])
+    bn = (167.64, 96.52)                                  # base node
+    sh.w(q2["B"], bn)
+    sh.nl("NIX12_B", bn)
+    r3l, r3r = h2(sh, R, "R103", "10k", 152.4, 96.52, FP_R, F("Q102 base (as D8: 3.3 V drive)"))
+    sh.w(r3r, bn)
+    lead(sh, r3l, "NIX12_EN", -2.54, 0)
+    r4t, r4b = v2(sh, R, "R104", "47k", 167.64, 101.6, FP_R,
+                  F("Q102 base pull-down: switch off while the RP2040 is in reset (D7)"))
+    sh.w(bn, r4t)
+    sh.gnd(r4b)
+    dn = (208.28, 83.82)
+    rail(sh, q1["D"], dn, (215.9, 83.82), (236.22, 83.82))
+    tp(sh, "TP102", "+12V_SW", (215.9, 83.82))
+    mark(sh, (236.22, 83.82), "+12V_SW")
 
-    note(sh, "TEST PADS", "Supplies and the switched 12 V", 218.44, 132.08)
-    for i, net in enumerate(("+12V_IN", "+12V_SW", "NIX_HV", "+5V", "GND")):
-        tp(sh, f"TP{101 + i}", net, 223.52 + i * 17.78, 152.4)
+    # ---- HV monitor (right) -------------------------------------------------------------------
+    note(sh, "NIXIE HV MONITOR", "Divider to ADC0: 3.3 V at about 278 V. R105 is also the bleeder (below "
+         "30 V in about 2-3 s, measured). BAT54S clamp and reservoir as on the dekatron ADC inputs.",
+         243.84, 22.86, 95)
+    hv = 50.8
+    mark(sh, (246.38, hv), "NIX_HV", "L")
+    rail(sh, (246.38, hv), (251.46, hv), (269.24, hv), (281.94, hv))
+    tp(sh, "TP103", "NIX_HV", (251.46, hv))
+    sh.pflag((269.24, hv), textpos=(-3.81, -6.35))
+    at, ab = v2(sh, R, "R105", "1M", 281.94, hv, FP_AX0411,
+                F("HV monitor divider, upper; bleeder", "HHV-50FT-52-1M", rating="HHV-50: 0.5 W"))
+    s1, s2, s3 = (281.94, 66.04), (294.64, 66.04), (314.96, 66.04)
+    sh.w(ab, s1)
+    rail(sh, s1, s2, s3, (327.66, 66.04))
+    mark(sh, (327.66, 66.04), "NIX_HV_SENSE")
+    lt, lb = v2(sh, R, "R106", "12k", 281.94, 71.12, FP_R, F("HV monitor divider, lower", rating="1 %"))
+    sh.w(s1, lt)
+    sh.gnd(lb)
+    c3t, c3b = v2(sh, C, "C103", "100nF", 294.64, 71.12, FP_C,
+                  F("NIX_HV_SENSE ADC sampling reservoir (as the dekatron ADC inputs)", rating="50 V X7R"))
+    sh.w(s2, c3t)
+    sh.gnd(c3b)
+    # rotated only (no mirror): K up to 3V3, A down to GND, COM to the right onto the sense branch
+    d1 = sh.place("Diode:BAT54S", "D101", "BAT54S", 309.88, 83.82, angle=90, textpos=(7.62, 2.54),
+                  fields=F("NIX_HV_SENSE clamp to 3V3 / GND", "BAT54S", rating="30 V Schottky pair"))
+    sh.w(s3, d1["COM"])
+    sh.pwr("+3V3", d1["K"])
+    sh.gnd(d1["A"])
+    sh.finish()
     return sh
 
 
@@ -246,87 +355,143 @@ LOGIC_GLOBALS = {"SDA", "SCL", "NIX_SPARE", "NIX12_EN", "NIX_HV_SENSE", "+12V_IN
 
 
 def build_logic(lib) -> Sheet:
-    sh = Sheet("logic", "logic.kicad_sch", U("file:logic"), "A2", lib, f"/{ROOT_UUID}/{LOGIC_UUID}",
+    sh = Sheet("logic", "logic.kicad_sch", U("file:logic"), "A3", lib, f"/{ROOT_UUID}/{LOGIC_UUID}",
                global_nets=LOGIC_GLOBALS,
                title="Logic: RP2040-Zero, level shifter, encoder, time modules")
 
-    note(sh, "RP2040-Zero (pin map: docs/hardware.md)", "Castellated, soldered by its edge pads; powered from "
-         "+5V (NIX_LV)", 20.32, 22.86)
+    # ---- RP2040-Zero (top left) ---------------------------------------------------------------
+    note(sh, "RP2040-Zero (pin map: docs/hardware.md)", "Castellated, soldered by its edge pads; powered "
+         "from +5V (NIX_LV). C301 / C302 at the module.", 20.32, 22.86, 100)
     nets = {"5V": "+5V", "GND": "GND", "3V3": "+3V3",
             "GP0": "NIX12_EN", "GP1": "NIX_SPARE", "GP2": "SDA", "GP3": "SCL", "GP4": "WWVB_SDA",
             "GP5": "WWVB_SCL", "GP6": "WWVB_EN", "GP7": "WWVB_IRQ", "GP8": "DRV_BL", "GP9": "DRV_LE",
             "GP10": "DRV_CLK", "GP11": "DRV_DATA", "GP12": "GP12", "GP13": "ENC_A", "GP14": "ENC_B",
             "GP15": "ENC_SW", "GP26": "NIX_HV_SENSE", "GP27": "GP27", "GP28": "GP28", "GP29": "GP29"}
-    sh.part("nixie:RP2040-Zero", "U301", "RP2040-Zero", 101.6, 86.36, nets, textpos=(-12.7, -27.5),
+    sh.part("nixie:RP2040-Zero", "U301", "RP2040-Zero", 73.66, 71.12, nets, textpos=(-12.7, -27.5),
             footprint=FP_ZERO, fields=F("Nixie controller MCU", "RP2040-Zero", "Waveshare", "headerless, castellated"))
-    sh.part(CP, "C301", "10uF", 30.48, 58.42, {"1": "+5V", "2": "GND"}, footprint=FP_TANT_A,
+    sh.part(CP, "C301", "10uF", 106.68, 39.37, {"1": "+5V", "2": "GND"}, footprint=FP_TANT_A,
             fields=F("+5V bulk at the module (as dekatron C301)", rating="16 V tantalum"))
-    sh.part(C, "C302", "0.1uF", 45.72, 58.42, {"1": "+3V3", "2": "GND"}, footprint=FP_C,
+    sh.part(C, "C302", "0.1uF", 119.38, 39.37, {"1": "+3V3", "2": "GND"}, footprint=FP_C,
             fields=F("3V3 bypass (as dekatron C302)", rating="50 V X7R"))
-    note(sh, "TEST PADS", "Spare GPIOs, 3V3, 12 V logic, driver lines (3.3 V side)", 20.32, 165.1)
-    for i, net in enumerate(("GP12", "GP27", "GP28", "GP29", "+3V3", "+12V_LOGIC", "DRV_DATA", "DRV_CLK",
-                             "DRV_LE", "DRV_BL")):
-        tp(sh, f"TP{301 + i}", net, 25.4 + i * 15.24, 182.88)
 
-    note(sh, "LEVEL SHIFTER: CD40109B, 3.3 V -> 12 V", "HV5622 inputs need V_IH >= VDD - 2 V. Enables tied to "
-         "3V3. DRV_BL pulled down: all tube outputs off while the RP2040 is in reset (BL low, POL high)",
-         172.72, 22.86)
-    sh.part("Logic_LevelTranslator:CD40109BPW", "U302", "CD40109B", 215.9, 81.28,
-            {"1": "+3V3", "16": "+12V_LOGIC", "8": "GND", "2": "+3V3", "7": "+3V3", "9": "+3V3", "15": "+3V3",
-             "3": "DRV_DATA", "4": "DRV12_DATA", "6": "DRV_CLK", "5": "DRV12_CLK",
-             "10": "DRV_LE", "11": "DRV12_LE", "14": "DRV_BL", "13": "DRV12_BL"},
-            footprint=FP_SOP16_NS, fields=F("3.3 V -> 12 V for the HV5622 inputs", "CD40109BNSRE4", "TI",
-                                            "VCC/VDD 3-18 V, SOP-16 (NS) 5.3 mm"))
-    sh.part(C, "C303", "0.1uF", 195.58, 116.84, {"1": "+12V_LOGIC", "2": "GND"}, footprint=FP_C,
-            fields=F("U302 VDD bypass", rating="50 V X7R"))
-    sh.part(C, "C304", "0.1uF", 210.82, 116.84, {"1": "+3V3", "2": "GND"}, footprint=FP_C,
-            fields=F("U302 VCC bypass", rating="50 V X7R"))
-    sh.part(R, "R301", "10k", 241.3, 116.84, {"1": "DRV_BL", "2": "GND"}, footprint=FP_R,
-            fields=F("DRV_BL pull-down: tubes blank while the RP2040 is in reset"))
-    sh.part(R, "R310", "100k", 256.54, 116.84, {"1": "DRV12_BL", "2": "GND"}, footprint=FP_R,
-            fields=F("DRV12_BL pull-down: tubes blank while 3V3 is absent (U302 outputs then high-impedance)"))
+    # ---- level shifter (top middle) -------------------------------------------------------------
+    note(sh, "LEVEL SHIFTER: CD40109B, 3.3 V -> 12 V", "HV5622 inputs need V_IH >= VDD - 2 V. Enables tied "
+         "to 3V3. DRV_BL pulled down: all tube outputs off while the RP2040 is in reset (BL low, POL "
+         "high). R310: the same while 3V3 is absent.", 142.24, 22.86, 105)
+    u = sh.place("Logic_LevelTranslator:CD40109BPW", "U302", "CD40109B", 193.04, 68.58, footprint=FP_SOP16_NS,
+                 textpos=(10.16, 12.7),
+                 fields=F("3.3 V -> 12 V for the HV5622 inputs", "CD40109BNSRE4", "TI",
+                          "VCC/VDD 3-18 V, SOP-16 (NS) 5.3 mm"))
+    for pin, net in (("3", "DRV_DATA"), ("6", "DRV_CLK"), ("10", "DRV_LE"), ("14", "DRV_BL")):
+        lead(sh, u[pin], net, -2.54, 0)
+    for pin, net in (("4", "DRV12_DATA"), ("5", "DRV12_CLK"), ("11", "DRV12_LE"), ("13", "DRV12_BL")):
+        lead(sh, u[pin], net, 2.54, 0)
+    bx = 162.56                                          # enables bus, tied to 3V3
+    ens = [u[p] for p in ("2", "7", "9", "15")]
+    for e in ens:
+        sh.w(e, (bx, e[1]))
+    rail(sh, *[(bx, e[1]) for e in ens])
+    sh.w((bx, ens[0][1]), (bx, ens[0][1] - 2.54))
+    sh.pwr("+3V3", (bx, ens[0][1] - 2.54))
+    vcc, vdd = u["1"], u["16"]
+    sh.w(vcc, (vcc[0], vcc[1] - 2.54))
+    sh.pwr("+3V3", (vcc[0], vcc[1] - 2.54))
+    sh.w(vdd, (vdd[0], vdd[1] - 5.08))
+    lead(sh, (vdd[0], vdd[1] - 5.08), "+12V_LOGIC", 2.54, 0)
+    sh.gnd(u["8"])
+    c4t, c4b = v2(sh, C, "C304", "0.1uF", 172.72, 96.52, FP_C, F("U302 VCC bypass", rating="50 V X7R"))
+    sh.pwr("+3V3", c4t)
+    sh.gnd(c4b)
+    c3t, c3b = v2(sh, C, "C303", "0.1uF", 187.96, 96.52, FP_C, F("U302 VDD bypass", rating="50 V X7R"))
+    lead(sh, c3t, "+12V_LOGIC", 0, -2.54, "R")
+    sh.gnd(c3b)
+    r1t, r1b = v2(sh, R, "R301", "10k", 220.98, 96.52, FP_R,
+                  F("DRV_BL pull-down: tubes blank while the RP2040 is in reset"))
+    lead(sh, r1t, "DRV_BL", 0, -2.54, "R")
+    sh.gnd(r1b)
+    r10t, r10b = v2(sh, R, "R310", "100k", 238.76, 96.52, FP_R,
+                    F("DRV12_BL pull-down: tubes blank while 3V3 is absent (U302 outputs then high-impedance)"))
+    lead(sh, r10t, "DRV12_BL", 0, -2.54, "R")
+    sh.gnd(r10b)
 
-    note(sh, "12 V LOGIC RAIL", "HV5622 / CD40109B VDD. HV5622 VDD abs max 15 V, below the 24 V TVS clamp on "
-         "the 12 V input: series resistor and 13 V zener (12.35-13.65 V)", 345.44, 22.86)
-    sh.part(R, "R309", "470", 355.6, 63.5, {"1": "+12V_IN", "2": "+12V_LOGIC"}, footprint=FP_R,
-            fields=F("12 V logic rail series resistor: ~0.2 V at ~0.45 mA average; 0.23 W at the 24 V clamp",
-                     rating="1206, 0.25 W"))
-    sh.part(DZ, "D301", "MMSZ5243B", 370.84, 81.28, {"1": "+12V_LOGIC", "2": "GND"}, angle=90,
-            footprint=FP_SOD123, fields=F("12 V logic rail clamp", "MMSZ5243B", rating="13 V, 500 mW, SOD-123"))
-    sh.part(C, "C305", "10uF", 386.08, 81.28, {"1": "+12V_LOGIC", "2": "GND"}, footprint=FP_C,
-            fields=F("12 V logic reservoir: shift bursts", rating="25 V X7R"))
-    sh.flag("+12V_LOGIC", 401.32, 101.6)
+    # ---- 12 V logic rail (top right) ------------------------------------------------------------
+    note(sh, "12 V LOGIC RAIL", "HV5622 / CD40109B VDD. The HV5622's VDD absolute maximum is 15 V, below the "
+         "24 V TVS clamp on the 12 V input: series resistor and 13 V zener (12.35-13.65 V).", 274.32, 22.86, 115)
+    y = 55.88
+    mark(sh, (279.4, y), "+12V_IN", "L")
+    r9l, r9r = h2(sh, R, "R309", "470", 284.48, y, FP_R,
+                  F("12 V logic rail series resistor: ~0.2 V at ~0.45 mA average; 0.23 W at the 24 V clamp",
+                    rating="1206, 0.25 W"))
+    sh.w((279.4, y), r9l)
+    z, cn, tn, fn, out = (304.8, y), (322.58, y), (337.82, y), (353.06, y), (365.76, y)
+    rail(sh, r9r, z, cn, tn, fn, out)
+    mark(sh, out, "+12V_LOGIC")
+    dz = sh.place(DZ, "D301", "MMSZ5243B", 304.8, 64.77, angle=270, footprint=FP_SOD123,
+                  fields=F("12 V logic rail clamp", "MMSZ5243B", rating="13 V, 500 mW, SOD-123"))
+    sh.w(z, dz["K"])
+    sh.gnd(dz["A"])
+    c5t, c5b = v2(sh, C, "C305", "10uF", 322.58, 60.96, FP_C,
+                  F("12 V logic reservoir: shift bursts", rating="25 V X7R"))
+    sh.w(cn, c5t)
+    sh.gnd(c5b)
+    tp(sh, "TP306", "+12V_LOGIC", tn)
+    sh.pflag(fn, textpos=(-3.81, -6.35))
 
+    # ---- encoder (bottom left) ------------------------------------------------------------------
     note(sh, "ENCODER (front panel, harness)", "Bourns PEC11R wired to J301 (user, 2026-11-07). Filter per "
          "its data sheet (Suggested Filter Circuit): 10k pull-up, 10k series, 0.01 uF; the push switch "
-         "the same", 172.72, 139.7)
-    sh.part("Connector_Generic:Conn_01x04", "J301", "ENCODER", 187.96, 172.72,
+         "the same.", 20.32, 132.08, 105)
+    sh.part("Connector_Generic:Conn_01x04", "J301", "ENCODER", 40.64, 165.1,
             {"1": "ENC_A_RAW", "2": "ENC_B_RAW", "3": "ENC_SW_RAW", "4": "GND"}, footprint=FP_WIRE4,
             fields=F("Harness to the panel-mount encoder (PEC11R): A, B, switch, common C and switch 2"))
     for i, net in enumerate(("ENC_A", "ENC_B", "ENC_SW")):
-        x = 215.9 + i * 25.4
-        sh.part(R, f"R{302 + i}", "10k", x, 165.1, {"1": "+3V3", "2": net + "_RAW"}, footprint=FP_R,
-                fields=F(f"{net} pull-up (PEC11R suggested filter)"))
-        sh.part(R, f"R{311 + i}", "10k", x + 7.62, 165.1, {"1": net + "_RAW", "2": net}, footprint=FP_R,
-                fields=F(f"{net} series: filter discharge through 10k, not the contact (PEC11R suggested filter)"))
-        sh.part(C, f"C{308 + i}", "0.01uF", x + 15.24, 180.34, {"1": net, "2": "GND"}, footprint=FP_C,
-                fields=F(f"{net} debounce, 0.1 ms with the series 10k (PEC11R suggested filter)", rating="25 V X7R"))
+        yr = 165.1 + i * 25.4
+        put, pub = v2(sh, R, f"R{302 + i}", "10k", 76.2, yr - 7.62, FP_R,
+                      F(f"{net} pull-up (PEC11R suggested filter)"))
+        sh.pwr("+3V3", put)
+        sl, sr = h2(sh, R, f"R{311 + i}", "10k", 83.82, yr, FP_R,
+                    F(f"{net} series: filter discharge through 10k, not the contact (PEC11R suggested filter)"))
+        rail(sh, (63.5, yr), pub, sl)
+        mark(sh, (63.5, yr), net + "_RAW", "L")
+        o = (99.06, yr)
+        sh.w(sr, o)
+        cct, ccb = v2(sh, C, f"C{308 + i}", "0.01uF", 99.06, yr, FP_C,
+                      F(f"{net} debounce, 0.1 ms with the series 10k (PEC11R suggested filter)", rating="25 V X7R"))
+        sh.w(o, (109.22, yr))
+        mark(sh, (109.22, yr), net)
+        sh.gnd(ccb)
 
+    # ---- time modules (bottom middle) -----------------------------------------------------------
     note(sh, "TIME MODULES (optional, harnesses)", "RTC (ZS-042) on the main bus; ES100 on its private bus. "
-         "Pull resistors here so an unplugged module leaves defined levels", 297.18, 139.7)
-    sh.part("Connector_Generic:Conn_01x04", "J302", "RTC", 309.88, 172.72,
-            {"1": "+3V3", "2": "GND", "3": "SDA", "4": "SCL"}, footprint=FP_WIRE4,
+         "Pull resistors here so an unplugged module leaves defined levels; values chosen at assembly.",
+         142.24, 132.08, 110)
+    sh.part("Connector_Generic:Conn_01x04", "J302", "RTC", 172.72, 160.02,
+            {"1": "+3V3", "2": "GND", "3": "SDA", "4": "SCL"}, footprint=FP_WIRE4, stub=5.08,
             fields=F("Harness to the DS3231 module (ZS-042): jacks on its header by silk name"))
-    sh.part("Connector_Generic:Conn_01x06", "J303", "WWVB", 360.68, 172.72,
+    sh.part("Connector_Generic:Conn_01x06", "J303", "WWVB", 172.72, 193.04,
             {"1": "+3V3", "2": "GND", "3": "WWVB_SDA", "4": "WWVB_SCL", "5": "WWVB_EN", "6": "WWVB_IRQ"},
-            footprint=FP_WIRE6, fields=F("Harness to the ES100 carrier: jacks on its header by silk name"))
+            footprint=FP_WIRE6, stub=5.08, fields=F("Harness to the ES100 carrier: jacks on its header by silk name"))
     for i, (net, up, func) in enumerate((("WWVB_SDA", True, "pull-up (unless on the carrier)"),
                                          ("WWVB_SCL", True, "pull-up (unless on the carrier)"),
                                          ("WWVB_IRQ", True, "pull-up (IRQ- is active low)"),
                                          ("WWVB_EN", False, "pull-down: ES100 in shutdown when unplugged or in reset"))):
-        x = 391.16 + i * 15.24
-        sh.part(R, f"R{305 + i}", OPEN, x, 165.1, {"1": "+3V3" if up else net, "2": net if up else "GND"},
-                footprint=FP_R, fields=F(f"{net} {func}"))
+        x = 200.66 + i * 20.32
+        pt, pb = v2(sh, R, f"R{305 + i}", OPEN, x, 182.88, FP_R, F(f"{net} {func}"))
+        if up:
+            sh.pwr("+3V3", pt)
+            lead(sh, pb, net, 0, 2.54, "R")
+        else:
+            lead(sh, pt, net, 0, -2.54, "R")
+            sh.gnd(pb)
+
+    # ---- test pads (bottom right) ---------------------------------------------------------------
+    note(sh, "TEST PADS", "Spare GPIOs, 3V3, driver lines (3.3 V side)", 302.26, 132.08, 90)
+    for i, net in enumerate(("GP12", "GP27", "GP28", "GP29", "+3V3", "DRV_DATA", "DRV_CLK", "DRV_LE", "DRV_BL")):
+        x, yy = 309.88 + (i // 5) * 40.64, 152.4 + (i % 5) * 12.7
+        ref = f"TP{301 + i + (1 if i >= 5 else 0)}"      # TP306 (+12V_LOGIC) sits on the 12 V logic rail
+        tp(sh, ref, net, (x, yy), textpos=(-12.7, -2.54))
+        lead(sh, (x, yy), net, 10.16, 0)
+    sh.finish()
     return sh
 
 
@@ -348,40 +513,63 @@ assert sorted(HV_MAP.values()) == sorted((t, s) for t in "ab" for s in [f"K{d}" 
 
 
 def build_tubes(lib) -> Sheet:
-    sh = Sheet("tubes", "tubes.kicad_sch", U("file:tubes"), "A2", lib, f"/{ROOT_UUID}/{TUBES_UUID}",
+    sh = Sheet("tubes", "tubes.kicad_sch", U("file:tubes"), "A3", lib, f"/{ROOT_UUID}/{TUBES_UUID}",
                global_nets=TUBES_GLOBALS, title="Tubes: HV5622 drivers, IN-14s, resistors")
     note(sh, "TUBE DRIVERS: 3 x HV5622 (220 V open drain)", "Tube 1 at the left as seen by the viewer. Chain "
-         "U201 -> U202 -> U203, 96 bits latched whole (LE). Outputs assigned from the PCB geometry (HV_MAP in "
-         "tools/gen_nixie_schematics.py, table in docs/hardware.md); 1-5 and 30-32 spare. Firmware owns the map", 20.32, 22.86)
+         "U201 -> U202 -> U203 (DRV12_D1, DRV12_D2), 96 bits latched whole (LE). Outputs assigned from the "
+         "PCB geometry (HV_MAP in tools/gen_nixie_schematics.py, table in docs/hardware.md); HVOUT1-5 and "
+         "30-32 spare. Firmware owns the map. Each tube: 12k anode resistor from NIX_HV, 150k in series "
+         "with each decimal point.", 20.32, 22.86, 250)
     for k in range(CHIPS):
-        x0 = 20.32 + k * 190.5
+        x0 = 15.24 + k * 127.0
         ta, tb = 2 * k + 1, 2 * k + 2
+        note(sh, f"U{201 + k}: TUBES {ta} AND {tb}", "", x0 + 5.08, 48.26)
+        xc, yc = x0 + 43.18, 127.0
         nets = {HV5622_OUT[o]: (f"T{ta if HV_MAP[o][0] == 'a' else tb}_{HV_MAP[o][1]}" if o in HV_MAP else "NC")
                 for o in range(1, 33)}
-        nets.update({"30": "+12V_LOGIC", "29": "GND", "27": "+12V_LOGIC", "28": "DRV12_CLK", "31": "DRV12_LE",
-                     "33": "DRV12_BL", "32": "DRV12_DATA" if k == 0 else f"DRV12_D{k}",
-                     "23": f"DRV12_D{k + 1}" if k < CHIPS - 1 else "NC"})
-        sh.part("nixie:HV5622", f"U{201 + k}", "HV5622", x0 + 30.48, 132.08, nets, footprint=FP_PQFP44,
-                fields=F(f"Tube {ta}/{tb} cathode and decimal-point driver", "HV5622PG-G", "Microchip",
-                         "220 V outputs, PQFP-44 0.8 mm"))
-        sh.part(C, f"C{201 + k}", "0.1uF", x0 + 7.62, 195.58, {"1": "+12V_LOGIC", "2": "GND"}, footprint=FP_C,
-                fields=F(f"U{201 + k} VDD bypass", rating="50 V X7R"))
-        for j, n in enumerate((ta, tb)):
-            y0 = 66.04 + j * 121.92
-            note(sh, f"TUBE {n}", "", x0 + 88.9, y0 - 25.4)
-            sh.part("nixie:IN-14", f"N{n}", "IN-14", x0 + 132.08, y0 + 20.32,
-                    {"1": f"T{n}_ANODE", "2": f"T{n}_LDP_K", "13": f"T{n}_RDP_K", "12": f"T{n}_K0",
-                     **{str(d + 2): f"T{n}_K{d}" for d in range(1, 10)}},
-                    footprint=FP_IN14, fields=F(f"Tube {n}", "IN-14"))
-            sh.part(R, f"R{200 + 10 * n}", "12k", x0 + 160.02, y0 - 10.16, {"1": "NIX_HV", "2": f"T{n}_ANODE"},
-                    footprint=FP_AX0207,
-                    fields=F(f"Tube {n} anode resistor: (175 V - 145 V) / 2.5 mA, 75 mW",
-                             rating="MRS25: 0.6 W, 350 V, 1 %, 50 ppm/K"))
-            for i, dp in enumerate(("LDP", "RDP")):
-                sh.part(R, f"R{200 + 10 * n + 1 + i}", "150k", x0 + 99.06 + i * 12.7, y0 + 60.96,
-                        {"1": f"T{n}_{dp}_D", "2": f"T{n}_{dp}_K"}, footprint=FP_R,
-                        fields=F(f"Tube {n} {dp} series resistor: starting value, point <= 0.3 mA; "
-                                 "check at bring-up"))
+        u = sh.place("nixie:HV5622", f"U{201 + k}", "HV5622", xc, yc, footprint=FP_PQFP44, textpos=(2.54, 52.07),
+                     fields=F(f"Tube {ta}/{tb} cathode and decimal-point driver", "HV5622PG-G", "Microchip",
+                              "220 V outputs, PQFP-44 0.8 mm"))
+        for num, net in nets.items():
+            if net == "NC":
+                sh.noconn(*u[num])
+            else:
+                lead(sh, u[num], net, 2.54, 0)
+        if k < CHIPS - 1:
+            lead(sh, u["23"], f"DRV12_D{k + 1}", 2.54, 0)
+        else:
+            sh.noconn(*u["23"])
+        for num, net in (("32", "DRV12_DATA" if k == 0 else f"DRV12_D{k}"), ("28", "DRV12_CLK"),
+                         ("31", "DRV12_LE"), ("33", "DRV12_BL"), ("27", "+12V_LOGIC")):
+            lead(sh, u[num], net, -2.54, 0)
+        n = (xc, u["30"][1] - 5.08)                       # VDD node: bypass to the left, rail label right
+        sh.w(u["30"], n)
+        cx = xc - 12.7
+        sh.w(n, (cx, n[1]))
+        lead(sh, n, "+12V_LOGIC", 5.08, 0)
+        bt, bb = v2(sh, C, f"C{201 + k}", "0.1uF", cx, n[1], FP_C, F(f"U{201 + k} VDD bypass", rating="50 V X7R"))
+        sh.gnd(bb)
+        sh.gnd(u["29"])
+        for j, t in enumerate((ta, tb)):
+            xt, yt = x0 + 115.57, 88.9 + j * 66.04
+            nt = sh.place("nixie:IN-14", f"N{t}", "IN-14", xt, yt, footprint=FP_IN14, fields=F(f"Tube {t}", "IN-14"))
+            nt = by_number(sh, "nixie:IN-14", xt, yt)
+            for d in range(10):
+                lead(sh, nt[str(d + 2) if d else "12"], f"T{t}_K{d}", -2.54, 0)
+            for pin, dp in (("2", "LDP"), ("13", "RDP")):
+                rl, rr = h2(sh, R, f"R{200 + 10 * t + (1 if dp == 'LDP' else 2)}", "150k", xt - 30.48, nt[pin][1], FP_R,
+                            F(f"Tube {t} {dp} series resistor: starting value, point <= 0.3 mA; check at bring-up"))
+                sh.w(rr, nt[pin])
+                sh.nl(f"T{t}_{dp}_K", rr)
+                lead(sh, rl, f"T{t}_{dp}_D", -2.54, 0)
+            ay = yt - 25.4                                 # anode resistor row, above the tube
+            al, ar = h2(sh, R, f"R{200 + 10 * t}", "12k", xt - 20.32, ay, FP_AX0207,
+                        F(f"Tube {t} anode resistor: (175 V - 145 V) / 2.5 mA, 75 mW",
+                          rating="MRS25: 0.6 W, 350 V, 1 %, 50 ppm/K"))
+            sh.w(ar, (xt, ay), nt["1"])
+            sh.nl(f"T{t}_ANODE", ar)
+            lead(sh, al, "NIX_HV", -2.54, 0)
+    sh.finish()
     return sh
 
 
