@@ -132,7 +132,26 @@ startup, full-load stability.
 First module data, 2026-11-01: input current, efficiency and decay in the
 [bench log](../characterization/nixie/2026-11-01_hv_module.md). Inrush measured 2026-11-06 (same log); ripple and overshoot not yet measured.
 
-Board checks to add to the Phase 2 step table:
+### Nixie controller/mount board
+
+Brought up section by section with the [assembly and bring-up checklist](../hardware/nixie/assembly.md).
+HV off and tubes dark are the hardware default: `NIX12_EN` and `DRV_BL` are pulled down, so the
+module has no 12 V and the HV5622s are blanked while the RP2040 is in reset or being flashed. The
+RTC and the ES100 are mounted in the enclosure and wired to the board there (step 7).
+
+| Step | Section | Acceptance | Result |
+|---|---|---|---|
+| −1 | Before ordering boards | 1:1 print: IN-14 lead spacer on the footprint; RP2040-Zero castellations centred on U301's pads, USB-C at the right edge | **IN-14 footprint matches** (2026-11-11, user: spacing and orientation). RP2040-Zero: — |
+| 0 | Before assembly | Nixie HV module trimmer at 175 V and glued; ZS-042 and ES100 carrier inspected (header order, pull-ups, coin-cell charging), R305-R308 values chosen; tube height decided | — |
+| 1 | 5 V, 3.3 V, RP2040-Zero (checklist Stage 1) | Rails in tolerance; enumerates over USB; `DRV_BL` low in BOOTSEL | — |
+| 2 | 12 V input, 12 V logic rail, module switch (Stage 2) | `+12V_LOGIC` within the HV5622's 10.8-13.2 V; `+12V_SW` off in reset and with 5 V absent, on only by command; `NIX12_SENSE` scale | — |
+| 3 | Driver logic, no HV (Stage 3) | Frames shift, latch and read back on GP12; every output switches, matching `HV_MAP`, no bridges; blank frame latched before `BL` is released; encoder filter and ES100 idle levels | — |
+| 4 | HV module and monitor, no tubes (Stage 4) | HV off in reset and while flashing; 12 V ramp against the simulation; 175 V at TP103, `NIX_HV_SENSE` agrees with the meter; 200 V firmware cut-off exercised (below); ripple, overshoot, decay | — |
+| 5 | Tube 1 and its decimal points (Stage 5a) | All digits strike at 175 V; digit current ≤ 2.5 mA; decimal-point resistor value chosen (below) | — |
+| 6 | All six tubes (Stage 5b) | Every digit and point; dark start-up; full-load stability and current; dimming frequency and minimum duty (below) | — |
+| 7 | Encoder, RTC, ES100 in the enclosure (Stage 6) | Harness continuity by silk name; encoder counts both ways; ES100 ID 0x10 at 0x32 with EN high, absent with EN low; RTC answers on the main bus | — |
+
+Details for steps 4-6:
 
 * **HV setpoint and overvoltage cut-off.** Set the module's trimmer to 175 V on the bench and fix it
   with glue before fitting; do not turn it toward its maximum (the module may have no
