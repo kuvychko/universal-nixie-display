@@ -45,20 +45,25 @@ with the tube lit ([assembly log](characterization/dekatron/2026-10-24_assembly_
 
 ## Status
 
-**Phase 1D — dekatron controller/PSU bring-up** (boards from PCBWay received 2026-10-15; parts
-from Mouser 2026-10-16). Schematics, simulations, PCB and fab files are done; the board is now being
-assembled and brought up section by section. The planning baseline is
-[docs/project_plan.md](docs/project_plan.md); the design decisions and open items are tracked in [docs/hardware.md](docs/hardware.md#dekatron-controllerpsu).
+**Phase 1D and Phase 2 in parallel.** The dekatron controller/PSU board 1 is assembled: its rails,
+HV converter and tube drive pass bring-up steps 1-3 (some measurements deferred), and the A101
+steps and indexes on it under the [bring-up firmware](firmware/dekatron-bringup/README.md). The
+dekatron controller firmware (steps 4-5) is next. The Nixie board is designed: schematics, PCB,
+fab outputs and an [assembly checklist](hardware/nixie/assembly.md) are done, its parts were
+ordered on 2026-11-10, and the board itself is not yet ordered. The purchased Nixie HV module has
+been measured on the bench ([log](characterization/nixie/2026-11-01_hv_module.md)). The planning
+baseline is [docs/project_plan.md](docs/project_plan.md); design decisions and open items are in
+[docs/hardware.md](docs/hardware.md), results in [docs/bringup.md](docs/bringup.md).
 
 | Phase | Deliverable | State |
 |---|---|---|
 | 1A | Dekatron board architecture and power budget for 12 VDC input | Done |
 | 1B | Hierarchical schematics and simulation evidence | Done (open simulation items in `docs/hardware.md`) |
-| 1C | Dekatron controller/PSU PCB, BOM, fab files | Done: boards and parts received |
-| 1D | Sectional bring-up and standalone firmware | **In progress** |
-| 2 | Nixie PSU qualification and six-tube controller/mount | Not started |
+| 1C | Dekatron controller/PSU PCB, BOM, fab files | Done: boards and parts received 2026-10-15/16 |
+| 1D | Sectional bring-up and standalone firmware | **In progress:** board 1 hardware brought up (steps 1-3); controller firmware not started |
+| 2 | Nixie PSU qualification and six-tube controller/mount | **In progress:** HV module bench data and inrush; board designed, fab outputs ready, parts ordered, board not yet ordered |
 | 3 | ESP32 UI, encoder, I2C master, USB host commands | Not started |
-| 4 | Enclosure | Not started |
+| 4 | Enclosure | Started: A101 socket housing and shroud printed and in use |
 | 5 | Rev A release | Not started |
 
 ### Dekatron controller/PSU at a glance
@@ -85,7 +90,7 @@ bring-up rework: 470 pF at the converter's current-sense pin.*
 ### Nixie controller/mount at a glance
 
 Six IN-14s, three HV5622 drivers and an RP2040 on one 164 x 53 mm board. Fabrication outputs
-generated 2026-11-10, **not yet ordered or built**.
+generated 2026-11-11; parts ordered 2026-11-10, **board not yet ordered or built**.
 
 | What | File |
 |---|---|
@@ -138,11 +143,12 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | `hardware/lib/` | Shared symbols and footprints (planned; the dekatron board's own library is in `hardware/dekatron/lib/`) |
 | `firmware/display/` | ESP32 main application, PlatformIO (planned, Phase 3) |
 | `firmware/dekatron/` | RP2040 dekatron controller and standalone diagnostics (planned, Phase 1D) |
+| `firmware/dekatron-bringup/` | Dekatron board bring-up firmware: HV enable, guide drive, status over USB serial |
 | `firmware/nixie/` | RP2040 Nixie controller (planned, Phase 2) |
 | `firmware/common/` | Shared protocol definitions (planned) |
 | `enclosure/` | Printed parts, one folder per assembly (SOLIDWORKS source, STEP, 3MF); index and print settings in its README |
-| `tools/` | KiCad generators (schematic, placement, routing, silkscreen) and the site checker; serial client and bring-up scripts to come |
-| `characterization/` | Dated measurements: supply, homing, thermal, reliability (none yet) |
+| `tools/` | KiCad generators (schematic, placement, routing, silkscreen) and the site checker; dekatron bring-up and demo scripts (`hv_bringup.py`, `dekatron_demo.py`), scope photo tool |
+| `characterization/` | Dated measurements: dekatron board 1 assembly log, Nixie HV module bench log |
 | `tests/` | Host protocol/formatting tests, hardware test scripts (planned) |
 | `website/` | Companion site source (MkDocs Material; `mkdocs.yml` at the root) |
 
