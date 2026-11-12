@@ -3,7 +3,7 @@
 Generated 2026-11-11 from `hardware/nixie/nixie.kicad_pcb` (KiCad 10.0.5) as committed together
 with this README revision (164 × 53 mm layout with two mid-edge M3 holes; HV5622 chain readback
 to the RP2040 and switched 12 V sense added), byte for byte;
-**not yet ordered**. Plain RS-274X Gerbers (no X2 attributes) and separate plated and unplated
+**ordered from PCBWay on 2026-11-11** (sponsored), from these files as committed in 9ac88ba. Plain RS-274X Gerbers (no X2 attributes) and separate plated and unplated
 Excellon drill files.
 
 To order, zip the ten files from `nixie-F_Cu.gtl` to `nixie-NPTH.drl` in the table below and

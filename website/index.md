@@ -45,4 +45,4 @@ drives it, how fast it can count, why the tube is a memory, and a short history.
     also runs from the first assembled board, which steps it at up to 200 steps/s
     ([watch on YouTube](https://youtu.be/51U_WKXrzoA)), and since 2026-10-26 its HV supply
     holds its setpoint with the tube lit. The Nixie side comes
-    next. See [Build and investigate](build.md).
+    next: its boards are on order from PCBWay. See [Build and investigate](build.md).

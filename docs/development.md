@@ -215,7 +215,7 @@ kicad-cli pcb export drill --format excellon --excellon-units mm --excellon-sepa
 ```
 
 The Nixie module the same way: replace `dekatron` by `nixie` in both commands
-(`hardware/nixie/fab/`, generated 2026-11-11, not yet ordered).
+(`hardware/nixie/fab/`, generated 2026-11-11, ordered 2026-11-11).
 
 Regenerate only for a board change that will be ordered; the files are a record of what was sent.
 

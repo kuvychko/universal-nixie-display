@@ -49,8 +49,8 @@ with the tube lit ([assembly log](characterization/dekatron/2026-10-24_assembly_
 HV converter and tube drive pass bring-up steps 1-3 (some measurements deferred), and the A101
 steps and indexes on it under the [bring-up firmware](firmware/dekatron-bringup/README.md). The
 dekatron controller firmware (steps 4-5) is next. The Nixie board is designed: schematics, PCB,
-fab outputs and an [assembly checklist](hardware/nixie/assembly.md) are done, its parts were
-ordered on 2026-11-10, and the board itself is not yet ordered. The purchased Nixie HV module has
+fab outputs and an [assembly checklist](hardware/nixie/assembly.md) are done; its parts were
+ordered on 2026-11-10 and the board from PCBWay on 2026-11-11. The purchased Nixie HV module has
 been measured on the bench ([log](characterization/nixie/2026-11-01_hv_module.md)). The planning
 baseline is [docs/project_plan.md](docs/project_plan.md); design decisions and open items are in
 [docs/hardware.md](docs/hardware.md), results in [docs/bringup.md](docs/bringup.md).
@@ -61,7 +61,7 @@ baseline is [docs/project_plan.md](docs/project_plan.md); design decisions and o
 | 1B | Hierarchical schematics and simulation evidence | Done (open simulation items in `docs/hardware.md`) |
 | 1C | Dekatron controller/PSU PCB, BOM, fab files | Done: boards and parts received 2026-10-15/16 |
 | 1D | Sectional bring-up and standalone firmware | **In progress:** board 1 hardware brought up (steps 1-3); controller firmware not started |
-| 2 | Nixie PSU qualification and six-tube controller/mount | **In progress:** HV module bench data and inrush; board designed, fab outputs ready, parts ordered, board not yet ordered |
+| 2 | Nixie PSU qualification and six-tube controller/mount | **In progress:** HV module bench data and inrush; board designed; parts and boards ordered (2026-11-10/11) |
 | 3 | ESP32 UI, encoder, I2C master, USB host commands | Not started |
 | 4 | Enclosure | Started: A101 socket housing and shroud printed and in use |
 | 5 | Rev A release | Not started |
@@ -90,7 +90,7 @@ bring-up rework: 470 pF at the converter's current-sense pin.*
 ### Nixie controller/mount at a glance
 
 Six IN-14s, three HV5622 drivers and an RP2040 on one 164 x 53 mm board. Fabrication outputs
-generated 2026-11-11; parts ordered 2026-11-10, **board not yet ordered or built**.
+ordered from PCBWay 2026-11-11 (parts 2026-11-10); **not yet built**.
 
 | What | File |
 |---|---|
@@ -138,7 +138,7 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | Path | Contents |
 |---|---|
 | `hardware/dekatron/` | Dekatron controller/PSU KiCad project; `simulation/` holds supply and drive/sense models |
-| `hardware/nixie/` | Nixie controller/mount KiCad project (fab outputs generated, not yet ordered) |
+| `hardware/nixie/` | Nixie controller/mount KiCad project (boards ordered 2026-11-11) |
 | `hardware/power/` | Purchased Nixie PSU specification and system power harness (planned, Phase 2) |
 | `hardware/lib/` | Shared symbols and footprints (planned; the dekatron board's own library is in `hardware/dekatron/lib/`) |
 | `firmware/display/` | ESP32 main application, PlatformIO (planned, Phase 3) |
@@ -195,6 +195,9 @@ The Gerbers went up on the evening of 2026-10-08 and the five boards were on the
 2026-10-15. They came sealed in bubble wrap with a silica-gel desiccant pack, and the label lists
 the order, the uploaded file, size, layer count, thickness and quantity. The edges are milled
 clean: no break-away tab remnants to file, so the boards were ready to use straight out of the bag.
+
+PCBWay is sponsoring the Nixie controller/mount boards too: ordered on 2026-11-11 from
+[`hardware/nixie/fab/`](hardware/nixie/fab/).
 
 Thank you, PCBWay, for supporting an open-source hardware project!
 
