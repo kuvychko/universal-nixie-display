@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-200 -200 400 400" width="400" height="400" font-family="system-ui, sans-serif">
+<title>Dekatron electrode ring: ten main cathodes K0 to K9 around a central anode, with guides G1 and G2 between each pair; the glow rests on K0</title>
+<defs><radialGradient id="h"><stop offset="0" stop-color="#ff6a00" stop-opacity="0.9"/><stop offset="0.45" stop-color="#ff6a00" stop-opacity="0.35"/><stop offset="1" stop-color="#ff6a00" stop-opacity="0"/></radialGradient></defs>
+<rect x="-200" y="-200" width="400" height="400" fill="#fff"/>
+<circle r="40" fill="#eee" stroke="#999"/><text text-anchor="middle" dominant-baseline="central" font-size="11" fill="#555">anode</text>
+<circle cx="0.00" cy="-120.00" r="24" fill="url(#h)"/>
+<g transform="translate(0.00 -120.00) rotate(0.00)" fill="#ff6a00" stroke="#222" stroke-width="3"><circle r="8"/></g>
+<g transform="translate(24.95 -117.38) rotate(12.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(48.81 -109.63) rotate(24.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<g transform="translate(70.53 -97.08) rotate(36.00)" fill="#fff" stroke="#666" stroke-width="1.5"><circle r="8"/></g>
+<g transform="translate(89.18 -80.30) rotate(48.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(103.92 -60.00) rotate(60.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<g transform="translate(114.13 -37.08) rotate(72.00)" fill="#fff" stroke="#666" stroke-width="1.5"><circle r="8"/></g>
+<g transform="translate(119.34 -12.54) rotate(84.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(119.34 12.54) rotate(96.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<g transform="translate(114.13 37.08) rotate(108.00)" fill="#fff" stroke="#666" stroke-width="1.5"><circle r="8"/></g>
+<g transform="translate(103.92 60.00) rotate(120.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(89.18 80.30) rotate(132.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<g transform="translate(70.53 97.08) rotate(144.00)" fill="#fff" stroke="#666" stroke-width="1.5"><circle r="8"/></g>
+<g transform="translate(48.81 109.63) rotate(156.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(24.95 117.38) rotate(168.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<g transform="translate(0.00 120.00) rotate(180.00)" fill="#fff" stroke="#666" stroke-width="1.5"><circle r="8"/></g>
+<g transform="translate(-24.95 117.38) rotate(192.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(-48.81 109.63) rotate(204.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<g transform="translate(-70.53 97.08) rotate(216.00)" fill="#fff" stroke="#666" stroke-width="1.5"><circle r="8"/></g>
+<g transform="translate(-89.18 80.30) rotate(228.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(-103.92 60.00) rotate(240.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<g transform="translate(-114.13 37.08) rotate(252.00)" fill="#fff" stroke="#666" stroke-width="1.5"><circle r="8"/></g>
+<g transform="translate(-119.34 12.54) rotate(264.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(-119.34 -12.54) rotate(276.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<g transform="translate(-114.13 -37.08) rotate(288.00)" fill="#fff" stroke="#666" stroke-width="1.5"><circle r="8"/></g>
+<g transform="translate(-103.92 -60.00) rotate(300.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(-89.18 -80.30) rotate(312.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<g transform="translate(-70.53 -97.08) rotate(324.00)" fill="#fff" stroke="#666" stroke-width="1.5"><circle r="8"/></g>
+<g transform="translate(-48.81 -109.63) rotate(336.00)" fill="#fff" stroke="#666" stroke-width="1.5"><path d="M0 -6.5L6 4.5H-6Z"/></g>
+<g transform="translate(-24.95 -117.38) rotate(348.00)" fill="#fff" stroke="#666" stroke-width="1.5"><rect x="-4.5" y="-4.5" width="9" height="9"/></g>
+<text x="0.00" y="-155.00" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K0</text>
+<text x="91.11" y="-125.40" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K1</text>
+<text x="147.41" y="-47.90" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K2</text>
+<text x="147.41" y="47.90" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K3</text>
+<text x="91.11" y="125.40" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K4</text>
+<text x="0.00" y="155.00" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K5</text>
+<text x="-91.11" y="125.40" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K6</text>
+<text x="-147.41" y="47.90" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K7</text>
+<text x="-147.41" y="-47.90" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K8</text>
+<text x="-91.11" y="-125.40" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#222">K9</text>
+<g font-size="11" fill="#444"><circle cx="-188" cy="180" r="5" fill="#fff" stroke="#666" stroke-width="1.5"/><text x="-179" y="184">main cathode</text><path d="M-86 175L-81 184H-91Z" fill="#fff" stroke="#666" stroke-width="1.5"/><text x="-74" y="184">G1</text><rect x="-48" y="176" width="8" height="8" fill="#fff" stroke="#666" stroke-width="1.5"/><text x="-34" y="184">G2</text></g>
+</svg>

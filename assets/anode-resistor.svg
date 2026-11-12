@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" width="600" height="300" font-family="system-ui, sans-serif" font-size="13">
+<title>One supply, one anode resistor, one tube: before the strike the anode sits at the supply, 289 V; once a gap conducts, the resistor drops the anode to 147 V above the cathodes, too low to strike a second gap</title>
+<rect width="600" height="300" fill="#fff"/>
+<g stroke="#333" stroke-width="2" fill="none">
+  <!-- supply rail and resistor -->
+  <path d="M80 30H160"/>
+  <path d="M160 30V60"/>
+  <path d="M152 60H168V120H152Z"/>
+  <path d="M160 120V160"/>
+  <!-- tube envelope -->
+  <ellipse cx="160" cy="210" rx="70" ry="45"/>
+  <!-- anode -->
+  <path d="M160 160V190"/>
+  <path d="M140 190H180"/>
+  <!-- cathodes -->
+  <path d="M105 232V244M125 236V248M145 238V250M175 238V250M195 236V248M215 232V244" stroke-width="2.5"/>
+  <path d="M105 244V280H215V244M125 248V280M145 250V280M175 250V280M195 248V280"/>
+  <path d="M160 280V290"/>
+</g>
+<!-- the one glowing gap -->
+<ellipse cx="150" cy="222" rx="13" ry="16" fill="#ff6a00" opacity="0.45"/>
+<g fill="#222">
+  <text x="14" y="34">supply</text>
+  <text x="178" y="95">R_A (anode resistor,</text>
+  <text x="178" y="111">shared by every gap)</text>
+  <text x="188" y="194">anode</text>
+  <text x="104" y="298" font-size="12">main cathodes (RTN)</text>
+</g>
+<g fill="#222" font-size="12.5">
+  <text x="345" y="40" font-weight="600">Before the strike (289 V supply)</text>
+  <text x="345" y="58">No current, so no drop across R_A:</text>
+  <text x="345" y="74">anode at 289 V, cathodes ≈ 33 V.</text>
+  <text x="345" y="90">≈ 256 V across the tube: it strikes.</text>
+  <text x="345" y="126" font-weight="600">After the strike (400 V supply)</text>
+  <text x="345" y="144">Current through R_A pulls the anode</text>
+  <text x="345" y="160">down to 210 V; cathodes at 63 V</text>
+  <text x="345" y="176">(both measured): 147 V across the</text>
+  <text x="345" y="192">glow. Enough to keep it alive, far</text>
+  <text x="345" y="208">below what a second gap needs to</text>
+  <text x="345" y="224">strike. One glow, and only one.</text>
+</g>
+</svg>

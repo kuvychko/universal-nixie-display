@@ -1,0 +1,1561 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="How a glow in a gas-filled tube counts, steps both ways and remembers a digit, with an interactive A101 dekatron you can step yourself.">
+      
+      
+      
+        <link rel="canonical" href="https://kuvychko.github.io/universal-nixie-display/how-it-works/dekatron/">
+      
+      
+        <link rel="prev" href="../../display/">
+      
+      
+        <link rel="next" href="../nixie/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>How a dekatron counts - Universal Nixie Display</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Universal Nixie Display">
+  <meta property="og:title" content="How a dekatron counts - Universal Nixie Display">
+  <meta property="og:description" content="How a glow in a gas-filled tube counts, steps both ways and remembers a digit, with an interactive A101 dekatron you can step yourself.">
+  <meta property="og:url" content="https://kuvychko.github.io/universal-nixie-display/how-it-works/dekatron/">
+  <meta property="og:image" content="https://kuvychko.github.io/universal-nixie-display/assets/og-dekatron.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The A101 dekatron glowing orange in its printed socket housing, in front of a high-voltage bench supply">
+  <meta name="twitter:card" content="summary_large_image">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="red">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-a-dekatron-counts" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Universal Nixie Display" class="md-header__button md-logo" aria-label="Universal Nixie Display" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Universal Nixie Display
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              How a dekatron counts
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="red"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="red"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kuvychko/universal-nixie-display" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kuvychko/universal-nixie-display
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../display/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  The display
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+    
+  
+  How the tubes work
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../build/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Build and investigate
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../safety/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Safety
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../about/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  About
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Universal Nixie Display" class="md-nav__button md-logo" aria-label="Universal Nixie Display" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Universal Nixie Display
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kuvychko/universal-nixie-display" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kuvychko/universal-nixie-display
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../display/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The display
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How the tubes work
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    How the tubes work
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How a dekatron counts
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How a dekatron counts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#step-through-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step through it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-only-one-glow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why only one glow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-glow-moves" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the glow moves
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How the glow moves">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unrolled-the-voltages-that-decide-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unrolled: the voltages that decide it
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-circuit-on-the-bench" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The circuit on the bench
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-fast-it-can-count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How fast it can count
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-tube-that-remembers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A tube that remembers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-short-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A short history
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#this-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        This build
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nixie/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How a nixie shows a digit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build and investigate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#step-through-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step through it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-only-one-glow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why only one glow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-glow-moves" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the glow moves
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How the glow moves">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unrolled-the-voltages-that-decide-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unrolled: the voltages that decide it
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-circuit-on-the-bench" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The circuit on the bench
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-fast-it-can-count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How fast it can count
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-tube-that-remembers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A tube that remembers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-short-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A short history
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#this-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        This build
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="how-a-dekatron-counts">How a dekatron counts<a class="headerlink" href="#how-a-dekatron-counts" title="Permanent link">&para;</a></h1>
+<p>A dekatron is a gas-filled glass tube with a ring of ten cathodes around a central anode. One
+spot of glow, orange in a neon tube like this project's A101, sits on one cathode. Send the tube a pair of pulses and the spot moves one
+place round the ring; send them in the other order and it moves back. The position of the spot is
+a decimal digit.</p>
+<p>That makes the dekatron unusual among display tubes: it does not just <strong>show</strong> a number, it
+<strong>holds</strong> one. It is a counter, a one-digit memory and a display in one envelope. This page
+explains how a glow can do that, using the A101, the two-guide dekatron in this project.</p>
+<p><a href="https://youtube.com/shorts/yVVf5zhSL-M"><img alt="Still from the video: the A101 in its shroud, lit, the orange glow on one cathode at the left of the ring" src="../../assets/dekatron-video-still.jpg" width="300" /></a></p>
+<p><em>This project's A101 stepping on the bench, from a 400 V supply (<a href="https://youtube.com/shorts/yVVf5zhSL-M">watch on YouTube</a>, recorded 2026-10-19).</em></p>
+<p><strong><a href="#step-through-it">Step through it yourself ↓</a></strong> in the interactive ring below.</p>
+<p>The page answers five questions:</p>
+<ol>
+<li>Why does only one main cathode glow, when all of them are connected to the circuit?</li>
+<li>How can pulsing a whole group of guides select only the guide beside the glow?</li>
+<li>Why does the glow move on to the next main cathode rather than back to the old one?</li>
+<li>Why does reversing the pulse order reverse the count?</li>
+<li>What keeps the count between pulses?</li>
+</ol>
+<h2 id="step-through-it">Step through it<a class="headerlink" href="#step-through-it" title="Permanent link">&para;</a></h2>
+<p>The ring below is drawn from above. Between each pair of main cathodes (circles, K0-K9) sit two
+<strong>guides</strong>: a G1 (triangle) and a G2 (square). All ten G1 guides are wired together, and so are
+all ten G2 guides: the circuit has only two guide wires. The figure drives them the way the
+bench test did, with two pushbuttons that ground one set of guides each while held
+(<a href="#the-circuit-on-the-bench">the circuit</a> is further down).</p>
+<p>Use <strong>Stage ▶</strong> to follow one handoff at a time, or <strong>Count +1</strong> to complete a whole step. With
+the ring focused, the left and right arrow keys move one stage and the up and down keys one count.
+Under the controls, an expandable voltage record of the bench circuit builds up like a scope
+trace, in volts from ground, with the cathodes dashed underneath each trace. Count up a few times,
+then down, and compare the order in which G1 and G2 fall.</p>
+<div class="dekatron-ring">
+<div class="ring__fallback">
+<p><em>The interactive figure needs JavaScript. Here is the ring at rest, with the glow on K0, and the
+sequence that moves it one step:</em></p>
+<p><img alt="Dekatron electrode ring: ten main cathodes K0 to K9 around a central anode, with guides G1 and G2 between each pair; the glow rests on K0" class="figure-plate" src="../../assets/dekatron-ring.svg" width="400" /></p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>G1 guides</th>
+<th>G2 guides</th>
+<th>Glow on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rest</td>
+<td>at rest</td>
+<td>at rest</td>
+<td>K0: count = 0</td>
+</tr>
+<tr>
+<td>1 (S1)</td>
+<td>grounded</td>
+<td>at rest</td>
+<td>G1 beside K0 (transfer in progress)</td>
+</tr>
+<tr>
+<td>2 (S1, S2)</td>
+<td>grounded</td>
+<td>grounded</td>
+<td>spreading from that G1 to the next G2</td>
+</tr>
+<tr>
+<td>3 (S2)</td>
+<td>at rest</td>
+<td>grounded</td>
+<td>G2 beside K1</td>
+</tr>
+<tr>
+<td>Rest</td>
+<td>at rest</td>
+<td>at rest</td>
+<td>K1: count = 1</td>
+</tr>
+</tbody>
+</table>
+<p>Starting with G2 instead runs the same stages backwards and counts down.</p>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">What the figure is, and is not</p>
+<p>A qualitative state model, slowed down enormously, not a plasma simulation. The halo is
+schematic, and each stage in the real circuit is far shorter than shown. The drawing's electrode
+order and viewing direction are illustrative until checked against the A101 itself. The drive
+sequence is the bench test's button sequence, which stepped the tube reliably both ways.</p>
+</div>
+<h2 id="why-only-one-glow">Why only one glow<a class="headerlink" href="#why-only-one-glow" title="Permanent link">&para;</a></h2>
+<p>A glow discharge needs a high voltage to <strong>strike</strong> (start) across a gap, and a lower one to
+<strong>sustain</strong> it once the gas near the cathode is ionised. All the tube's cathodes share one
+anode, and the anode is fed through one resistor.</p>
+<p><img alt="Supply, anode resistor and tube. Before the strike the anode sits at the supply; once a gap conducts, the resistor drops the anode to the maintaining voltage, too low to strike a second gap." class="figure-plate" src="../../assets/anode-resistor.svg" /></p>
+<p>Before anything conducts, no current flows through the resistor, so the anode sits at the full
+supply voltage. On the bench the tube struck as the supply reached 289 V, with the cathodes at
+about 33 V (calculated): an estimated 256 V across the tube. From then on the current through the anode
+resistor, R_A, drops the anode until only the <strong>maintaining voltage</strong> is left across the glow: at a
+400 V supply the anode measured 210 V and the cathodes 63 V, so 147 V at a tube current of 288 µA.
+That is plenty to keep the existing glow alive, and far below the roughly 256 V that started the
+first one. No second glow can start, and the tube settles into one lit cathode by itself. Almost always: the A101's datasheet warns that just after
+switch-on two cathodes may glow at once, until a reset pulse clears one.</p>
+<h2 id="how-the-glow-moves">How the glow moves<a class="headerlink" href="#how-the-glow-moves" title="Permanent link">&para;</a></h2>
+<p>On the bench, at rest, the guides sit at G+, about 91 V from ground, above the main cathodes at
+about 57 V (<a href="#the-circuit-on-the-bench">the circuit</a> is below), so the glow has
+no reason to visit them. To move it, a button grounds one set of guides: 0 V, well below the
+cathodes.</p>
+<p>All ten G1 guides fall together, but they are not all equal. The one beside the glow sits in a
+cloud of ions and excited atoms left by the discharge, and a discharge starts there far more easily
+than at a guide across the ring. So the glow hands over to the <strong>adjacent</strong> guide only. This is
+a local handoff: the glow grows on the new electrode as it fades on the old one. The discharge
+transfers between neighbouring electrodes; it is not a glowing spot circling the ring.</p>
+<p>The presses overlap. While S1 is still held, S2 grounds G2 too, and the glow spreads to the G2
+beside it. That G2 is on the far side of the G1 from the old cathode: the G2 on the old cathode's
+other side is two electrodes away and out of reach. Then G1 is released, leaving the glow on G2,
+and finally G2 is released. The glow falls to the nearest main cathode, which is now the <strong>next</strong>
+one. The two guides between each pair of cathodes act like a ratchet: the order of the pulses
+decides which way the glow can go.</p>
+<p><strong>Reverse the order</strong> (S2 first, then S1) and the same reasoning runs the other way round the ring:
+the count goes down. The same two buttons drive the count in both directions.</p>
+<h3 id="unrolled-the-voltages-that-decide-it">Unrolled: the voltages that decide it<a class="headerlink" href="#unrolled-the-voltages-that-decide-it" title="Permanent link">&para;</a></h3>
+<p>Cut the ring open and lay a few electrodes out in a row under the anode. The chart below them is
+in volts from ground, from the bench circuit (<a href="#the-circuit-on-the-bench">below</a>). Each electrode's bar runs from its own
+voltage (the dot) up to the anode's (the solid line), so <strong>the bar's length is the voltage across
+its gap</strong>. Two marks on each bar stand for the two thresholds of a simplified model: the tick, 147 V above
+the electrode, is what <strong>keeps a glow going</strong>; the dashed outline, about 256 V above it, is what
+fresh gas needs to <strong>start one</strong>. The 147 V is the maintaining voltage measured at the bench's
+operating point, and the 256 V the striking voltage estimated from the first strike; real
+thresholds shift with current and differ from gap to gap, but the model holds them fixed. A gap next to the glow is <strong>primed</strong> by its ions and starts at a lower
+voltage (the arrow); by how much was not measured, so the figure gives no number for it.</p>
+<p>Because the anode sits 147 V above whichever electrode glows, it follows the glow. When the glow
+moves onto a grounded guide, the anode drops to 147 V, and the cathode the glow left behind no
+longer has enough voltage across it to stay lit.</p>
+<p>Each change is shown twice: <strong>the instant the buttons change</strong>, before the glow has moved, and
+<strong>after the handoff</strong>.</p>
+<div class="dekatron-strip">
+<div class="ring__fallback">
+<p><em>The interactive figure needs JavaScript. One step from K0 to K1, in volts from ground (gap = anode
+minus electrode):</em></p>
+<table>
+<thead>
+<tr>
+<th>Moment</th>
+<th>Anode</th>
+<th>Cathodes</th>
+<th>What the gaps see</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>At rest on K0</td>
+<td>204 V</td>
+<td>57 V</td>
+<td>Other cathodes 147 V (sustains, cannot strike); guides at 91 V, 113 V</td>
+<td>Glow stays on K0</td>
+</tr>
+<tr>
+<td>S1 pressed, instant</td>
+<td>198 V</td>
+<td>51 V</td>
+<td>Every G1, now at 0 V, has 198 V: below 256 V, but the G1 beside K0 is primed</td>
+<td>Only that G1 strikes</td>
+</tr>
+<tr>
+<td>After</td>
+<td>147 V</td>
+<td>39 V</td>
+<td>K0 is left with 108 V, below 147 V</td>
+<td>K0 goes out</td>
+</tr>
+<tr>
+<td>S2 pressed too</td>
+<td>147 V</td>
+<td>34 V</td>
+<td>G2 at 0 V has 147 V; the one beside the glow is primed</td>
+<td>Glow spreads onto it</td>
+</tr>
+<tr>
+<td>S1 released</td>
+<td>147 V</td>
+<td>39 V</td>
+<td>G1 rises towards 70 V: 77 V across it</td>
+<td>G1 goes out; glow on G2</td>
+</tr>
+<tr>
+<td>S2 released, G2 passing 57 V</td>
+<td>204 V</td>
+<td>57 V</td>
+<td>K0 and K1 both have 147 V; only K1 is next to the glow</td>
+<td>Glow lands on K1</td>
+</tr>
+<tr>
+<td>After</td>
+<td>204 V</td>
+<td>57 V</td>
+<td>G2, back at 91 V, has 113 V</td>
+<td>Count = 1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">A first-order picture</p>
+<p>The two thresholds come from the bench: 147 V measured at one operating point, 256 V estimated
+from the first strike, both held fixed here. The node voltages are calculated from the bench
+circuit with the simple anode rule, and come out about 6 V below the two points that were
+measured. While a
+released guide carries the glow, it rises only as fast as its 470 kΩ pull-up allows; the
+figure shows it at the moment it passes the cathodes. Real gaps also differ in geometry, and
+the ions' influence fades with distance rather than stopping at the neighbouring electrode.
+The figure shows why the handoff is selective, not how fast it happens.</p>
+</div>
+<h2 id="the-circuit-on-the-bench">The circuit on the bench<a class="headerlink" href="#the-circuit-on-the-bench" title="Permanent link">&para;</a></h2>
+<p>The voltages on this page come from the circuit the project's A101 was first tested on: a
+bench supply, a few resistors and two pushbuttons. <strong>All voltages are measured from ground</strong>, the
+supply's negative terminal, so a number always means the same thing.</p>
+<div class="admonition danger">
+<p class="admonition-title">Not a casual experiment</p>
+<p>This circuit has 400 V on open wiring. If you build anything like it, it is at your own risk:
+read the <a href="../../safety/">safety notes</a> first, and keep one hand away while it is powered.</p>
+</div>
+<p><a href="../../assets/bench-circuit.svg"><img alt="The A101 bench test circuit, as built: a 400 V supply feeds the anode through R_A; a divider R1, R2, R3 holds the main cathodes at RTN, about 57 V, and the guide supply G+ at about 91 V; each guide is pulled up to G+ through 470 kΩ, and a pushbutton grounds it. R1 was two resistors in parallel, each above its voltage rating" class="figure-plate" src="../../assets/bench-circuit.svg" /></a></p>
+<p><em>The bench circuit (open the drawing full size), with the parts as built: the record of an
+experiment, not a recommendation. R1 was two 1/4 W 680k resistors in parallel, and each saw about
+320 V, above the usual rating for that size. To build it, make R1 from two resistors in series
+(2 × 160k–180k), as in the
+<a href="https://github.com/kuvychko/universal-nixie-display/blob/main/docs/bringup.md#optional-a101-bench-test">bench test's parts table</a>.</em></p>
+<ul>
+<li>The <strong>anode</strong> is fed from the 400 V supply through one resistor, R_A.</li>
+<li>All ten <strong>main cathodes</strong> return to <strong>RTN</strong>, which the divider R1-R2-R3 holds at about 57 V
+  rather than at ground. That is the trick that lets a plain switch to ground pull a guide
+  <em>below</em> the cathodes.</li>
+<li>All ten <strong>G1</strong> guides are joined, and so are all ten <strong>G2</strong> guides. Each set is pulled up through
+  470 kΩ to <strong>G+</strong>, about 91 V, which keeps the guides above the cathodes at rest. Pressing <strong>S1</strong>
+  grounds every G1 at once; <strong>S2</strong> grounds every G2.</li>
+</ul>
+<p>The node voltages in each state, calculated from the resistor values:</p>
+<table>
+<thead>
+<tr>
+<th>Buttons</th>
+<th>Glow on</th>
+<th>Cathodes (RTN)</th>
+<th>G+</th>
+<th>Pressed guide</th>
+<th>Anode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>a main cathode</td>
+<td>57 V (63 V measured)</td>
+<td>91 V</td>
+<td>—</td>
+<td>204 V (210 V measured)</td>
+</tr>
+<tr>
+<td>S1</td>
+<td>a G1</td>
+<td>39 V</td>
+<td>70 V</td>
+<td>0 V</td>
+<td>147 V</td>
+</tr>
+<tr>
+<td>S1 and S2</td>
+<td>a G1 and a G2</td>
+<td>34 V</td>
+<td>62 V</td>
+<td>0 V</td>
+<td>147 V</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>a G2</td>
+<td>39 V</td>
+<td>70 V</td>
+<td>0 V</td>
+<td>147 V</td>
+</tr>
+</tbody>
+</table>
+<p>The calculation treats the tube simply: the anode sits 147 V, the tube's measured maintaining
+voltage, above whichever electrode glows. Where the bench was measured, it comes out about 6 V
+low. Notice that the cathodes move too. The divider is not stiff, and while the glow sits on a
+grounded guide the tube current no longer flows into RTN, so RTN falls. The controller board
+uses the same scheme with transistors in place of the buttons, but regulates RTN, so there the
+cathodes stay put.</p>
+<h2 id="how-fast-it-can-count">How fast it can count<a class="headerlink" href="#how-fast-it-can-count" title="Permanent link">&para;</a></h2>
+<p>Slowly. The A101 is rated at 1,000 steps per second, at the slow end of what dekatrons could
+do. That is no handicap here: the display's plan steps it at up to 200 per second.</p>
+<p>What sets the limit is the same thing that makes the handoff work. Every transfer leaves ions and
+excited atoms around the electrode the glow has just left. They are what primes the neighbouring
+gap, and they take time to clear: step again too soon and the old position is still primed, so
+the glow can take the wrong neighbour. Ericsson's 1954 catalogue, describing one of its tubes,
+names the limit as the de-ionisation time of the gas.</p>
+<p>So the gas fill sets the speed. The table collects the tubes whose figures could be traced to a
+datasheet, a manufacturer's bulletin or Acton's account; a dash means the source does not say.</p>
+<table>
+<thead>
+<tr>
+<th>Tube</th>
+<th>Fill</th>
+<th>Glow</th>
+<th>Maintaining voltage</th>
+<th>Rated speed</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A101 (Soviet; this project)</td>
+<td>neon</td>
+<td>orange (this project's bench)</td>
+<td>130–170 V</td>
+<td>1 kHz (0.01–1000 Hz)</td>
+<td>Original datasheet, 1989<sup id="fnref:a101"><a class="footnote-ref" href="#fn:a101">1</a></sup></td>
+</tr>
+<tr>
+<td>Ericsson GC10B</td>
+<td>neon and helium</td>
+<td>—</td>
+<td>—</td>
+<td>4 kHz</td>
+<td>Acton<sup id="fnref:acton"><a class="footnote-ref" href="#fn:acton">2</a></sup></td>
+</tr>
+<tr>
+<td>Raytheon CK7978</td>
+<td>neon</td>
+<td>—</td>
+<td>190 V (nominal tube drop)</td>
+<td>5 kHz</td>
+<td>Raytheon datasheet, 1961<sup id="fnref:ck7978"><a class="footnote-ref" href="#fn:ck7978">3</a></sup></td>
+</tr>
+<tr>
+<td>A106 (Soviet)</td>
+<td>"a neon mixture"</td>
+<td>blue</td>
+<td>255–295 V</td>
+<td>10 kHz (10⁴ Hz)</td>
+<td>Soviet handbook page<sup id="fnref:a106"><a class="footnote-ref" href="#fn:a106">4</a></sup></td>
+</tr>
+<tr>
+<td>Ericsson GC10D</td>
+<td>helium and hydrogen</td>
+<td>—</td>
+<td>—</td>
+<td>10–20 kHz, by drive waveform; up to 40 kHz by Acton's account</td>
+<td>Acton<sup id="fnref2:acton"><a class="footnote-ref" href="#fn:acton">2</a></sup>; collectors' survey<sup id="fnref2:ia"><a class="footnote-ref" href="#fn:ia">8</a></sup></td>
+</tr>
+<tr>
+<td>A107 (Soviet)</td>
+<td>—</td>
+<td>light blue</td>
+<td>270–310 V</td>
+<td>1 MHz (0.01 Hz–10⁶ Hz)</td>
+<td>Soviet handbook page<sup id="fnref:a107"><a class="footnote-ref" href="#fn:a107">5</a></sup></td>
+</tr>
+<tr>
+<td>Elesta EZ10B (Switzerland, 1961)</td>
+<td>— (collectors: hydrogen<sup id="fnref:tt"><a class="footnote-ref" href="#fn:tt">7</a></sup>)</td>
+<td>"weaker, bluish"</td>
+<td>about 290 V (half its 580 V supply)</td>
+<td>"a little above 1 MHz"</td>
+<td>Elesta technical bulletin No. 17, 1961<sup id="fnref:ez10b"><a class="footnote-ref" href="#fn:ez10b">6</a></sup></td>
+</tr>
+</tbody>
+</table>
+<p>Two patterns stand out. The slow tubes are the neon ones with the familiar orange glow; the fast
+ones glow blue. And the fast ones need about twice the A101's maintaining voltage. Their makers'
+own sheets mostly do not name the gas: the A107's is silent, and Elesta's bulletin describes the
+EZ10B's speed and glow but not its fill. Collectors' sources say hydrogen for the 1 MHz class, and
+Elesta concedes the price in light: the EZ10B's glow is weaker. Reaching 1 MHz took more than the
+tube, too: the bulletin gives a dedicated input stage for it, more critical to build and set up
+than its 500 kHz trigger.</p>
+<details class="warning">
+<summary>Ten times too fast: one tube, three sources</summary>
+<p>The A106's handbook page gives its speed as 10⁴ Hz: 10 kHz. The collectors' site Lampes et
+tubes transcribes this as "104 Hz", the exponent lost. A third source, Industrial Alchemy,
+rates the tube at 100 kHz, ten times the handbook. The fill is no clearer: the handbook says "a neon
+mixture", which cannot by itself explain a blue glow (neon glows orange-red), while Lampes et
+tubes says argon, whose glow is violet-blue. The table uses the handbook. Collectors' surveys
+also list a few 100 kHz types, the Sylvania 6909 and 8035 and the Raytheon 8262; without a
+datasheet to check them against, they are left out of the table.</p>
+</details>
+<p>Speed had a price beyond the voltage. Hydrogen seeps out through the glass, even on the
+shelf, and helium-filled GC10Ds have almost always lost their gas by now<sup id="fnref:ia"><a class="footnote-ref" href="#fn:ia">8</a></sup>. Neon was the
+stable choice, and most dekatrons ran far below the hydrogen tubes' speeds. For faster inputs, the
+answer at the time was to put vacuum-tube counting stages in front: for one of its tubes,
+Ericsson's catalogue advises vacuum-tube decades ahead of the dekatron above about 20,000 counts
+per second. Transistor counters later made the whole arrangement obsolete.</p>
+<h2 id="a-tube-that-remembers">A tube that remembers<a class="headerlink" href="#a-tube-that-remembers" title="Permanent link">&para;</a></h2>
+<p>Between steps, nothing in the bench circuit records the count. Both guide wires sit at rest,
+identical for every digit. <strong>The count exists only as the position of the glow</strong>, and the
+discharge keeps itself there: the anode-resistor balance above holds it on whichever cathode it
+occupies. The pulses carry no number, only "one more" or "one fewer".</p>
+<p>In the finished display the point is literal. On the controller board, nine of the ten main
+cathodes are joined together at the socket and return on one wire; only K1, the <strong>index</strong> cathode, has a wire of its own (turn on
+<em>Show connections</em> in the figure). The controller cannot ask the tube which digit it holds. It can
+only see the index light once per revolution and count the pulses it has sent since, so what the
+controller holds is an <em>estimate</em> of the count; the count itself is the glow's position in the
+tube. Normally the two agree. After a missed step they differ, and the controller can only notice
+at an index visit, if then: one index cathode cannot catch every missed step. The controller's firmware is planned to re-home the tube
+whenever the index disagrees, and after any power interruption.</p>
+<p>The memory is volatile. It lasts exactly as long as the discharge: switch off and the count is
+gone, and at the next power-up the glow strikes wherever it strikes. That is why a dekatron circuit
+needs the index cathode, or a reset, to find a known starting point.</p>
+<p>Engineers in the 1950s used exactly this as computer memory. The Harwell Dekatron computer kept
+its numbers in 720 dekatrons, each one a decimal digit you could watch.</p>
+<p>The memory has one more quirk: it does not like to sit still. A glow left on one cathode for a
+long time changes the tube: Ericsson's 1954 catalogue warns that the GC10B's maximum speed drops
+if the glow rests on one cathode for more than 2,000 hours. The A101's datasheet allows at
+most an hour of running slower than one step per 100 seconds, and after slow running (a step per
+second or less) recommends twenty minutes of exercise at 100 steps per second or more. The
+Harwell restorers met the same problem: dekatrons that had spent a long time with the glow on one
+cathode became "sticky", and they planned a way to spin a whole store of them. A dekatron that
+shows a fixed number for hours is, in the datasheet's terms, being misused. This display's
+controller will therefore never hold the glow still for long: it exercises the tube now and then,
+and switches it off when there is nothing to show.</p>
+<h2 id="a-short-history">A short history<a class="headerlink" href="#a-short-history" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>1945–1947.</strong> John Reginald Acton, then at the valve maker Cossor, finds that a pulse can move a
+  glow discharge from one cathode to another, and that it stays put when the pulse ends. A
+  colleague wishes aloud for "a valve that has ten states built into it"; Acton imagines moving the
+  glow along a line of ten cathodes.</li>
+<li><strong>1948.</strong> At Ericsson Telephones in Beeston, Nottingham, Acton demonstrates a first prototype in
+  November. By the end of the year the ten-way GC10A, filled with helium and counting up to about
+  400 pulses per second, is ready for production.</li>
+<li><strong>1949–1950.</strong> A provisional patent in Acton's name is granted on 18 January 1949. A colleague,
+  Ray Bacon, suggests the name <em>Dekatron</em>, which appears in print in May 1950.</li>
+<li><strong>1950s.</strong> The faster GC10B, filled with neon and helium (about 4,000 pulses per second), becomes
+  the standard tube, used by the thousand in Geiger-counter scalers, timers, early calculators and
+  cash registers. The helium-hydrogen GC10D goes faster still (see
+  <a href="#how-fast-it-can-count">How fast it can count</a>). The design is copied in Europe, the USA and
+  the USSR.</li>
+<li><strong>1951.</strong> The Harwell Dekatron computer, designed at Harwell from 1949, first runs. Its store is
+  720 dekatrons. It works until 1973; restored at The National Museum of Computing, it is rebooted
+  on 20 November 2012 and recognised in 2013 as the world's oldest original working digital
+  computer.</li>
+<li><strong>Mid-1960s.</strong> Transistor counters make the dekatron obsolete, and Ericsson stops making them.
+  Equipment already installed lives on: dekatron timers still controlled spot welders at the end of
+  the century.</li>
+</ul>
+<p>The <strong>A101</strong> in this project is a Soviet two-guide dekatron with a ten-cathode ring and an index
+output. Its product sheet comes from the Reflector plant and is stamped December 1989, late in the
+dekatron's life; a fuller production history is still to be sourced.</p>
+<h2 id="this-build">This build<a class="headerlink" href="#this-build" title="Permanent link">&para;</a></h2>
+<p>The tube on this page is not hypothetical. On the bench (2026-10-09) the project's A101:</p>
+<ul>
+<li>struck at a 289 V supply, with an estimated 256 V across the tube;</li>
+<li>held its glow at a maintaining voltage of 147 V, at 288 µA;</li>
+<li>stepped reliably in both directions, judged by eye, with the guides grounded: a swing of about
+  90 V, to about 63 V below the cathodes. The datasheet's control pulse is a 135–200 V swing (as
+  its test circuit applies it), so the bench used roughly half to two-thirds of it.</li>
+</ul>
+<p><img alt="The A101 bench fixture running: the tube lit in its printed socket housing, orange glow inside the glass, in front of the high-voltage bench supply, with the white clamshell holding the bench circuit and its two pushbuttons in the foreground" src="../../assets/dekatron-bench-lit-overview.jpg" /></p>
+<p><em>The bench fixture these results come from: the circuit above on a perf board in the white
+clamshell, the tube in a printed socket housing, the bench supply behind, at 400 V. Photographed 2026-10-20;
+more in <a href="../../build/#the-a101-bench-fixture">Build and investigate</a>. The video at the
+<a href="#how-a-dekatron-counts">top of the page</a> shows it running.</em></p>
+<p>The controller board uses the same scheme with the buttons replaced: RTN is regulated at about
+50 V, and transistor switches driven by an RP2040 ground the guides, about 50 V below the
+cathodes. It also gives the index cathode K1 a wire of its own, so the controller can sense it.
+The details are in the engineering documents:
+<a href="https://github.com/kuvychko/universal-nixie-display/blob/main/docs/bringup.md#optional-a101-bench-test">bench test</a>
+and <a href="https://github.com/kuvychko/universal-nixie-display/blob/main/docs/hardware.md#a101-operating-point-d1">dekatron controller design</a>.</p>
+<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">&para;</a></h2>
+<ul>
+<li>John and Robin Acton, <a href="https://www.computerconservationsociety.org/resurrection/res61.htm">Dekatron – The Story of an Invention</a>,
+  <em>Resurrection</em> 61, Computer Conservation Society. The invention, the GC10 tubes and their decline.</li>
+<li>The National Museum of Computing, <a href="https://www.tnmoc.org/witch">The Harwell Dekatron / WITCH</a>.
+  The computer, its store and its restoration.</li>
+<li><a href="https://electricstuff.co.uk/dekatron.html">Ericsson 1954 Dekatron catalogue</a>, transcribed on
+  electricstuff.co.uk. Striking and maintaining voltage, glow transfer, guide sequencing and the
+  de-ionisation limit, for Ericsson's tubes rather than the A101.</li>
+</ul>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:a101">
+<p>Reflector (Sovtek), A-101 product sheet, accepted December 1989 (<a href="https://www.tube-tester.com/sites/nixie/dat_arch/A-101_02.pdf">scan</a> via tube-tester.com): counting rate 0.01–1000 Hz. The sheet gives neither fill nor maintaining voltage; those are from tube-tester.com's <a href="https://www.tube-tester.com/sites/nixie/datdekat/A101/A101.htm">A101 page</a> ("Neon filled", 130–170 V). The glow colour is as seen on this project's bench: the classic orange of neon.&#160;<a class="footnote-backref" href="#fnref:a101" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:acton">
+<p>Acton, <em>Dekatron – The Story of an Invention</em> (above): GC10B "neon/helium mixture", 4,000 pulses per second; GC10D "Helium and Hydrogen", "up to 40,000 pulses per second".&#160;<a class="footnote-backref" href="#fnref:acton" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:acton" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:ck7978">
+<p>Raytheon, <em>CK7978 Technical Information</em>, 15 January 1961: "cold cathode gas-filled 5 KC medium speed bi-directional ring stepping decade counter", "direct visual neon glow readout", input frequency 5000 cps, nominal tube drop 190 V. Copy via <a href="https://www.industrialalchemy.org/articleview.php?item=764">Industrial Alchemy</a>.&#160;<a class="footnote-backref" href="#fnref:ck7978" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:a106">
+<p>A106 handbook page (Soviet reference book): "Свечение — синее. Наполнение — смесь неона" (glow blue; fill a neon mixture); frequency 10⁴ Hz; maintaining voltage 255–295 V. Transcribed by <a href="https://lampes-et-tubes.info/cd/cd052.php?l=e">Lampes et tubes</a> as "104 Hz", argon, violet-blue; rated 100 kHz by <a href="https://industrialalchemy.org/articleview.php?item=1070">Industrial Alchemy</a>.&#160;<a class="footnote-backref" href="#fnref:a106" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:a107">
+<p>A107 handbook page (Soviet reference book): "Цвет свечения — голубой" (light blue); counting rate 0.01–10⁶ Hz; maintaining voltage 270–310 V; life at least 1,000 hours. No fill given. <a href="https://lampes-et-tubes.info/cd/A107.pdf">Scan</a> via Lampes et tubes.&#160;<a class="footnote-backref" href="#fnref:a107" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:ez10b">
+<p>Elesta AG, <em>Technische Mitteilungen</em> No. 17, February 1961, "Die Dekadenzählröhre EZ 10 B": "Zählfrequenzen von 1 MHz", a cut-off frequency "wenig über 1 MHz", "das schwächere bläuliche Glimmlicht", a 580 V supply "etwa zweimal so hoch wie die Brennspannung", and a separate input stage for 1 MHz. <a href="https://lampes-et-tubes.info/cd/EZ10B.pdf">Scan</a> via Lampes et tubes; transcribed on <a href="https://www.radiomuseum.org/tubes/tube_ez10b.html">radiomuseum.org</a>.&#160;<a class="footnote-backref" href="#fnref:ez10b" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+<li id="fn:tt">
+<p>tube-tester.com, <a href="https://www.tube-tester.com/sites/nixie/datdekat/ez10b/ez10b.htm">EZ10B</a>: "Hydrogen filled"; Industrial Alchemy also gives hydrogen.&#160;<a class="footnote-backref" href="#fnref:tt" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+</li>
+<li id="fn:ia">
+<p>Industrial Alchemy, <a href="https://www.industrialalchemy.org/tubepage.php?item=15">Dekatron glow-transfer counting tubes</a>: a collector's survey of dekatron types, including the GC10D's 20 kHz rating with sine-wave drive and 10 kHz with square pulses, hydrogen's leakage through glass, and the GC10D's lost helium.&#160;<a class="footnote-backref" href="#fnref:ia" title="Jump back to footnote 8 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:ia" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Text, diagrams and hardware CERN-OHL-P v2; code MIT. Igor Kuvychko, 2026.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/dekatron/ring.js" type="module"></script>
+      
+        <script src="../../javascripts/dekatron/strip.js" type="module"></script>
+      
+    
+  </body>
+</html>
