@@ -24,12 +24,37 @@ Versioned command/status contracts between the ESP32 (sole master) and the contr
 
 ## Dekatron controller
 
-Address: _open_.
+Address: _open_. Behaviour behind each operation:
+[firmware/dekatron/README.md](../firmware/dekatron/README.md).
 
-Operations: `HOME`, `MOVE_RELATIVE`, `MOVE_TO`, `ROTATE`, `STOP`, `STATUS`.
-Status fields: `position`, `position_valid`, `busy`/`homing`, expected vs. observed index
-crossings, homing failure count, fault code. A homing timeout returns a fault, never a fabricated
-position.
+**Draft framing (2026-11-12, not frozen).** A write is `[op][len][payload…]`: `len` is the payload
+length in bytes and must match the op's fixed length, or the write is rejected. A read returns the
+status block below. Multi-byte fields are little-endian. Every accepted write increments
+`cmd_seq`, and a rejected one sets `last_error`, so the master can confirm each command by
+polling. Op codes and field widths are placeholders until the firmware is written against them.
+
+| Op | Payload | Notes |
+|---|---|---|
+| `LIGHT` | — | HV on, strike, home. Completion seen in status |
+| `DARK` | — | HV off, position invalid |
+| `HOME` | — | Needs `LIT` |
+| `MOVE_TO` | `k` u8 (0-9), `dir` u8 (0 shortest, 1 fwd, 2 rev) | |
+| `MOVE_RELATIVE` | `n` i16 | Added to the step queue; overflow rejected |
+| `ROTATE` | `rate` i32, 0.01 steps/s, signed | 0 stops |
+| `STOP` | — | Finishes the current step; clears queue and effect |
+| `SET_RAMP` | `accel` u16, steps/s² (0 = none) | |
+| `EFFECT` | `id` u8, parameters (fixed per id) | `SWING`, `BOUNCE`, `SPIN` |
+| `ARC` | `start` u8, `length` u8, `sweep` u16 steps/s, `end_weight` u8 | Rejected above validated limits |
+| `GAUGE` | `value` u16 (0-1000 = 0-10 cathodes) | |
+| `CLEAR_FAULT` | — | |
+| `PING` | — | Resets the master-loss timer without other effect (any valid write also does) |
+
+Status block: protocol version, module id, firmware version, boot counter, uptime, reset reason;
+`cmd_seq`, `last_error`; owner (I2C or USB console); power state (`DARK`/`STRIKING`/`LIT`), fault
+code, master-loss flag; `position`, `position_valid`, busy/homing, active effect; expected and
+observed index crossings, homing failures, index mismatches; queue depth; dwell at the current
+position, recent step rate; HV, VIN, RTN (0.1 V units) and PGOOD. A homing timeout returns a
+fault, never a fabricated position.
 
 ## Nixie controller
 

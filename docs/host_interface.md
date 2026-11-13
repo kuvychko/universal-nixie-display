@@ -24,6 +24,12 @@ The boot counter and uptime are queryable so a host can detect reboots and resto
 | `DEK:HOME` / `DEK:HOME?` | Request homing / query status |
 | `DEK:POS 4` | Move to a main-cathode position |
 | `DEK:ROT 2` | Rotate at a specified rate; units fixed by protocol |
+| `DEK:LIGHT` / `DEK:DARK` | Strike and home / HV off |
+| `DEK:STEP -3` | Queue relative steps (event-driven demos) |
+| `DEK:STOP` | Stop at a cathode, clear queue and effect |
+| `DEK:EFF SWING,4,2,1.5` | Run a local animation (`SWING`, `BOUNCE`, `SPIN`) with its parameters |
+| `DEK:ARC 2,5` / `DEK:GAUGE 6.5` | POV arc or gauge, within the validated step limits |
+| `DEK:STAT?` | Power state, position, fault, counters |
 
 ## Display rules
 

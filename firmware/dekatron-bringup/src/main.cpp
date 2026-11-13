@@ -4,6 +4,7 @@
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include <hardware/adc.h>
 
 static const uint8_t PIN_GUIDE1 = 4;     // G1 driver base (D8); R_BE holds it off in reset
 static const uint8_t PIN_GUIDE2 = 5;     // G2 driver base
@@ -38,6 +39,17 @@ static const uint32_t STEP_RATE_MAX = 200;
 static const uint32_t PHASE_US_MIN = 50;
 static const uint32_t PHASE_US_MAX = 2000;
 
+// Speed-sweep experiment (sweep command): test bounds for finding where the tube loses counts,
+// deliberately beyond the datasheet's 1 kHz and 200 us. Not operating limits. The phase floor is
+// about the guide rise time (10-21 us, hardware.md D8); the rest floor leaves time to sample NDX.
+static const uint32_t SWEEP_N_MIN = 10;
+static const uint32_t SWEEP_N_MAX = 20000;
+static const uint32_t SWEEP_HZ_MAX = 5000;
+static const uint32_t SWEEP_PHASE_MIN = 10;
+static const uint32_t SWEEP_REST_MIN = 20;
+static const uint32_t SWEEP_HITS_MAX = 4096;
+static const uint32_t SWEEP_HITS_PER_LINE = 32;
+
 static Adafruit_NeoPixel led(1, PIN_LED, NEO_GRB + NEO_KHZ800);
 
 static bool hvOn = false;
@@ -61,6 +73,8 @@ static uint32_t stepNextUs = 0;
 static bool ndxPending = false;
 static uint32_t stepsDone = 0;
 static uint32_t ndxHits = 0;
+
+static uint16_t sweepHits[SWEEP_HITS_MAX];
 
 static char line[64];
 static size_t lineLen = 0;
@@ -213,6 +227,169 @@ static void stepOnce()
     digitalWrite(second, LOW);
 }
 
+static uint32_t maxU32(uint32_t a, uint32_t b) { return a > b ? a : b; }
+
+// Busy-wait until time_us_32() reaches t, feeding the watchdog (a 1 Hz sweep waits 1 s).
+// Returns how late the wait ended, in us (0 if t was still ahead when called).
+static uint32_t waitUntil(uint32_t t)
+{
+    int32_t late = (int32_t)(time_us_32() - t);
+    if (late > 0) {
+        return (uint32_t)late;
+    }
+    while ((int32_t)(time_us_32() - t) < 0) {
+        rp2040.wdt_reset();
+    }
+    return 0;
+}
+
+// Speed-sweep experiment: n steps as one blocking burst on an absolute timetable, NDX sampled
+// once per step sample_us after the second guide releases. Reports the step numbers (1-based,
+// position after that step) at which NDX read high, so the host can find lost or extra steps from
+// the gaps between index hits. Any received byte aborts; safety checks run every step.
+static void cmdSweep(const char *arg)
+{
+    char dir[8] = "";
+    unsigned long n = 0, ph = 0, hz = 0, sample = 0;
+    int got = sscanf(arg, "%lu %7s %lu %lu %lu", &n, dir, &ph, &hz, &sample);
+    if (got < 4 || (strcmp(dir, "fwd") != 0 && strcmp(dir, "rev") != 0) || n < SWEEP_N_MIN ||
+        n > SWEEP_N_MAX || hz == 0 || hz > SWEEP_HZ_MAX || ph < SWEEP_PHASE_MIN || ph > PHASE_US_MAX) {
+        Serial.printf("ERR sweep <n %lu-%lu> <fwd|rev> <phase_us %lu-%lu> <hz 1-%lu> [sample_us]\n",
+                      (unsigned long)SWEEP_N_MIN, (unsigned long)SWEEP_N_MAX, (unsigned long)SWEEP_PHASE_MIN,
+                      (unsigned long)PHASE_US_MAX, (unsigned long)SWEEP_HZ_MAX);
+        return;
+    }
+    uint32_t period = 1000000UL / hz;
+    if (period < 3 * ph + SWEEP_REST_MIN) {
+        Serial.printf("ERR rest %ld us < %lu (period %lu - 3 x phase)\n", (long)period - (long)(3 * ph),
+                      (unsigned long)SWEEP_REST_MIN, (unsigned long)period);
+        return;
+    }
+    uint32_t rest = period - 3 * ph;
+    if (got < 5) {
+        sample = rest - 10; // just before the next step, as the step command reads it
+    } else if (sample >= rest) {
+        Serial.printf("ERR sample_us must be < rest %lu\n", (unsigned long)rest);
+        return;
+    }
+    if (!hvOn) {
+        Serial.println("ERR hv off");
+        return;
+    }
+    if (stepsLeft || ndxPending) {
+        Serial.println("ERR stepping");
+        return;
+    }
+    uint32_t runMs = (uint32_t)(((uint64_t)n * period) / 1000) + 100;
+    uint32_t leftMs = onForMs - (millis() - onAtMs);
+    if (runMs > leftMs) {
+        Serial.printf("ERR run %lu ms > hv time left %lu ms\n", (unsigned long)runMs, (unsigned long)leftMs);
+        return;
+    }
+
+    guidesRest();
+    uint8_t first = strcmp(dir, "fwd") == 0 ? PIN_GUIDE1 : PIN_GUIDE2;
+    uint8_t second = first == PIN_GUIDE1 ? PIN_GUIDE2 : PIN_GUIDE1;
+    float hvPre = readHv();
+    Serial.printf("OK sweep %lu %s %lu us %lu Hz rest %lu us sample %lu us\n", n, dir, ph, hz,
+                  (unsigned long)rest, sample);
+    Serial.flush();
+
+    uint32_t hits = 0;
+    bool overflow = false;
+    uint32_t slipMax = 0;   // lateness of guide edges and NDX samples within a step
+    uint32_t startLate = 0; // lateness of a step's first edge: the previous step's work overran
+    uint32_t workMax = 0;   // NDX sample plus per-step checks, us: the rest time this needs
+    uint32_t pgoodLow = 0;
+    // The hot loop uses the SDK directly (gpio_put/gpio_get/adc_read): digitalWrite, analogRead and
+    // Serial.available() cost enough per step to slip the timetable by 46 us at 100 Hz (board 1,
+    // 2026-11-12). setup()'s analogRead() calls have already set the ADC pins up.
+    const uint32_t ndxHighRaw = (uint32_t)(NDX_HIGH_V / ADC_VREF * 4095.0f);
+    const uint32_t vinMinRaw = (uint32_t)(VIN_MIN / VIN_SCALE / ADC_VREF * 4095.0f);
+    const uint32_t vinMaxRaw = (uint32_t)(VIN_MAX / VIN_SCALE / ADC_VREF * 4095.0f);
+    adc_select_input(PIN_NDX - 26);
+    uint32_t done = 0;
+    const char *stop = "done";
+    uint32_t t = time_us_32() + 1000;
+    while (done < n) {
+        startLate = maxU32(startLate, waitUntil(t));
+        gpio_put(first, 1);
+        uint32_t slip = waitUntil(t + ph);
+        gpio_put(second, 1);
+        slip = maxU32(slip, waitUntil(t + 2 * ph));
+        gpio_put(first, 0);
+        slip = maxU32(slip, waitUntil(t + 3 * ph));
+        gpio_put(second, 0);
+        done++;
+        slip = maxU32(slip, waitUntil(t + 3 * ph + sample));
+        uint32_t workStart = time_us_32();
+        // ADC, not a digital read: analogRead() has turned off GP26's digital input buffer.
+        if (adc_read() > ndxHighRaw) {
+            if (hits < SWEEP_HITS_MAX) {
+                sweepHits[hits] = (uint16_t)done;
+            } else {
+                overflow = true;
+            }
+            hits++;
+        }
+        slipMax = maxU32(slipMax, slip);
+        t += period;
+
+        if (!gpio_get(PIN_PGOOD)) {
+            pgoodLow++;
+        }
+        if (!gpio_get(PIN_EN_NODE)) {
+            adc_select_input(PIN_HV_SENSE - 26); // trip() prints HV via analogRead()
+            trip("en_low");
+            stop = "fault";
+            break;
+        }
+        if ((done & 0x3F) == 0) {
+            // Every 64 steps: VIN, the HV timer and the serial abort.
+            adc_select_input(PIN_VIN_SENSE - 26);
+            uint32_t vinRaw = adc_read();
+            adc_select_input(PIN_NDX - 26);
+            if (vinRaw < vinMinRaw || vinRaw > vinMaxRaw) {
+                adc_select_input(PIN_HV_SENSE - 26); // trip() prints HV via analogRead()
+                trip("vin");
+                stop = "fault";
+                break;
+            }
+            if (millis() - onAtMs >= onForMs) {
+                hvOff();
+                Serial.println("OK timeout off");
+                stop = "timeout";
+                break;
+            }
+            if (Serial.available()) {
+                stop = "abort"; // the byte is left for the command parser: an empty line turns HV off
+                break;
+            }
+        }
+        workMax = maxU32(workMax, time_us_32() - workStart);
+    }
+    guidesRest();
+    // analogRead() caches the mux (_lastADCMux) and skips adc_select_input() for the pin it read
+    // last: hvPre's HV_SENSE. Put the mux back there, or the next HV reads return NDX x 192.9
+    // (hv_post 549.6 V with the glow on K1, board 1, 2026-11-12).
+    adc_select_input(PIN_HV_SENSE - 26);
+    float hvPost = readHv();
+
+    Serial.printf("OK sweep done n=%lu done=%lu stop=%s hits=%lu overflow=%d slip_max_us=%lu start_late_us=%lu "
+                  "work_max_us=%lu hv_pre=%.1f hv_post=%.1f pgood_low=%lu\n",
+                  n, (unsigned long)done, stop, (unsigned long)hits, overflow ? 1 : 0, (unsigned long)slipMax,
+                  (unsigned long)startLate, (unsigned long)workMax, hvPre, hvPost, (unsigned long)pgoodLow);
+    uint32_t stored = min(hits, SWEEP_HITS_MAX);
+    for (uint32_t i = 0; i < stored; i += SWEEP_HITS_PER_LINE) {
+        Serial.print("HITS ");
+        for (uint32_t j = i; j < min(stored, i + SWEEP_HITS_PER_LINE); j++) {
+            Serial.printf(j == i ? "%u" : ",%u", sweepHits[j]);
+        }
+        Serial.println();
+    }
+    Serial.println("END");
+}
+
 static void cmdLog(const char *arg)
 {
     char *end;
@@ -259,11 +436,13 @@ static void handleLine(char *cmd)
         cmdGuide(arg);
     } else if (strcmp(cmd, "step") == 0) {
         cmdStep(arg);
+    } else if (strcmp(cmd, "sweep") == 0) {
+        cmdSweep(arg);
     } else if (strcmp(cmd, "log") == 0) {
         cmdLog(arg);
     } else if (strcmp(cmd, "help") == 0) {
         Serial.println("OK on [s] | off | status | clear | guide <1|2> <0|1> | step <n> <fwd|rev> <phase_us> <hz> | "
-                       "log <s> [hz] | help");
+                       "sweep <n> <fwd|rev> <phase_us> <hz> [sample_us] | log <s> [hz] | help");
     } else {
         Serial.printf("ERR unknown %s\n", cmd);
     }

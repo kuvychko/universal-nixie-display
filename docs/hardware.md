@@ -102,6 +102,12 @@ Consequences for this design:
 * **Phase durations.** Start the firmware's guide phases inside the datasheet's 200-1000 µs. By
   its 1 / (3 × duration) rule, 200 steps/s allows phases up to 1.67 ms, so the homing target is
   compatible with the whole 200-1000 µs range.
+  **Measured** (board 1, 2026-11-12, 453 V, warm tube; [speed sweep](../characterization/dekatron/2026-11-12_speed_sweep.md)): clean in both
+  directions for every phase from 50 to 500 µs, up to 3000 steps/s at 50-75 µs phase, as long as
+  the rest after the step (period − 3 × phase) was ≥ 108 µs. Steps were lost at 30 µs phase at
+  any rate and at 20 µs nearly always; miscounts at rests of 33-50 µs. NDX crosses 2.0 V
+  30-40 µs after the second guide releases. The firmware's operating phase and maximum rate are
+  chosen from these with margin (firmware/dekatron/README.md).
 * **Static glow is a tube-life limit, not just a display choice.** See plan §5: the controller
   must not leave the discharge on one electrode for long; it exercises the tube or turns HV off.
 * **Strike timeout.** Allow at least 5 s for the first strike in a dark enclosure before
@@ -328,7 +334,8 @@ G+ (90 V) ──[R_PU 470k]──┬──────────── guide p
 * **Step sequence** (one main-cathode step clockwise; reverse the order for the other direction):
   G1 on → G2 on → G1 off → G2 off, all from rest. Phase durations are firmware parameters, set at
   bring-up within the 200 steps/s budget, starting inside the datasheet's 200-1000 µs control
-  pulse; the datasheet limits counting to 1 kHz and to 1 / (3 × pulse duration).
+  pulse; the datasheet limits counting to 1 kHz and to 1 / (3 × pulse duration). Measured
+  limits on board 1: [A101 operating point](#a101-operating-point-d1), phase durations.
 * **Resistor voltage ratings.** The 470 kΩ pull-up sees up to 90 V, within a 1206 part's rating
   (see [Component conventions](#component-conventions)).
 
@@ -354,7 +361,7 @@ RTN (50 V) ──┬───────────────[R_E 220k]─�
 | Output low | 0 V: R_E holds K1 at RTN, Q off, R16 pulls down | |
 | Current split, glow on K1 | 0.22 mA through the divider, the rest of the ~0.4 mA via the base into RTN | RTN regulator sinks it (D8 note) |
 | Fault: RTN regulator fails to V_b (167 V) | Unclamped output 9.3 V; the clamp conducts 0.74 mA through R15 into 3V3 | Clamp is mandatory. R15 is one HHV-25 220k (rated 1600 V) for the 167 V fault |
-| Filter | 1 nF with 12.3 kΩ Thevenin: τ = 12 µs | Sample ≥ 60 µs (5τ) after both guides return to rest (plan §5: check index only at a settled phase) |
+| Filter | 1 nF with 12.3 kΩ Thevenin: τ = 12 µs | Sample ≥ 60 µs (5τ) after both guides return to rest (plan §5: check index only at a settled phase). Measured: NDX above 2.0 V from 30-40 µs after release, glow transfer and filter together (board 1, 453 V, [speed sweep](../characterization/dekatron/2026-11-12_speed_sweep.md)) |
 | Reset/unpowered | Q is driven by the tube only; with the RP2040 unpowered the clamp to an unpowered 3V3 rail limits the pin | Check the RP2040's unpowered-pin limits in 1B |
 
 * **Use an ADC-capable pin** (RP2040 GPIO26-29). Firmware normally reads it digitally (Schmitt

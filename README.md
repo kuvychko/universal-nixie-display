@@ -142,7 +142,7 @@ hardware state. See [docs/architecture.md](docs/architecture.md).
 | `hardware/power/` | Purchased Nixie PSU specification and system power harness (planned, Phase 2) |
 | `hardware/lib/` | Shared symbols and footprints (planned; the dekatron board's own library is in `hardware/dekatron/lib/`) |
 | `firmware/display/` | ESP32 main application, PlatformIO (planned, Phase 3) |
-| `firmware/dekatron/` | RP2040 dekatron controller and standalone diagnostics (planned, Phase 1D) |
+| `firmware/dekatron/` | RP2040 dekatron controller and standalone diagnostics: [capability spec](firmware/dekatron/README.md), not yet implemented (Phase 1D) |
 | `firmware/dekatron-bringup/` | Dekatron board bring-up firmware: HV enable, guide drive, status over USB serial |
 | `firmware/nixie/` | RP2040 Nixie controller (planned, Phase 2) |
 | `firmware/common/` | Shared protocol definitions (planned) |
