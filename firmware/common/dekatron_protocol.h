@@ -25,11 +25,12 @@ enum Op : uint8_t {
     OP_SWING = 0x0A,         // centre u8, amplitude u8 (1-5), period u16 ms (100-60000)
     OP_BOUNCE = 0x0B,        // a u8, b u8 (forward from a to b and back), rate u16 steps/s
     OP_SPIN = 0x0C,          // start u16, end u16 steps/s, accel u16 steps/s^2, turns u8 (1-255)
-    OP_ARC = 0x0D,           // start u8, length u8 (1-10), sweep u16 steps/s, end_weight u8
-    OP_GAUGE = 0x0E,         // value u16 (0-1000 = 0-10 cathodes)
+    OP_WEDGE = 0x0D,         // a u16, b u16 (bookends, 0-999 = 0.01 cathode), rate u16 steps/s (1-2000)
+    OP_GAUGE = 0x0E,         // value u16 (0-1000 = 0-10 cathodes): WEDGE 0 -> value at 2000 steps/s
     OP_EXERCISE = 0x0F,      // -                         20 min at >= 100 steps/s, then back
     OP_CLEAR_FAULT = 0x10,   // -
     OP_BOOTSEL = 0x11,       // -                         reboot to the USB bootloader (dark only)
+    OP_WEDGE_CENTRED = 0x12, // centre u8 (0-9), half_width u16 (0-500 = 0.01 cathode), rate u16 steps/s
     // USB console only:
     OP_OWNER_LOCAL = 0x80,
     OP_OWNER_REMOTE = 0x81,
@@ -45,8 +46,10 @@ inline int opLength(uint8_t op)
         return 2;
     case OP_ROTATE: case OP_SET_MOTION: case OP_SWING: case OP_BOUNCE:
         return 4;
-    case OP_ARC:
+    case OP_WEDGE_CENTRED:
         return 5;
+    case OP_WEDGE:
+        return 6;
     case OP_SPIN:
         return 7;
     default:
@@ -84,7 +87,7 @@ enum Owner : uint8_t { OWN_I2C = 0, OWN_USB = 1 };
 
 enum Mode : uint8_t {
     M_IDLE = 0, M_HOME = 1, M_QUEUE = 2, M_ROTATE = 3, M_SWING = 4, M_BOUNCE = 5, M_SPIN = 6,
-    M_ARC = 7, M_EXERCISE = 8,
+    M_WEDGE = 7, M_EXERCISE = 8,
 };
 
 enum Flag : uint8_t {

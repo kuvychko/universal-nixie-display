@@ -89,7 +89,7 @@ static void printStatus()
     controllerSnapshot(&s, &d);
     static const char *pw[] = {"dark", "striking", "lit"};
     static const char *dr[] = {"boot", "command", "fault", "master_loss", "hold_limit"};
-    static const char *md[] = {"idle", "home", "queue", "rotate", "swing", "bounce", "spin", "arc", "exercise"};
+    static const char *md[] = {"idle", "home", "queue", "rotate", "swing", "bounce", "spin", "wedge", "exercise"};
     Serial.printf("OK t_ms=%lu boots=%u fw=%u.%u owner=%s power=%s fault=%s dark_reason=%s pos=%u valid=%d "
                   "mode=%s queue=%d hv=%.1f vin=%.1f rtn=%.1f pgood=%d hv_en=%d ndx_raw=%u idx_exp=%u idx_obs=%u "
                   "home_fail=%u mismatch=%u dwell_ms=%lu rate=%.1f slow_run_s=%lu exercise_due=%d master_loss=%d "
@@ -135,7 +135,8 @@ static void send(const uint8_t *frame, int n)
 static const char *HELP =
     "OK status | local | remote | ping | light | dark | home | moveto <k> [fwd|rev] | move <n> | "
     "rotate <steps/s> | stop | motion <move_rate> <accel> | swing <centre> <amp> <period_ms> | "
-    "bounce <a> <b> <rate> | spin <start> <end> <accel> <turns> | arc <start> <len> <sweep> <weight> | "
+    "bounce <a> <b> <rate> | spin <start> <end> <accel> <turns> | wedge <a> <b> <rate> | "
+    "wedgec <centre> <half_width> <rate> | "
     "gauge <0-1000> | exercise | clear | bootsel | help";
 
 static void handleLine(char *cmd)
@@ -150,6 +151,8 @@ static void handleLine(char *cmd)
     }
     const char *c = argv[0];
     auto num = [&](int i) { return i < argc ? strtol(argv[i], nullptr, 10) : 0L; };
+    // Cathodes with decimals as 0.01 cathode; out-of-range values stay out of range for the controller.
+    auto centi = [&](int i) { return i < argc ? (uint16_t)lroundf(fminf(fmaxf(strtof(argv[i], nullptr) * 100, 0), 65535)) : 0; };
     uint8_t f[10] = {};
     auto simple = [&](uint8_t op) { f[0] = op; f[1] = 0; send(f, 2); };
 
@@ -204,8 +207,12 @@ static void handleLine(char *cmd)
     } else if (!strcmp(c, "spin") && argc >= 5) {
         f[0] = OP_SPIN; f[1] = 7; put16(f + 2, num(1)); put16(f + 4, num(2)); put16(f + 6, num(3)); f[8] = num(4);
         send(f, 9);
-    } else if (!strcmp(c, "arc") && argc >= 5) {
-        f[0] = OP_ARC; f[1] = 5; f[2] = num(1); f[3] = num(2); put16(f + 4, num(3)); f[6] = num(4);
+    } else if (!strcmp(c, "wedge") && argc >= 4) {
+        // Bookends in cathodes, decimals allowed: "wedge 2.3 5.7 2000"
+        f[0] = OP_WEDGE; f[1] = 6; put16(f + 2, centi(1)); put16(f + 4, centi(2)); put16(f + 6, num(3));
+        send(f, 8);
+    } else if (!strcmp(c, "wedgec") && argc >= 4) {
+        f[0] = OP_WEDGE_CENTRED; f[1] = 5; f[2] = num(1); put16(f + 3, centi(2)); put16(f + 5, num(3));
         send(f, 7);
     } else if (!strcmp(c, "gauge") && argc >= 2) {
         f[0] = OP_GAUGE; f[1] = 2; put16(f + 2, num(1));

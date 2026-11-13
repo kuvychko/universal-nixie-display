@@ -66,7 +66,7 @@ static int32_t swingCentre;
 static uint8_t swingAmp;
 static uint32_t swingPeriodMs;
 static uint64_t swingT0;
-// sweep (arc, gauge, bounce)
+// sweep (bounce)
 static int32_t sweepLo, sweepHi;
 static int8_t sweepDir;
 static uint32_t sweepIntervalUs, sweepLoDwellUs, sweepHiDwellUs;
@@ -75,6 +75,17 @@ static int32_t spinStepsLeft;
 static uint16_t spinAccel;
 static uint64_t exerciseEndUs;
 static uint8_t returnPos;
+// wedge (wedge, centred wedge, gauge)
+static int32_t wedgeLo, wedgeHi;      // absolute positions of the bookend cathodes
+static uint8_t wedgeLoPct, wedgeHiPct; // share of each bookend cathode inside the wedge, 1-100
+static uint32_t wedgeIntervalUs;
+static int8_t wedgeDir;
+static float wedgeAccLo, wedgeAccHi;   // fractional visits owed to a bookend below the minimum dwell
+static uint32_t stepSeq;               // increments on every step
+static uint32_t wedgePlanSeq;          // stepSeq the plan below was made for
+static bool wedgePlanValid;
+static int8_t wedgePlanDir;
+static uint32_t wedgePlanGapUs;
 
 // tube care
 static uint64_t verySlowUs;
@@ -170,17 +181,47 @@ static void startSweep(int32_t lo, int32_t hi, uint32_t intervalUs, uint32_t loD
     sweepHiDwellUs = hiDwellUs;
 }
 
-// Arc of len cathodes from start: every cathode gets two intervals per sweep cycle (interior: one
-// each way; ends: a double dwell), the far end scaled by weight/255.
-static void startArc(uint8_t start, uint8_t len, uint16_t sweep, uint8_t weight)
+// Wedge over the ring interval [start, start + width) in 0.01 cathode, cathode k spanning
+// k.00-k.99. It sweeps back and forth between the bookend cathodes. A running wedge is
+// updated in place: the sweep carries on from where the glow is, in the direction it is going.
+static void setWedge(int32_t start, int32_t width, uint16_t rate)
 {
-    int32_t lo = absPos + shortest(posMod(), start);
-    uint32_t iv = 1000000UL / sweep;
-    uint32_t hiDwell = (uint32_t)((2ull * iv * weight) / 255);
-    if (hiDwell < MIN_PERIOD_US) {
-        hiDwell = MIN_PERIOD_US;
+    start = ((start % 1000) + 1000) % 1000;
+    int32_t end = start + width;
+    int32_t loCell = start / 100;
+    int32_t hiCell = (end + 99) / 100 - 1;
+    if (hiCell < loCell) {
+        hiCell = loCell;
     }
-    startSweep(lo, lo + len - 1, iv, 2 * iv, hiDwell, M_ARC);
+    uint8_t loPct = (uint8_t)((loCell + 1) * 100 - start);
+    uint8_t hiPct = (uint8_t)(end - hiCell * 100);
+    if (loCell == hiCell) {
+        loPct = hiPct = 100;
+    }
+    // Place it on the ring copy nearest the glow, so an update never walks the long way round.
+    int32_t span = hiCell - loCell;
+    int32_t lo = absPos + ((loCell - posMod() + 10) % 10), best = lo;
+    int32_t bestDist = INT32_MAX;
+    const int32_t cands[] = {lo, lo - 10};
+    for (int32_t cand : cands) {
+        int32_t dist = absPos < cand ? cand - absPos : absPos > cand + span ? absPos - cand - span : 0;
+        if (dist < bestDist) {
+            bestDist = dist;
+            best = cand;
+        }
+    }
+    if (mode != M_WEDGE) {
+        setIdle();
+        mode = M_WEDGE;
+        wedgeDir = 1;
+        wedgeAccLo = wedgeAccHi = 0;
+    }
+    wedgeLo = best;
+    wedgeHi = best + span;
+    wedgeLoPct = loPct;
+    wedgeHiPct = hiPct;
+    wedgeIntervalUs = 1000000UL / rate;
+    wedgePlanValid = false;
 }
 
 static void startRotate(float r, uint8_t m)
@@ -366,15 +407,27 @@ static uint8_t execute(const Command &c)
         spinStepsLeft = 10 * (int32_t)turns;
         return E_OK;
     }
-    case OP_ARC: {
-        uint16_t sweep = rd16(d + 2);
-        if (d[0] > 9 || d[1] < 1 || d[1] > 10 || sweep == 0 || sweep > MAX_RATE) {
+    case OP_WEDGE: {
+        uint16_t a = rd16(d), b = rd16(d + 2), r = rd16(d + 4);
+        if (a > 999 || b > 999 || r == 0 || r > MAX_RATE) {
             return E_RANGE;
         }
         if ((e = needMotion())) {
             return e;
         }
-        startArc(d[0], d[1], sweep, d[4]);
+        int32_t w = ((int32_t)b - a + 1000) % 1000;
+        setWedge(a, w ? w : 1000, r); // equal bookends: the whole ring
+        return E_OK;
+    }
+    case OP_WEDGE_CENTRED: {
+        uint16_t h = rd16(d + 1), r = rd16(d + 3);
+        if (d[0] > 9 || h > 500 || r == 0 || r > MAX_RATE) {
+            return E_RANGE;
+        }
+        if ((e = needMotion())) {
+            return e;
+        }
+        setWedge(d[0] * 100 + 50 - h, h ? 2 * h : 1, r);
         return E_OK;
     }
     case OP_GAUGE: {
@@ -385,12 +438,7 @@ static uint8_t execute(const Command &c)
         if ((e = needMotion())) {
             return e;
         }
-        uint8_t full = v / 100, frac = v % 100;
-        uint8_t len = full + (frac ? 1 : 0);
-        if (len < 1) {
-            len = 1;
-        }
-        startArc(0, len, MAX_RATE, frac ? (uint8_t)(frac * 255 / 100) : 255);
+        setWedge(0, v ? v : 1, MAX_RATE);
         return E_OK;
     }
     case OP_EXERCISE:
@@ -423,6 +471,7 @@ static void startStep(int dir, uint64_t now)
     verySlowUs = gap >= VERY_SLOW_GAP_US ? verySlowUs + gap : 0;
     stepperStart(dir);
     absPos += dir;
+    stepSeq++;
     stepStartUs = lastStepUs = now;
     inFlight = true;
     rateBins[rateSec % 10]++;
@@ -485,6 +534,75 @@ static void finishStep()
     }
 }
 
+// Wedge brightness. A step spends TRANSIT_US on the guides, so a cathode glows for the gap minus
+// that. Interior cathodes are passed twice per sweep cycle, glowing 2 * (interval - transit); a
+// bookend is visited once, so it dwells for its share of that plus the transit. Below the minimum
+// step period a bookend is visited on only some cycles instead (error diffusion), and the sweep
+// turns at its neighbour, which then dwells as a full bookend.
+static const uint32_t TRANSIT_US = 3 * PHASE_US;
+
+static uint32_t wedgeEndDwell(uint8_t pct)
+{
+    return TRANSIT_US + (uint32_t)((2ull * (wedgeIntervalUs - TRANSIT_US) * pct) / 100);
+}
+
+// Visit the bookend this cycle? Called once per arrival at its neighbour.
+static bool wedgeVisit(uint8_t pct, float *accum, bool canSkip)
+{
+    uint32_t want = wedgeEndDwell(pct);
+    if (want >= MIN_PERIOD_US || !canSkip) {
+        return true;
+    }
+    *accum += (float)(want - TRANSIT_US) / (MIN_PERIOD_US - TRANSIT_US);
+    if (*accum >= 1.0f) {
+        *accum -= 1.0f;
+        return true;
+    }
+    return false;
+}
+
+static int decideWedge(uint32_t *gapUs)
+{
+    uint32_t iv = wedgeIntervalUs;
+    if (absPos < wedgeLo || absPos > wedgeHi) {
+        *gapUs = iv; // walk in, e.g. after an update moved the wedge
+        wedgeDir = absPos < wedgeLo ? 1 : -1;
+        return wedgeDir;
+    }
+    if (wedgeLo == wedgeHi) {
+        return 0; // one cathode: a held glow, under the hold limit like any other
+    }
+    if (wedgePlanValid && wedgePlanSeq == stepSeq) {
+        *gapUs = wedgePlanGapUs;
+        return wedgePlanDir;
+    }
+    int8_t dir = wedgeDir;
+    uint32_t gap = iv;
+    if (absPos == wedgeHi) {
+        dir = -1;
+        gap = wedgeEndDwell(wedgeHiPct);
+    } else if (absPos == wedgeLo) {
+        dir = 1;
+        gap = wedgeEndDwell(wedgeLoPct);
+    } else if (dir > 0 && absPos + 1 == wedgeHi && !wedgeVisit(wedgeHiPct, &wedgeAccHi, true)) {
+        dir = -1;
+        gap = wedgeEndDwell(100);
+    } else if (dir < 0 && absPos - 1 == wedgeLo && !wedgeVisit(wedgeLoPct, &wedgeAccLo, true)) {
+        dir = 1;
+        gap = wedgeEndDwell(100);
+    }
+    if (gap < MIN_PERIOD_US) {
+        gap = MIN_PERIOD_US;
+    }
+    wedgeDir = dir;
+    wedgePlanSeq = stepSeq;
+    wedgePlanValid = true;
+    wedgePlanDir = dir;
+    wedgePlanGapUs = gap;
+    *gapUs = gap;
+    return dir;
+}
+
 // Next step direction for the current mode, or 0; *gapUs is the minimum time since the last step.
 static int decide(uint64_t now, uint32_t *gapUs)
 {
@@ -528,7 +646,8 @@ static int decide(uint64_t now, uint32_t *gapUs)
         int32_t d = lroundf(target) - absPos;
         return d > 0 ? 1 : d < 0 ? -1 : 0;
     }
-    case M_ARC:
+    case M_WEDGE:
+        return decideWedge(gapUs);
     case M_BOUNCE: {
         if (absPos < sweepLo || absPos > sweepHi) {
             *gapUs = sweepIntervalUs;

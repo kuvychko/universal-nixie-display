@@ -28,7 +28,7 @@ The boot counter and uptime are queryable so a host can detect reboots and resto
 | `DEK:STEP -3` | Queue relative steps (event-driven demos) |
 | `DEK:STOP` | Stop at a cathode, clear queue and effect |
 | `DEK:EFF SWING,4,2,1.5` | Run a local animation (`SWING`, `BOUNCE`, `SPIN`) with its parameters |
-| `DEK:ARC 2,5` / `DEK:GAUGE 6.5` | POV arc or gauge, within the validated step limits |
+| `DEK:WEDGE 2.3,5.7` / `DEK:EYE 4,1.5` / `DEK:GAUGE 6.5` | Lit wedge between bookends, centred wedge (magic eye) or gauge, in cathodes; within the validated step limits |
 | `DEK:STAT?` | Power state, position, fault, counters |
 
 ## Display rules

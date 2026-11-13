@@ -31,7 +31,7 @@ WinUSB driver (Zadig) on Windows. Protocol definitions shared with the ESP32:
 
 Decided by the user, 2026-11-12, from the board 1 speed sweep
 ([log](../../characterization/dekatron/2026-11-12_speed_sweep.md)). **Outside the datasheet**,
-which gives a 200 µs minimum phase and 1000 Hz maximum rate; chosen for faster spins and arcs.
+which gives a 200 µs minimum phase and 1000 Hz maximum rate; chosen for faster spins and wedges.
 
 | Parameter | Value | Margin against the measurement |
 |---|---|---|
@@ -79,16 +79,32 @@ returning to the commanded position, or runs until `STOP`.
 | `BOUNCE` | Between two cathodes at a constant rate |
 | `SPIN` | Start rate, end rate, acceleration, number of turns; then back to where it started |
 
-### POV arc and gauge
+### Wedge, magic eye and gauge
 
-Sweeping back and forth across a span of cathodes fast enough makes the whole span look lit: an
-arc, or a bar-graph gauge on the ring. `ARC(start, length, sweep rate)` and `GAUGE(value)` take a
-dwell weighting that sets how bright the end cathode looks, so a gauge can show fractions of a
-cathode. Requests above the step timing envelope (2000 steps/s) are rejected. At that rate a
-five-cathode arc (10 steps per sweep and back) repeats 200 times a second. Each cathode gets
-two step intervals per sweep cycle (the ends a double dwell), the far end scaled by `end_weight`.
-`GAUGE` is an arc from position 0 at 2000 steps/s. The index is checked on every step, so an arc
-that covers K1 is checked on each pass.
+The glow bounces between two bookends. Fast enough, the whole sector between them looks lit, like
+the shadow of a magic eye tube; slowly, the glow is seen travelling between them. The sweep rate
+(1-2000 steps/s) chooses the look (user, 2026-11-13). At 2000 steps/s a five-cathode wedge
+(8 steps per sweep and back, 4.4 ms with the bookend dwells) repeats about 230 times a
+second.
+
+* **Coordinates:** 0.01 cathode; cathode k spans k.00-k.99, so `WEDGE(2.00, 6.00)` lights
+  cathodes 2-5 fully. Bookends between whole cathodes light the end cathodes partly.
+* **Two forms** (user, 2026-11-13): `WEDGE(a, b, rate)`, clockwise from bookend a to bookend b,
+  across K1 if needed, a = b being the whole ring; and `WEDGE_CENTRED(centre, half_width, rate)`,
+  symmetric about a cathode, opening and closing like a magic eye. `GAUGE(value)` is
+  `WEDGE(0, value)` at 2000 steps/s.
+* **Updates in place** (user, 2026-11-13): sent again while a wedge runs, the new bookends take
+  effect at the next step; the sweep carries on in its direction, walking in if the glow is
+  outside the new wedge. The ESP32 can stream a level (e.g. 20 updates/s) without hiccups.
+* **Even brightness:** a step spends 3 × 100 µs on the guides, so a cathode glows for the step
+  gap minus that. Interior cathodes are passed twice per sweep cycle; a bookend is visited once and
+  dwells for its share of two passes. A bookend share too small for the 500 µs minimum step period
+  is shown by visiting it on that fraction of cycles (error diffusion); the sweep turns at its
+  neighbour on the others. A wedge only two cathodes wide cannot skip either end, so there the
+  minimum period limits small shares (0.7/0.3 at 2000 steps/s shows about 0.7/0.4).
+* A wedge narrower than one cathode cell is a held glow on that cathode, under the hold limit.
+* The index is checked on every step, so a wedge that covers K1 is checked on each pass.
+* `BOUNCE` stays the plain version: whole cathodes, one constant interval, the ends dimmer.
 
 ### Position integrity
 
@@ -194,7 +210,8 @@ USB serial, one command per line; replies `OK`, `ERR <error>`, or the status lin
 | `swing <centre> <amp> <period_ms>` | `SWING` |
 | `bounce <a> <b> <rate>` | `BOUNCE` |
 | `spin <start> <end> <accel> <turns>` | `SPIN` |
-| `arc <start> <len> <sweep> <weight>` | `ARC` |
+| `wedge <a> <b> <rate>` | `WEDGE`, bookends in cathodes with decimals: `wedge 2.3 5.7 2000` |
+| `wedgec <centre> <half_width> <rate>` | `WEDGE_CENTRED`, half-width in cathodes: `wedgec 4 1.5 2000` |
 | `gauge <0-1000>` | `GAUGE` |
 
 ### Out of scope

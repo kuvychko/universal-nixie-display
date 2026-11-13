@@ -50,11 +50,12 @@ confirms each command by polling. Any I2C traffic, read or write, resets the mas
 | `SWING` | 0x0A | `centre` u8, `amplitude` u8 (1-5), `period` u16 ms (100-60000) | Sinusoidal pendulum, until `STOP` |
 | `BOUNCE` | 0x0B | `a` u8, `b` u8 (≠ a), `rate` u16 steps/s | Forward from a to b and back, until `STOP` |
 | `SPIN` | 0x0C | `start` u16, `end` u16 steps/s, `accel` u16 steps/s², `turns` u8 (1-255) | Then back to the starting position |
-| `ARC` | 0x0D | `start` u8, `length` u8 (1-10), `sweep` u16 steps/s, `end_weight` u8 | POV arc, until `STOP` |
-| `GAUGE` | 0x0E | `value` u16 (0-1000 = 0-10 cathodes) | Arc from position 0 |
+| `WEDGE` | 0x0D | `a` u16, `b` u16 (bookends, 0-999 = 0.01 cathode), `rate` u16 steps/s (1-2000) | Lit sector clockwise from a to b (a = b: the whole ring), until `STOP`. Sent again while running, it updates in place |
+| `GAUGE` | 0x0E | `value` u16 (0-1000 = 0-10 cathodes) | `WEDGE` 0 → value at 2000 steps/s |
 | `EXERCISE` | 0x0F | — | 20 min at 200 steps/s, then back; clears the slow-running total |
 | `CLEAR_FAULT` | 0x10 | — | |
 | `BOOTSEL` | 0x11 | — | Reboot to the USB bootloader; refused unless dark |
+| `WEDGE_CENTRED` | 0x12 | `centre` u8 (0-9), `half_width` u16 (0-500 = 0.01 cathode), `rate` u16 steps/s | Wedge symmetric about a cathode (magic eye): 0-50 lights the centre only, 500 the whole ring. Updates in place like `WEDGE` |
 
 Errors: 0 ok, 1 `bad_op`, 2 `bad_len`, 3 `range` (never clamped), 4 `state`, 5 `not_owner` (the
 USB console has taken over with `local`), 6 `queue_full`, 7 `vin`. Motion ops need `LIT` and a
@@ -77,7 +78,7 @@ Status block (45 bytes):
 | 15 | `dark_reason` | u8 | 0 boot, 1 command, 2 fault, 3 master_loss, 4 hold_limit |
 | 16 | `flags` | u8 | bit 0 position valid, 1 busy, 2 PGOOD, 3 HV_EN, 4 master loss, 5 exercise due, 6 watchdog reset |
 | 17 | `position` | u8 | 0-9, 0 = K1 (index) |
-| 18 | `mode` | u8 | 0 idle, 1 home, 2 queue, 3 rotate, 4 swing, 5 bounce, 6 spin, 7 arc/gauge, 8 exercise |
+| 18 | `mode` | u8 | 0 idle, 1 home, 2 queue, 3 rotate, 4 swing, 5 bounce, 6 spin, 7 wedge/gauge, 8 exercise |
 | 19 | `queue` | i16 | Pending queued steps |
 | 21 | `idx_expected` | u16 | K1 arrivals expected while the position was valid, wrapping |
 | 23 | `idx_observed` | u16 | K1 arrivals seen while the position was valid, wrapping |
