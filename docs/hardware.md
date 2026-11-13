@@ -567,6 +567,15 @@ RTN 1-4, 6, 7, 9, 11, 12, G1 5, G2 10). They agree. The AD01 page text once call
 "pin 12", contradicting both. The nine non-index cathodes are tied together at the socket (D14) and return on
 one RTN wire.
 
+### Tube orientation
+
+Observed by the user on board 1, 2026-11-13, with the glow parked by the controller firmware:
+
+* **The index cathode K1 (pin 13), firmware position 0, is at 1 o'clock.**
+* **Forward steps move the glow clockwise:** positions 1, 2, … (`MOVE_RELATIVE` +n, positive
+  `ROTATE`, `fwd` in `MOVE_TO`).
+* Viewing direction and 12 o'clock reference: _open_.
+
 ### 12 V input protection (D4)
 
 The input arrives by wire from the chassis barrel jack and carries everything: this board, and
