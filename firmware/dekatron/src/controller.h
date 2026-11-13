@@ -26,6 +26,15 @@ struct Reply {
 struct Diag {
     uint16_t ndx_raw;     // last index sample, ADC counts
     uint16_t pio_ok;      // stepper PIO claimed
+    // Last index mismatch: what the sample read, whether K1 was expected, the mode it broke, and
+    // where the dead-reckoned count stood when the re-home found K1 (0: the glow was where it
+    // was counted, so the sensing missed; otherwise steps were lost or gained). -1: none yet.
+    uint16_t miss_ndx_raw;
+    uint16_t idx_late;     // index samples that disagreed but agreed on the recheck (wrapping)
+    uint16_t late_ndx_raw; // first sample of the last such step
+    int8_t miss_expected;
+    int8_t miss_mode;
+    int8_t rehome_offset;
 };
 
 void controllerBegin(uint16_t bootCount, bool watchdogReset); // core 1 setup

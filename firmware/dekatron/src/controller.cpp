@@ -100,6 +100,10 @@ static uint64_t nextAdcUs;
 static uint64_t nextSnapUs;
 
 static uint16_t idxExpected, idxObserved, homeFailures, idxMismatches;
+static uint16_t missNdxRaw;
+static uint16_t idxLate, lateNdxRaw; // first sample disagreed, the recheck agreed
+static int8_t missExpected = -1, missMode = -1, rehomeOffset = -1;
+static bool rehoming; // the current home follows a mismatch: report the count's offset
 
 // ---- helpers ----
 static uint8_t posMod() { return (uint8_t)(((absPos % 10) + 10) % 10); }
@@ -285,6 +289,7 @@ static uint8_t execute(const Command &c)
         masterLoss = false;
         pgoodSeen = false;
         pgoodLowTiming = false;
+        rehoming = false; // a strike's home has no count to compare
         hvOnUs = time_us_64();
         power = PWR_STRIKING;
         gpio_put(pin::HV_EN, 1);
@@ -503,6 +508,10 @@ static void finishStep()
             homeConfirm++;
             if (hit && homeConfirm == 10) {
                 // K1 again after exactly one turn and not in between: one glow, consistent index.
+                if (rehoming) {
+                    rehomeOffset = (int8_t)posMod();
+                    rehoming = false;
+                }
                 absPos = 0;
                 posValid = true;
                 setIdle();
@@ -525,11 +534,33 @@ static void finishStep()
     }
     if (posValid) {
         bool expected = posMod() == 0;
+        if (hit != expected) {
+            // Recheck just before the earliest next step: a glow that settles on K1 later than
+            // the first sample is not a lost step (bench 2026-11-13: 0.29 V at 100 us, the glow
+            // on K1 at the re-home). Counted, so the margin stays visible.
+            busy_wait_until(from_us_since_boot(stepStartUs + RECHECK_AT_US));
+            adc_select_input(pin::NDX - 26);
+            uint16_t again = adc_read();
+            if ((again > NDX_HIGH_RAW) == expected) {
+                idxLate++;
+                lateNdxRaw = ndxRaw;
+                ndxRaw = again;
+                hit = expected;
+            }
+        }
         idxExpected += expected;
         idxObserved += hit;
         if (hit != expected) {
             idxMismatches++;
+            missNdxRaw = ndxRaw;
+            missExpected = expected;
+            missMode = (int8_t)mode;
+            rehomeOffset = -1;
+            rehoming = true;
             posValid = false; // re-homed at the next idle boundary
+            if (mode != M_QUEUE) {
+                setIdle(); // a continuous effect has no idle boundary: stop it and re-home now
+            }
         }
     }
 }
@@ -780,6 +811,12 @@ static void snapshot(uint64_t now)
     shared = s;
     sharedDiag.ndx_raw = ndxRaw;
     sharedDiag.pio_ok = pioOk;
+    sharedDiag.miss_ndx_raw = missNdxRaw;
+    sharedDiag.idx_late = idxLate;
+    sharedDiag.late_ndx_raw = lateNdxRaw;
+    sharedDiag.miss_expected = missExpected;
+    sharedDiag.miss_mode = missMode;
+    sharedDiag.rehome_offset = rehomeOffset;
     critical_section_exit(&statusLock);
 }
 

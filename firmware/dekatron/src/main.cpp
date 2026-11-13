@@ -93,7 +93,7 @@ static void printStatus()
     Serial.printf("OK t_ms=%lu boots=%u fw=%u.%u owner=%s power=%s fault=%s dark_reason=%s pos=%u valid=%d "
                   "mode=%s queue=%d hv=%.1f vin=%.1f rtn=%.1f pgood=%d hv_en=%d ndx_raw=%u idx_exp=%u idx_obs=%u "
                   "home_fail=%u mismatch=%u dwell_ms=%lu rate=%.1f slow_run_s=%lu exercise_due=%d master_loss=%d "
-                  "seq=%u err=%s wdt_reset=%d pio=%u\n",
+                  "seq=%u err=%s wdt_reset=%d pio=%u idx_late=%u late_ndx_raw=%u miss_ndx_raw=%u miss_expected=%d miss_mode=%d rehome_offset=%d\n",
                   (unsigned long)s.uptime_ms, s.boot_count, s.firmware >> 8, s.firmware & 0xFF,
                   s.owner == OWN_USB ? "usb" : "i2c", s.power < 3 ? pw[s.power] : "?", faultName(s.fault),
                   s.dark_reason < 5 ? dr[s.dark_reason] : "?", s.position, (s.flags & FL_POSITION_VALID) ? 1 : 0,
@@ -102,7 +102,8 @@ static void printStatus()
                   s.idx_observed, s.home_failures, s.idx_mismatches, (unsigned long)s.dwell_ms, s.rate_dsps / 10.0f,
                   (unsigned long)s.slow_run_s, (s.flags & FL_EXERCISE_DUE) ? 1 : 0,
                   (s.flags & FL_MASTER_LOSS) ? 1 : 0, s.cmd_seq, errName(s.last_error),
-                  (s.flags & FL_WATCHDOG_RESET) ? 1 : 0, d.pio_ok);
+                  (s.flags & FL_WATCHDOG_RESET) ? 1 : 0, d.pio_ok, d.idx_late, d.late_ndx_raw, d.miss_ndx_raw, d.miss_expected, d.miss_mode,
+                  d.rehome_offset);
 }
 
 static void put16(uint8_t *p, uint32_t v) { p[0] = v & 0xFF; p[1] = (v >> 8) & 0xFF; }

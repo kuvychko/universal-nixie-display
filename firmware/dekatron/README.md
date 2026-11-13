@@ -108,10 +108,18 @@ second.
 
 ### Position integrity
 
-* Expected vs. observed index on every K1 pass during motion. A mismatch (an index where none is
-  expected, or a missing one) clears `position_valid`, increments a mismatch counter and schedules
-  a re-home at the next idle boundary. Single-index tracking cannot see every missed step between
-  K1 visits (plan §5).
+* Expected vs. observed index on every step, sampled 100 µs after the guide releases. A sample
+  that disagrees is rechecked just before the earliest next step (170 µs after release); only a
+  disagreement on both is a mismatch. A recheck that agrees counts as a late index (console
+  `idx_late`), so the timing margin stays visible. Bench 2026-11-13: in the eye effect, with the
+  glow turning back next to K1, it arrived later than 100 µs about once in 14000 passes; it was
+  on K1 every time.
+* A mismatch (an index where none is expected, or a missing one) clears `position_valid` and
+  increments a mismatch counter. A queue re-homes when it has played out; a continuous effect
+  (rotate, swing, bounce, wedge, spin, exercise) has no such boundary, so it stops and re-homes at
+  once. The console reports the miss (`miss_ndx_raw`, `miss_expected`, `miss_mode`) and where the
+  count stood when the re-home found K1 (`rehome_offset`: 0 means the sensing missed, not the
+  glow). Single-index tracking cannot see every missed step between K1 visits (plan §5).
 * Re-home after a dark period, a controller reset or a detected inconsistency. Periodic homing can
   sit on an animation boundary.
 * After switch-on two cathodes may glow. Homing steps the tube and confirms a single, consistent

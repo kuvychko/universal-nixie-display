@@ -43,6 +43,8 @@ static const uint32_t MIN_PERIOD_US = 1000000 / MAX_RATE; // 500 us: 300 us of g
 static const uint32_t SAMPLE_US = 100;                 // NDX sample after the second guide releases
 static const uint32_t SAMPLE_AT_US = 3 * PHASE_US + SAMPLE_US;
 static_assert(SAMPLE_AT_US + 50 <= MIN_PERIOD_US, "index sample must fit before the next step");
+// Recheck of a disagreeing index sample, just before the earliest next step (170 us after release).
+static const uint32_t RECHECK_AT_US = MIN_PERIOD_US - 30;
 
 // Homing and striking.
 static const uint32_t HOME_RATE = 200;         // plan section 5 homing target
