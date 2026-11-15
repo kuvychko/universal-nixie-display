@@ -30,11 +30,20 @@ struct Diag {
     // where the dead-reckoned count stood when the re-home found K1 (0: the glow was where it
     // was counted, so the sensing missed; otherwise steps were lost or gained). -1: none yet.
     uint16_t miss_ndx_raw;
-    uint16_t idx_late;     // index samples that disagreed but agreed on the recheck (wrapping)
-    uint16_t late_ndx_raw; // first sample of the last such step
+    uint16_t late_ndx_raw; // first sample of the last late index (count in Status.idx_late)
     int8_t miss_expected;
     int8_t miss_mode;
     int8_t rehome_offset;
+    // Periodic index check: steps and time since the last K1 that matched the count, and the
+    // largest of each since boot (while lit with a valid position).
+    uint16_t index_open_ms;  // from here a trip waits for a cheap moment
+    uint16_t index_check_ms; // hard limit; 0 = off
+    uint32_t unchecked_steps;
+    uint32_t unchecked_ms;
+    uint32_t max_unchecked_steps;
+    uint32_t max_unchecked_ms;
+    int32_t drop_detect_ms; // injected drop -> mismatch, ms; -1 none yet
+    int32_t recovery_ms;    // last mismatch -> effect resumed, ms; -1 none yet
 };
 
 void controllerBegin(uint16_t bootCount, bool watchdogReset); // core 1 setup

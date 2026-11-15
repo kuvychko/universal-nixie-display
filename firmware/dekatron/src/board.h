@@ -45,12 +45,34 @@ static const uint32_t SAMPLE_AT_US = 3 * PHASE_US + SAMPLE_US;
 static_assert(SAMPLE_AT_US + 50 <= MIN_PERIOD_US, "index sample must fit before the next step");
 // Recheck of a disagreeing index sample, just before the earliest next step (170 us after release).
 static const uint32_t RECHECK_AT_US = MIN_PERIOD_US - 30;
+// Index-check trip steps (user, 2026-11-14, after the 2000 steps/s trips were visible): 3000 steps/s
+// at 50 us phase, the fastest clean point of the speed sweep (rest 183 us; clean from 108 us).
+static const uint32_t TRIP_PHASE_US = 50;
+static const uint32_t TRIP_PERIOD_US = 1000000 / 3000; // 333 us
+static const uint32_t TRIP_SAMPLE_AT_US = 3 * TRIP_PHASE_US + SAMPLE_US;
+static const uint32_t TRIP_RECHECK_AT_US = TRIP_PERIOD_US - 30;
+static_assert(TRIP_SAMPLE_AT_US + 50 <= TRIP_PERIOD_US, "trip index sample must fit before the next step");
 
 // Homing and striking.
 static const uint32_t HOME_RATE = 200;         // plan section 5 homing target
 static const uint32_t HOME_MAX_STEPS = 50;     // 5 turns incl. confirmation retries, then index_timeout
 static const uint32_t STRIKE_TIMEOUT_MS = 10000; // 2 x the datasheet's 5 s readiness in darkness
 static const uint32_t PGOOD_LOW_MS = 100;      // PGOOD low this long while lit -> hv_low
+
+// Position integrity (user, 2026-11-14). Longest run without a confirmed K1 before a trip there;
+// A band (user, 2026-11-14, after 1 s and 5 s trips were visible; a display, so looks come before a
+// rare skip): from OPEN a trip is taken only at a cheap moment, at LIMIT whatever is showing.
+// Both settable with SET_INDEX_CHECK.
+static const uint16_t INDEX_CHECK_OPEN_MS_DEFAULT = 5000;
+static const uint16_t INDEX_CHECK_MS_DEFAULT = 60000;
+// Cheap moments (proposed 2026-11-14): the glow at most this many steps from K1 as it is about to
+// step, or a streamed wedge/eye update that moves its bookends by at least this much in all.
+static const uint8_t CHEAP_TRIP_STEPS = 2;
+static const int32_t CHEAP_UPDATE_CENTI = 100; // 0.01 cathode: one cathode
+// HOME attempts while lit (a re-home after a mismatch, or a commanded HOME) before going dark with
+// index_lost. Proposed 2026-11-14: 3 x 50 steps at 200 steps/s = 0.75 s.
+static const uint8_t RECOVERY_ATTEMPTS = 3;
+static const uint64_t INJECT_BLIND_US = 10000000; // bench hook: index blinded this long (> interval + 3 homes)
 
 // Tube care (plan section 5; datasheet: below 0.01 Hz for <= 1 h; >= 20 min at >= 100 Hz after <= 1 Hz).
 static const uint64_t HOLD_LIMIT_US = 30ull * 60 * 1000000; // user, 2026-11-12: then dark
@@ -65,4 +87,4 @@ static const uint32_t MASTER_LOSS_MS = 5000;
 static const uint16_t MOVE_RATE_DEFAULT = HOME_RATE;
 static const int32_t QUEUE_MAX = 32767;
 
-static const uint16_t FIRMWARE_VERSION = 0x0001; // 0.1
+static const uint16_t FIRMWARE_VERSION = 0x0002; // 0.2

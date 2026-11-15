@@ -5,5 +5,5 @@
 #include <stdint.h>
 
 bool stepperInit();        // claims a PIO state machine; guides at rest. false if no PIO free
-void stepperStart(int dir); // +1 fwd (G1 first), -1 rev (G2 first); takes 3 x PHASE_US
+void stepperStart(int dir, uint32_t phaseUs); // +1 fwd (G1 first), -1 rev (G2 first); takes 3 x phaseUs
 void stepperRest();        // abort any step in progress, both guides at rest

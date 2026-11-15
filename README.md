@@ -49,8 +49,10 @@ with the tube lit ([assembly log](characterization/dekatron/2026-10-24_assembly_
 HV converter and tube drive pass bring-up steps 1-3 (some measurements deferred), and the A101
 steps and indexes on it under the [bring-up firmware](firmware/dekatron-bringup/README.md). Its
 step-rate limits are measured (clean to 3000 steps/s; [log](characterization/dekatron/2026-11-12_speed_sweep.md)),
-and the [dekatron controller firmware](firmware/dekatron/README.md) is written; its HV tests
-(steps 4-5) are next. The Nixie board is designed: schematics, PCB,
+and the [dekatron controller firmware](firmware/dekatron/README.md) runs the tube over its USB
+console, including the periodic index check and skip recovery
+([log](characterization/dekatron/2026-11-14_index_check.md)); its I2C path and the remaining
+step 4-5 tests are next. The Nixie board is designed: schematics, PCB,
 fab outputs and an [assembly checklist](hardware/nixie/assembly.md) are done; its parts were
 ordered on 2026-11-10 and the board from PCBWay on 2026-11-11. The purchased Nixie HV module has
 been measured on the bench ([log](characterization/nixie/2026-11-01_hv_module.md)). The planning

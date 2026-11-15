@@ -8,7 +8,7 @@
 namespace dek {
 
 static const uint8_t I2C_ADDRESS = 0x20; // user decision 2026-11-12; the Nixie controller is 0x21
-static const uint8_t PROTOCOL_VERSION = 1;
+static const uint8_t PROTOCOL_VERSION = 2; // 2: skip recovery counters appended to Status
 static const uint8_t MODULE_ID = 0x44; // 'D'
 
 // Write: [op][len][payload...], len = payload bytes, fixed per op (opLength()).
@@ -31,9 +31,11 @@ enum Op : uint8_t {
     OP_CLEAR_FAULT = 0x10,   // -
     OP_BOOTSEL = 0x11,       // -                         reboot to the USB bootloader (dark only)
     OP_WEDGE_CENTRED = 0x12, // centre u8 (0-9), half_width u16 (0-500 = 0.01 cathode), rate u16 steps/s
+    OP_SET_INDEX_CHECK = 0x13, // open u16 ms, limit u16 ms (limit 0 = off; open <= limit <= 60000)
     // USB console only:
     OP_OWNER_LOCAL = 0x80,
     OP_OWNER_REMOTE = 0x81,
+    OP_INJECT = 0x82,        // kind u8: 1 drop the next step, 2 blind the index for 10 s (bench tests)
 };
 
 inline int opLength(uint8_t op)
@@ -42,9 +44,11 @@ inline int opLength(uint8_t op)
     case OP_PING: case OP_LIGHT: case OP_DARK: case OP_HOME: case OP_STOP: case OP_EXERCISE:
     case OP_CLEAR_FAULT: case OP_BOOTSEL: case OP_OWNER_LOCAL: case OP_OWNER_REMOTE:
         return 0;
+    case OP_INJECT:
+        return 1;
     case OP_MOVE_TO: case OP_MOVE_RELATIVE: case OP_GAUGE:
         return 2;
-    case OP_ROTATE: case OP_SET_MOTION: case OP_SWING: case OP_BOUNCE:
+    case OP_ROTATE: case OP_SET_MOTION: case OP_SWING: case OP_BOUNCE: case OP_SET_INDEX_CHECK:
         return 4;
     case OP_WEDGE_CENTRED:
         return 5;
@@ -76,11 +80,12 @@ enum Fault : uint8_t {
     F_EN_LOW = 2,         // EN/UVLO read low: OVP comparator or JP101 inhibit
     F_HV_LOW = 3,         // PGOOD low while lit, or never high while striking
     F_STRIKE_TIMEOUT = 4, // no glow confirmed within the strike window
-    F_INDEX_TIMEOUT = 5,  // HOME found no consistent index within its step budget
+    F_INDEX_TIMEOUT = 5,  // retired in protocol 2 (now DR_INDEX_LOST, not latched); value reserved
 };
 
 enum DarkReason : uint8_t {
     DR_BOOT = 0, DR_COMMAND = 1, DR_FAULT = 2, DR_MASTER_LOSS = 3, DR_HOLD_LIMIT = 4,
+    DR_INDEX_LOST = 5, // a lit HOME found no consistent index in RECOVERY_ATTEMPTS tries; LIGHT may retry
 };
 
 enum Owner : uint8_t { OWN_I2C = 0, OWN_USB = 1 };
@@ -98,6 +103,7 @@ enum Flag : uint8_t {
     FL_MASTER_LOSS = 1 << 4,   // went dark on master loss; clears on the next LIGHT
     FL_EXERCISE_DUE = 1 << 5,  // slow running (<= 1 step/s) since the last complete EXERCISE
     FL_WATCHDOG_RESET = 1 << 6,
+    FL_RECOVERING = 1 << 7,    // re-homing after an index mismatch; motion commands are held for after
 };
 
 // Read: the master reads up to sizeof(Status) bytes from offset 0.
@@ -127,7 +133,14 @@ struct __attribute__((packed)) Status {
     uint16_t hv_dv;          // HV_SENSE, 0.1 V (indicative: 3.3 V ADC reference)
     uint16_t vin_dv;         // VIN_SENSE, 0.1 V
     uint16_t rtn_dv;         // RTN_SENSE, 0.1 V
+    // Protocol 2: skip recovery, for the master to trend (all wrapping).
+    uint16_t skips;          // recoveries that found the count off: steps lost or gained
+    uint16_t sense_misses;   // recoveries that found the count right: the index sensing disagreed
+    uint16_t idx_late;       // index readings late at the first sample, on time at the recheck
+    uint16_t recovery_failures; // went dark with DR_INDEX_LOST
+    int8_t last_skip;        // count minus truth at the last skip, -4..+5; 0 = none yet
+    uint16_t trips;          // periodic index-check trips to K1
 };
-static_assert(sizeof(Status) == 45, "Status layout changed: update docs/i2c_protocol.md");
+static_assert(sizeof(Status) == 56, "Status layout changed: update docs/i2c_protocol.md");
 
 } // namespace dek

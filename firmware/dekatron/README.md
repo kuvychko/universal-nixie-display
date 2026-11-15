@@ -4,7 +4,10 @@ RP2040-Zero firmware for the dekatron controller/PSU in the finished display. It
 timing and hardware state: HV, stepping, homing, position tracking and tube care. The ESP32 decides
 what is shown and sends commands over I2C ([architecture](../../docs/architecture.md#ownership)).
 **Version 0.1: motion tested with HV over the USB console** (2026-11-13, bring-up step 4). The
-I2C path, hold limit and fault paths are not tested yet (Phase 1D, bring-up steps 4-5). The board
+I2C path, hold limit and fault paths are not tested yet (Phase 1D, bring-up steps 4-5).
+**Version 0.2 adds the periodic index check and skip recovery, bench-tested with HV on 2026-11-14**
+([log](../../characterization/dekatron/2026-11-14_index_check.md)): no unintended mismatch, an
+injected lost step caught inside the 60 s limit and recovered in 100 ms, nothing latched. The board
 bring-up tool is separate: [`firmware/dekatron-bringup/`](../dekatron-bringup/README.md).
 
 Toolchain: arduino-pico on PlatformIO, pinned to the same platform commit as the bring-up firmware
@@ -49,7 +52,7 @@ Homing keeps the plan's 200 steps/s target (plan §5). Measured on one board, on
 
 | Operation | Does |
 |---|---|
-| `HOME` | Steps toward K1 and checks the index only at a settled phase. It confirms K1 before setting position 0 and `position_valid`. A timeout is a fault, never a fabricated position (plan §5) |
+| `HOME` | Steps toward K1 and checks the index only at a settled phase. It confirms K1 before setting position 0 and `position_valid`. A timeout never fabricates a position (plan §5): after 3 attempts it goes dark with `index_lost` |
 | `MOVE_TO k` | Goes to main cathode k (0-9). Shortest path by default, or a forced direction |
 | `MOVE_RELATIVE ±n` | Adds n steps to the step queue (below) |
 | `ROTATE r` | Continuous rotation at a signed rate r, in 0.01 steps/s, so a seconds display (1 step/s) is exact. 0 stops |
@@ -103,27 +106,80 @@ second.
   neighbour on the others. A wedge only two cathodes wide cannot skip either end, so there the
   minimum period limits small shares (0.7/0.3 at 2000 steps/s shows about 0.7/0.4).
 * A wedge narrower than one cathode cell is a held glow on that cathode, under the hold limit.
-* The index is checked on every step, so a wedge that covers K1 is checked on each pass.
+* The index is checked on every step, so a wedge that covers K1 is checked on each pass. One that
+  does not is checked by the periodic trip to K1 (below), preferably when a bookend is next to K1
+  or a streamed update moves the sector.
 * `BOUNCE` stays the plain version: whole cathodes, one constant interval, the ends dimmer.
 
 ### Position integrity
 
 * Expected vs. observed index on every step, sampled 100 µs after the guide releases. A sample
   that disagrees is rechecked just before the earliest next step (170 µs after release); only a
-  disagreement on both is a mismatch. A recheck that agrees counts as a late index (console
-  `idx_late`), so the timing margin stays visible. Bench 2026-11-13: in the eye effect, with the
+  disagreement on both is a mismatch. A recheck that agrees counts as a late index (`idx_late`),
+  so the timing margin stays visible. Bench 2026-11-13: in the eye effect, with the
   glow turning back next to K1, it arrived later than 100 µs about once in 14000 passes; it was
   on K1 every time.
-* A mismatch (an index where none is expected, or a missing one) clears `position_valid` and
-  increments a mismatch counter. A queue re-homes when it has played out; a continuous effect
-  (rotate, swing, bounce, wedge, spin, exercise) has no such boundary, so it stops and re-homes at
-  once. The console reports the miss (`miss_ndx_raw`, `miss_expected`, `miss_mode`) and where the
-  count stood when the re-home found K1 (`rehome_offset`: 0 means the sensing missed, not the
-  glow). Single-index tracking cannot see every missed step between K1 visits (plan §5).
-* Re-home after a dark period, a controller reset or a detected inconsistency. Periodic homing can
-  sit on an animation boundary.
 * After switch-on two cathodes may glow. Homing steps the tube and confirms a single, consistent
-  index before it trusts the position (hardware.md, A101 operating point).
+  index before it trusts the position (hardware.md, A101 operating point). Relighting always
+  re-homes.
+
+#### Periodic index check (0.2)
+
+The count is only *confirmed* when the glow lands on K1 and the index agrees. An effect that never
+covers K1 (a wedge or eye on the far side of the ring) would otherwise run unchecked. So the
+controller bounds the time between confirmations:
+
+* **Tracking.** Steps and time since the last confirmed K1, and the largest of each, on the
+  console (`unchecked_steps`, `unchecked_ms`, `max_unchecked_*`).
+* **The trip.** The glow steps the shortest way to K1 at 3000 steps/s and 50 µs phase (the speed
+  sweep's fastest clean point), the index confirms, and it steps back. The effect resumes where it
+  left off. K1 is at most 5 steps away, so the round trip is at most 10 steps, or 3.3 ms. Trip
+  steps are index-checked like any other. They do not count toward the effect, the queue, the step
+  rate or the hold-limit dwell.
+* **When: a band, 5-60 s** (user, 2026-11-14; `SET_INDEX_CHECK` sets both ends). Before 5 s
+  nothing happens. From 5 s a trip is taken only at a cheap moment: the glow within 2 steps of K1 and about
+  to step away from it (so the trip lights a cathode or two beside the lit part), a queue ending there, or
+  a streamed wedge/eye update that moves the bookends by a cathode or more (the trip hides in the
+  change). At 60 s it is taken whatever is showing. This is a display: on the bench, trips across
+  the dark part of the ring were plainly visible, at 2000 steps/s every second and at 3000
+  steps/s every 5 s. A rare skip showing for up to a minute was judged the better trade.
+* **A held glow does not trip.** It cannot lose count, and the steps back from a trip do not arm
+  another one. A held value is therefore checked once after it arrives, then left alone.
+* **Guarantee.** Any count error is caught within 60 s (the limit) of the first step after the last
+  check (the unchecked clock starts there, so a long confirmed hold does not trip at once). Errors that cancel between two
+  checks (a lost step and a gained one) are still invisible, but they can only build up until the
+  next check. A step lost on a trip's way back is caught at the next check after the display moves
+  again.
+
+#### Skip recovery (0.2)
+
+This is a display, so a lost count is not mission critical. The controller recovers by itself,
+reports the event, and never latches.
+
+* **On a mismatch** (an index where none is expected, or a missing one), it clears
+  `position_valid`, remembers what was showing and re-homes at once, whatever the mode. Status
+  flag `recovering` stays set until it is done. The console reports the miss (`miss_ndx_raw`,
+  `miss_expected`, `miss_mode`) and where the count stood when the re-home found K1
+  (`rehome_offset`).
+* **Classified.** `rehome_offset` 0 means the glow was where it was counted, so the index sensing
+  disagreed (`sense_misses`). Anything else means steps were lost or gained (`skips`, and
+  `last_skip` = count minus truth, -4..+5). Both counters, `idx_late` and `recovery_failures` are
+  in the I2C status, for the ESP32 to trend.
+* **Resumed.** A wedge, eye, gauge, swing, bounce or rotation restarts from its last command,
+  which is in ring coordinates. A queue or held position goes where the count meant it to be,
+  with the steps still pending. A spin returns to where it started. An exercise runs on to its
+  original end. It looks like a short spin to K1 (about 50-150 ms at the homing rate) and the
+  effect carries on. Motion commands that arrive meanwhile get `E_OK` and replace what resumes,
+  so a streamed eye never sees an error.
+* **If the re-home fails.** Any HOME while lit gets 3 attempts of 50 steps (0.75 s, proposed
+  2026-11-14). After that the controller goes `DARK` with `dark_reason = index_lost` and counts a
+  `recovery_failure`. No fault is latched, and `LIGHT` strikes and homes as usual.
+* Bench 2026-11-14 ([log](../../characterization/dekatron/2026-11-14_index_check.md)): an injected
+  lost step was caught 58 s later, inside the 60 s limit. It re-homed and the wedge resumed in
+  100 ms, with `last_skip` −1. A blinded index went dark with `index_lost` after 3 attempts, and
+  relit.
+* Single-index tracking still cannot see every missed step between K1 visits (plan §5); the
+  periodic check bounds how long one can go unseen.
 
 ### Tube care (plan §5)
 
@@ -166,7 +222,7 @@ Latched until cleared; any fault drops HV and returns the guides to rest.
 | `en_low` | EN/UVLO node read low on GP8 while on: OVP comparator tripped, or the JP101 inhibit fitted |
 | `hv_low` | PGOOD low for ≥ 100 ms while lit, or never high within the strike window: the LM5156's own regulation flag, not an ADC threshold |
 | `strike_timeout` | PGOOD came up but no consistent index within the 10 s strike window |
-| `index_timeout` | `HOME` found no consistent index within 50 steps (5 turns, retries included) |
+| ~~`index_timeout`~~ | Retired in 0.2 (value reserved). A lit `HOME` that fails 3 times goes dark with `dark_reason = index_lost`, not latched (skip recovery above) |
 | watchdog reset (500 ms) | Status flag and boot counter. Core 1 feeds the watchdog only while core 0 is alive. GP6's pull-down holds HV off during reset |
 
 ### Telemetry (status)
@@ -221,6 +277,8 @@ USB serial, one command per line; replies `OK`, `ERR <error>`, or the status lin
 | `wedge <a> <b> <rate>` | `WEDGE`, bookends in cathodes with decimals: `wedge 2.3 5.7 2000` |
 | `wedgec <centre> <half_width> <rate>` | `WEDGE_CENTRED`, half-width in cathodes: `wedgec 4 1.5 2000` |
 | `gauge <0-1000>` | `GAUGE` |
+| `idxcheck <open_ms> <limit_ms>` | `SET_INDEX_CHECK`: limit 0 is off; open ≤ limit ≤ 60000 |
+| `inject drop` / `inject blind` | Bench hooks (console only): count a step the tube is never given; read the index as dark for 10 s |
 
 ### Out of scope
 

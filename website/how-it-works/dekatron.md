@@ -260,8 +260,13 @@ cathodes are joined together at the socket and return on one wire; only K1, the 
 only see the index light once per revolution and count the pulses it has sent since, so what the
 controller holds is an *estimate* of the count; the count itself is the glow's position in the
 tube. Normally the two agree. After a missed step they differ, and the controller can only notice
-at an index visit, if then: one index cathode cannot catch every missed step. The controller's firmware is planned to re-home the tube
-whenever the index disagrees, and after any power interruption.
+at an index visit, if then: one index cathode cannot catch every missed step. So the controller's
+firmware re-homes the tube whenever the index disagrees, and after any power interruption. Then it
+carries on with what it was showing. An effect that never passes K1, such as a lit sector on the
+far side of the ring, would never be checked, so the controller makes the glow hop to K1 and back.
+It waits for a moment when the hop is a step or two beside the lit part, and goes regardless after a
+minute. On the bench a deliberately dropped step was caught inside that minute and corrected in a
+tenth of a second ([log](https://github.com/kuvychko/universal-nixie-display/blob/main/characterization/dekatron/2026-11-14_index_check.md)).
 
 The memory is volatile. It lasts exactly as long as the discharge: switch off and the count is
 gone, and at the next power-up the glow strikes wherever it strikes. That is why a dekatron circuit

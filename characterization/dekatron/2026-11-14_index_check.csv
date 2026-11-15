@@ -1,0 +1,7 @@
+time,scene,seconds,open_ms,interval_ms,trips,mismatch,idx_late,skips,sense_misses,recovery_failures,home_fail,max_unchecked_steps,max_unchecked_ms,drop_detect_ms,recovery_ms,last_skip,notes
+2026-11-14T18:44:38,wedge,180,5000,60000,3,0,0,0,0,0,0,98974,60001,-1,-1,0,
+2026-11-14T18:47:38,eye,180,5000,60000,30,0,0,0,0,0,0,98974,60001,-1,-1,0,
+2026-11-14T18:50:38,rotate1,180,5000,60000,0,0,0,0,0,0,0,98974,60001,-1,-1,0,
+2026-11-14T18:53:38,hold,180,5000,60000,1,0,0,0,0,0,0,98974,60001,-1,-1,0,
+2026-11-14T18:54:40,drop,61,5000,60000,0,1,0,1,0,0,0,98975,60001,57987,100,-1,"PASS: detect 57987 ms (interval 60000 ms), recovery 100 ms, last_skip -1, mode wedge"
+2026-11-14T18:54:52,blind,13,5000,60000,0,1,0,0,0,1,0,98975,60001,57987,100,-1,"PASS: dark_reason index_lost, fault none, relit and homed"

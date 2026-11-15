@@ -88,22 +88,28 @@ static void printStatus()
     Diag d;
     controllerSnapshot(&s, &d);
     static const char *pw[] = {"dark", "striking", "lit"};
-    static const char *dr[] = {"boot", "command", "fault", "master_loss", "hold_limit"};
+    static const char *dr[] = {"boot", "command", "fault", "master_loss", "hold_limit", "index_lost"};
     static const char *md[] = {"idle", "home", "queue", "rotate", "swing", "bounce", "spin", "wedge", "exercise"};
     Serial.printf("OK t_ms=%lu boots=%u fw=%u.%u owner=%s power=%s fault=%s dark_reason=%s pos=%u valid=%d "
                   "mode=%s queue=%d hv=%.1f vin=%.1f rtn=%.1f pgood=%d hv_en=%d ndx_raw=%u idx_exp=%u idx_obs=%u "
                   "home_fail=%u mismatch=%u dwell_ms=%lu rate=%.1f slow_run_s=%lu exercise_due=%d master_loss=%d "
-                  "seq=%u err=%s wdt_reset=%d pio=%u idx_late=%u late_ndx_raw=%u miss_ndx_raw=%u miss_expected=%d miss_mode=%d rehome_offset=%d\n",
+                  "seq=%u err=%s wdt_reset=%d pio=%u idx_late=%u late_ndx_raw=%u miss_ndx_raw=%u miss_expected=%d miss_mode=%d rehome_offset=%d "
+                  "recovering=%d skips=%u sense_misses=%u recovery_failures=%u last_skip=%d recovery_ms=%ld trips=%u "
+                  "idxopen_ms=%u idxcheck_ms=%u unchecked_steps=%lu unchecked_ms=%lu max_unchecked_steps=%lu max_unchecked_ms=%lu "
+                  "drop_detect_ms=%ld\n",
                   (unsigned long)s.uptime_ms, s.boot_count, s.firmware >> 8, s.firmware & 0xFF,
                   s.owner == OWN_USB ? "usb" : "i2c", s.power < 3 ? pw[s.power] : "?", faultName(s.fault),
-                  s.dark_reason < 5 ? dr[s.dark_reason] : "?", s.position, (s.flags & FL_POSITION_VALID) ? 1 : 0,
+                  s.dark_reason < 6 ? dr[s.dark_reason] : "?", s.position, (s.flags & FL_POSITION_VALID) ? 1 : 0,
                   s.mode < 9 ? md[s.mode] : "?", s.queue, s.hv_dv / 10.0f, s.vin_dv / 10.0f, s.rtn_dv / 10.0f,
                   (s.flags & FL_PGOOD) ? 1 : 0, (s.flags & FL_HV_EN) ? 1 : 0, d.ndx_raw, s.idx_expected,
                   s.idx_observed, s.home_failures, s.idx_mismatches, (unsigned long)s.dwell_ms, s.rate_dsps / 10.0f,
                   (unsigned long)s.slow_run_s, (s.flags & FL_EXERCISE_DUE) ? 1 : 0,
                   (s.flags & FL_MASTER_LOSS) ? 1 : 0, s.cmd_seq, errName(s.last_error),
-                  (s.flags & FL_WATCHDOG_RESET) ? 1 : 0, d.pio_ok, d.idx_late, d.late_ndx_raw, d.miss_ndx_raw, d.miss_expected, d.miss_mode,
-                  d.rehome_offset);
+                  (s.flags & FL_WATCHDOG_RESET) ? 1 : 0, d.pio_ok, s.idx_late, d.late_ndx_raw, d.miss_ndx_raw, d.miss_expected, d.miss_mode,
+                  d.rehome_offset, (s.flags & FL_RECOVERING) ? 1 : 0, s.skips, s.sense_misses, s.recovery_failures,
+                  s.last_skip, (long)d.recovery_ms, s.trips, d.index_open_ms, d.index_check_ms, (unsigned long)d.unchecked_steps,
+                  (unsigned long)d.unchecked_ms, (unsigned long)d.max_unchecked_steps, (unsigned long)d.max_unchecked_ms,
+                  (long)d.drop_detect_ms);
 }
 
 static void put16(uint8_t *p, uint32_t v) { p[0] = v & 0xFF; p[1] = (v >> 8) & 0xFF; }
@@ -138,7 +144,7 @@ static const char *HELP =
     "rotate <steps/s> | stop | motion <move_rate> <accel> | swing <centre> <amp> <period_ms> | "
     "bounce <a> <b> <rate> | spin <start> <end> <accel> <turns> | wedge <a> <b> <rate> | "
     "wedgec <centre> <half_width> <rate> | "
-    "gauge <0-1000> | exercise | clear | bootsel | help";
+    "gauge <0-1000> | idxcheck <open_ms> <limit_ms> | inject drop|blind | exercise | clear | bootsel | help";
 
 static void handleLine(char *cmd)
 {
@@ -215,6 +221,12 @@ static void handleLine(char *cmd)
     } else if (!strcmp(c, "wedgec") && argc >= 4) {
         f[0] = OP_WEDGE_CENTRED; f[1] = 5; f[2] = num(1); put16(f + 3, centi(2)); put16(f + 5, num(3));
         send(f, 7);
+    } else if (!strcmp(c, "idxcheck") && argc >= 2) {
+        f[0] = OP_SET_INDEX_CHECK; f[1] = 4; put16(f + 2, num(1)); put16(f + 4, argc >= 3 ? num(2) : num(1));
+        send(f, 6);
+    } else if (!strcmp(c, "inject") && argc >= 2) {
+        f[0] = OP_INJECT; f[1] = 1; f[2] = !strcmp(argv[1], "drop") ? 1 : !strcmp(argv[1], "blind") ? 2 : 0;
+        send(f, 3);
     } else if (!strcmp(c, "gauge") && argc >= 2) {
         f[0] = OP_GAUGE; f[1] = 2; put16(f + 2, num(1));
         send(f, 4);

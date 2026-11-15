@@ -20,7 +20,6 @@ static uint offset;
 
 static const uint32_t PATTERN_FWD = 0b00101101; // 01, 11, 10, 00 from the LSB
 static const uint32_t PATTERN_REV = 0b00011110; // 10, 11, 01, 00
-static const uint32_t PHASE_COUNT = PHASE_US - 3;
 
 static uint16_t program[13];
 
@@ -73,9 +72,9 @@ bool stepperInit()
     return true;
 }
 
-void stepperStart(int dir)
+void stepperStart(int dir, uint32_t phaseUs)
 {
-    pio_sm_put(pio, sm, PHASE_COUNT);
+    pio_sm_put(pio, sm, phaseUs - 3); // phase count: out-to-out = X + 3 us
     pio_sm_put(pio, sm, dir > 0 ? PATTERN_FWD : PATTERN_REV);
 }
 

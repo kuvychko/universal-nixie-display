@@ -29,7 +29,7 @@ Address: **0x20** (7-bit; user, 2026-11-12). Behaviour behind each operation:
 [`firmware/common/dekatron_protocol.h`](../firmware/common/dekatron_protocol.h), which is the
 reference when this table and the header disagree.
 
-**Framing (protocol version 1, draft until the ESP32 side runs against it).** A write is
+**Framing (protocol version 2, draft until the ESP32 side runs against it).** A write is
 `[op][len][payload…]`: `len` is the payload length in bytes and must equal the op's fixed length,
 or the write is rejected (`bad_len`). An empty write is an address probe. A read returns the
 status block from offset 0; the master may read fewer bytes. Multi-byte fields are little-endian.
@@ -56,16 +56,18 @@ confirms each command by polling. Any I2C traffic, read or write, resets the mas
 | `CLEAR_FAULT` | 0x10 | — | |
 | `BOOTSEL` | 0x11 | — | Reboot to the USB bootloader; refused unless dark |
 | `WEDGE_CENTRED` | 0x12 | `centre` u8 (0-9), `half_width` u16 (0-500 = 0.01 cathode), `rate` u16 steps/s | Wedge symmetric about a cathode (magic eye): 0-50 lights the centre only, 500 the whole ring. Updates in place like `WEDGE` |
+| `SET_INDEX_CHECK` | 0x13 | `open` u16 ms, `limit` u16 ms (limit 0 = off; open ≤ limit ≤ 60000) | Unconfirmed-count band: from `open` a short trip to K1 at a cheap moment, at `limit` regardless (defaults 5000 / 60000; firmware 0.2) |
 
 Errors: 0 ok, 1 `bad_op`, 2 `bad_len`, 3 `range` (never clamped), 4 `state`, 5 `not_owner` (the
 USB console has taken over with `local`), 6 `queue_full`, 7 `vin`. Motion ops need `LIT` and a
-valid position.
+valid position. During a skip recovery (`flags` bit 7) motion commands are accepted and held,
+and the last one runs once the re-home is done (firmware 0.2).
 
-Status block (45 bytes):
+Status block (56 bytes; protocol 1 was the first 45):
 
 | Offset | Field | Type | Meaning |
 |---|---|---|---|
-| 0 | `protocol` | u8 | 1 |
+| 0 | `protocol` | u8 | 2 |
 | 1 | `module` | u8 | 0x44 (`D`) |
 | 2 | `firmware` | u16 | major << 8 \| minor |
 | 4 | `boot_count` | u16 | Increments every boot (flash) |
@@ -74,9 +76,9 @@ Status block (45 bytes):
 | 11 | `last_error` | u8 | Error of the last processed write |
 | 12 | `owner` | u8 | 0 I2C, 1 USB console |
 | 13 | `power` | u8 | 0 dark, 1 striking, 2 lit |
-| 14 | `fault` | u8 | 0 none, 1 vin, 2 en_low, 3 hv_low, 4 strike_timeout, 5 index_timeout; latched |
-| 15 | `dark_reason` | u8 | 0 boot, 1 command, 2 fault, 3 master_loss, 4 hold_limit |
-| 16 | `flags` | u8 | bit 0 position valid, 1 busy, 2 PGOOD, 3 HV_EN, 4 master loss, 5 exercise due, 6 watchdog reset |
+| 14 | `fault` | u8 | 0 none, 1 vin, 2 en_low, 3 hv_low, 4 strike_timeout, 5 reserved (index_timeout, retired in protocol 2); latched |
+| 15 | `dark_reason` | u8 | 0 boot, 1 command, 2 fault, 3 master_loss, 4 hold_limit, 5 index_lost (not latched) |
+| 16 | `flags` | u8 | bit 0 position valid, 1 busy, 2 PGOOD, 3 HV_EN, 4 master loss, 5 exercise due, 6 watchdog reset, 7 recovering |
 | 17 | `position` | u8 | 0-9, 0 = K1 (index) |
 | 18 | `mode` | u8 | 0 idle, 1 home, 2 queue, 3 rotate, 4 swing, 5 bounce, 6 spin, 7 wedge/gauge, 8 exercise |
 | 19 | `queue` | i16 | Pending queued steps |
@@ -90,8 +92,18 @@ Status block (45 bytes):
 | 39 | `hv_dv` | u16 | HV_SENSE, 0.1 V |
 | 41 | `vin_dv` | u16 | VIN_SENSE, 0.1 V |
 | 43 | `rtn_dv` | u16 | RTN_SENSE, 0.1 V |
+| 45 | `skips` | u16 | Recoveries that found the count off (steps lost or gained), wrapping |
+| 47 | `sense_misses` | u16 | Recoveries that found the count right (the index sensing disagreed), wrapping |
+| 49 | `idx_late` | u16 | Index readings late at the first sample and on time at the recheck, wrapping |
+| 51 | `recovery_failures` | u16 | Times it went dark with `index_lost`, wrapping |
+| 53 | `last_skip` | i8 | Count minus truth at the last skip, -4..+5; 0 = none yet |
+| 54 | `trips` | u16 | Periodic index-check trips to K1, wrapping |
 
-A homing timeout returns a fault, never a fabricated position.
+The recovery counters are for the master to trend: a rising `skips` or `idx_late` rate is the
+early sign of a tube or index channel going out of margin. Nothing about a skip latches.
+A homing timeout never fabricates a position. Since protocol 2 it is not a fault: a lit HOME that
+finds no consistent index in 3 attempts goes dark with `dark_reason` index_lost, and the master may
+`LIGHT` again.
 
 ## Nixie controller
 

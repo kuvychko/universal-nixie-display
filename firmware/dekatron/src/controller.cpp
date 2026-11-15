@@ -48,6 +48,7 @@ static bool posValid;
 
 static bool inFlight;
 static uint64_t stepStartUs;
+static uint32_t stepSampleAtUs, stepRecheckAtUs, stepPeriodUs; // the step in flight's timing
 static uint64_t lastStepUs; // start of the last step
 static uint16_t ndxRaw;
 
@@ -104,9 +105,44 @@ static uint16_t missNdxRaw;
 static uint16_t idxLate, lateNdxRaw; // first sample disagreed, the recheck agreed
 static int8_t missExpected = -1, missMode = -1, rehomeOffset = -1;
 static bool rehoming; // the current home follows a mismatch: report the count's offset
+static uint8_t homeAttempts;
+
+// periodic index check: a short trip to K1 when the count has gone unconfirmed too long
+static uint16_t indexCheckMs = INDEX_CHECK_MS_DEFAULT;
+static uint16_t indexOpenMs = INDEX_CHECK_OPEN_MS_DEFAULT;
+static uint32_t uncheckedSteps;   // every step since the last K1 that matched the count
+static uint32_t uncheckedOwnSteps; // the same without trip steps: only these arm a trip
+static uint64_t uncheckedSinceUs; // first own step after the last check
+static uint32_t maxUncheckedSteps;
+static uint64_t maxUncheckedUs;
+static uint16_t tripCount;
+static bool tripActive, tripOutbound;
+static int32_t tripHome; // absPos the trip returns to
+static uint64_t dwellFromUs; // start of the last non-trip step: tube care ignores trips
+static int32_t wedgeStartC = -1, wedgeEndC = -1; // last wedge bookends, 0.01 cathode, for update size
+
+// skip recovery: re-home, then resume what was showing
+enum ResumeKind : uint8_t { R_NONE, R_QUEUE, R_CMD, R_EXERCISE };
+static bool recovering;
+static uint8_t resumeKind;
+static Command resumeCmd;
+static uint8_t resumeAt;   // R_QUEUE: ring position the queue counts from (the count's view)
+static int32_t resumeQueue; // R_QUEUE: steps still to play from there
+static Command lastEffectCmd; // the command behind the running wedge/swing/bounce/rotate
+static uint64_t mismatchAtUs;
+static uint16_t skips, senseMisses, recoveryFailures;
+static int8_t lastSkip;
+static int32_t recoveryMs = -1;
+
+// bench hooks (USB console only)
+static bool dropPending;
+static uint64_t dropAtUs;
+static int32_t dropDetectMs = -1;
+static uint64_t blindUntilUs;
 
 // ---- helpers ----
-static uint8_t posMod() { return (uint8_t)(((absPos % 10) + 10) % 10); }
+static uint8_t ringOf(int32_t p) { return (uint8_t)(((p % 10) + 10) % 10); }
+static uint8_t posMod() { return ringOf(absPos); }
 
 static int32_t shortest(uint8_t from, uint8_t to)
 {
@@ -137,6 +173,7 @@ static void setIdle()
     mode = M_IDLE;
     queuePending = 0;
     rate = targetRate = acc = 0;
+    tripActive = false;
 }
 
 static void goDark(uint8_t why)
@@ -149,7 +186,73 @@ static void goDark(uint8_t why)
     power = PWR_DARK;
     posValid = false;
     darkReason = why;
+    recovering = false;
+    resumeKind = R_NONE;
     setIdle();
+}
+
+// ---- periodic index check ----
+static void noteUnchecked(uint64_t now)
+{
+    if (!posValid || power != PWR_LIT) {
+        return;
+    }
+    if (uncheckedSteps > maxUncheckedSteps) {
+        maxUncheckedSteps = uncheckedSteps;
+    }
+    if (uncheckedOwnSteps && now > uncheckedSinceUs && now - uncheckedSinceUs > maxUncheckedUs) {
+        maxUncheckedUs = now - uncheckedSinceUs;
+    }
+}
+
+static void markChecked(uint64_t now)
+{
+    noteUnchecked(now);
+    uncheckedSteps = uncheckedOwnSteps = 0;
+    uncheckedSinceUs = now;
+}
+
+// 0 not due, 1 in the band (trip at a cheap moment), 2 at the limit (trip now).
+static int checkDue(uint64_t now)
+{
+    if (indexCheckMs == 0 || tripActive || recovering || !posValid || power != PWR_LIT || mode == M_HOME ||
+        uncheckedOwnSteps == 0 || posMod() == 0 || now < uncheckedSinceUs) {
+        return 0;
+    }
+    uint64_t t = now - uncheckedSinceUs, limit = indexCheckMs * 1000ull;
+    return t >= limit ? 2 : t >= indexOpenMs * 1000ull ? 1 : 0;
+}
+
+static bool nearK1() { return abs(shortest(posMod(), 0)) <= CHEAP_TRIP_STEPS; }
+
+static int32_t ringDistC(int32_t a, int32_t b)
+{
+    int32_t d = abs(a - b) % 1000;
+    return d > 500 ? 1000 - d : d;
+}
+
+static void startTrip()
+{
+    tripActive = true;
+    tripOutbound = true;
+    tripHome = absPos;
+}
+
+// Next trip step, or 0 when back where it started (the trip is then over).
+static int tripStep()
+{
+    if (tripOutbound && posMod() == 0) {
+        tripOutbound = false; // the arrival's index sample confirmed K1 (or recovery took over)
+    }
+    if (tripOutbound) {
+        return shortest(posMod(), 0) > 0 ? 1 : -1;
+    }
+    if (absPos == tripHome) {
+        tripActive = false;
+        tripCount++;
+        return 0;
+    }
+    return tripHome > absPos ? 1 : -1;
 }
 
 static void setFault(uint8_t f)
@@ -160,10 +263,12 @@ static void setFault(uint8_t f)
 
 static void startHome()
 {
+    setIdle();
     mode = M_HOME;
     posValid = false;
     homeConfirming = false;
     homeSteps = homeConfirm = 0;
+    homeAttempts = 1;
 }
 
 static void returnTo(uint8_t k)
@@ -190,6 +295,7 @@ static void startSweep(int32_t lo, int32_t hi, uint32_t intervalUs, uint32_t loD
 // updated in place: the sweep carries on from where the glow is, in the direction it is going.
 static void setWedge(int32_t start, int32_t width, uint16_t rate)
 {
+    bool wasWedge = mode == M_WEDGE;
     start = ((start % 1000) + 1000) % 1000;
     int32_t end = start + width;
     int32_t loCell = start / 100;
@@ -226,6 +332,14 @@ static void setWedge(int32_t start, int32_t width, uint16_t rate)
     wedgeHiPct = hiPct;
     wedgeIntervalUs = 1000000UL / rate;
     wedgePlanValid = false;
+    // A streamed update that moves the sector a lot hides a trip inside the change.
+    int32_t endC = (start + width) % 1000;
+    bool big = wedgeStartC >= 0 && ringDistC(start, wedgeStartC) + ringDistC(endC, wedgeEndC) >= CHEAP_UPDATE_CENTI;
+    wedgeStartC = start;
+    wedgeEndC = endC;
+    if (wasWedge && big && checkDue(time_us_64()) >= 1) {
+        startTrip();
+    }
 }
 
 static void startRotate(float r, uint8_t m)
@@ -243,15 +357,22 @@ static void startRotate(float r, uint8_t m)
 }
 
 // ---- commands ----
+// Internal result: a valid motion command that arrived during a recovery, held until the re-home
+// is done (the master sees E_OK).
+static const uint8_t E_DEFER = 0xFE;
+
 static uint8_t needMotion()
 {
+    if (recovering && power == PWR_LIT) {
+        return E_DEFER;
+    }
     if (power != PWR_LIT || !posValid) {
         return E_STATE;
     }
     return E_OK;
 }
 
-static uint8_t execute(const Command &c)
+static uint8_t executeOp(const Command &c)
 {
     if (c.err) {
         return c.err;
@@ -265,6 +386,19 @@ static uint8_t execute(const Command &c)
         return E_OK;
     }
     if (c.op == OP_PING) {
+        return E_OK;
+    }
+    if (c.op == OP_INJECT) {
+        if (c.src != SRC_USB) {
+            return E_BAD_OP;
+        }
+        if (c.data[0] == 1) {
+            dropPending = true;
+        } else if (c.data[0] == 2) {
+            blindUntilUs = time_us_64() + INJECT_BLIND_US;
+        } else {
+            return E_RANGE;
+        }
         return E_OK;
     }
     if ((c.src == SRC_I2C) != (owner == OWN_I2C)) {
@@ -351,6 +485,9 @@ static uint8_t execute(const Command &c)
         return E_OK;
     }
     case OP_STOP:
+        if (recovering && power == PWR_LIT) {
+            return E_DEFER;
+        }
         if (mode != M_HOME) {
             setIdle();
         }
@@ -455,6 +592,15 @@ static uint8_t execute(const Command &c)
         rate = EXERCISE_RATE;
         exerciseEndUs = time_us_64() + EXERCISE_US;
         return E_OK;
+    case OP_SET_INDEX_CHECK: {
+        uint16_t open = rd16(d), limit = rd16(d + 2);
+        if (limit > 60000 || open > limit) {
+            return E_RANGE;
+        }
+        indexOpenMs = open;
+        indexCheckMs = limit;
+        return E_OK;
+    }
     case OP_CLEAR_FAULT:
         fault = F_NONE;
         return E_OK;
@@ -469,32 +615,167 @@ static uint8_t execute(const Command &c)
     }
 }
 
+static bool isEffect(uint8_t op)
+{
+    return op == OP_WEDGE || op == OP_WEDGE_CENTRED || op == OP_GAUGE || op == OP_SWING || op == OP_BOUNCE ||
+           op == OP_ROTATE;
+}
+
+// A motion command during a recovery replaces what resumes afterwards; the last one wins.
+static uint8_t deferResume(const Command &c)
+{
+    if (c.op == OP_MOVE_RELATIVE) {
+        int32_t n = (int16_t)rd16(c.data);
+        if (resumeKind != R_QUEUE) {
+            resumeKind = R_QUEUE;
+            resumeQueue = 0; // resumeAt: where the count stood at the mismatch
+        }
+        if (resumeQueue + n > QUEUE_MAX || resumeQueue + n < -QUEUE_MAX) {
+            return E_QUEUE_FULL;
+        }
+        resumeQueue += n;
+    } else if (c.op == OP_STOP) {
+        resumeKind = R_QUEUE; // hold where the display was meant to be
+        resumeQueue = 0;
+    } else {
+        resumeKind = R_CMD;
+        resumeCmd = c;
+    }
+    return E_OK;
+}
+
+static uint8_t execute(const Command &c)
+{
+    uint8_t e = executeOp(c);
+    if (e == E_DEFER) {
+        e = deferResume(c);
+    }
+    if (e == E_OK && isEffect(c.op)) {
+        lastEffectCmd = c;
+    }
+    return e;
+}
+
 // ---- stepping ----
+// Trip steps (periodic index check) move the glow and are index-checked like any other, but they
+// leave the effect, the queue, the step-rate bins and the hold-limit dwell alone, and they do not
+// advance stepSeq, so a wedge resumes on the plan it had.
 static void startStep(int dir, uint64_t now)
 {
-    uint64_t gap = now - lastStepUs;
-    verySlowUs = gap >= VERY_SLOW_GAP_US ? verySlowUs + gap : 0;
-    stepperStart(dir);
+    bool drop = false;
+    if (!tripActive) {
+        uint64_t gap = now - dwellFromUs;
+        verySlowUs = gap >= VERY_SLOW_GAP_US ? verySlowUs + gap : 0;
+        dwellFromUs = now;
+        stepSeq++;
+        rateBins[rateSec % 10]++;
+        if (uncheckedOwnSteps++ == 0) {
+            uncheckedSinceUs = now; // the unchecked clock starts with the first step since the check
+        }
+        if (mode == M_QUEUE) {
+            queuePending -= dir;
+        } else if (mode == M_SPIN || mode == M_ROTATE || mode == M_EXERCISE) {
+            acc -= dir;
+            if (mode == M_SPIN) {
+                spinStepsLeft--;
+            }
+        }
+        if (dropPending && posValid && mode != M_HOME) {
+            dropPending = false; // bench hook: count a step the tube is never given
+            drop = true;
+            dropAtUs = now;
+        }
+    }
+    // The next step waits out this one's full period (guides + rest), whichever timing it uses.
+    stepPeriodUs = tripActive ? TRIP_PERIOD_US : MIN_PERIOD_US;
+    stepSampleAtUs = tripActive ? TRIP_SAMPLE_AT_US : SAMPLE_AT_US;
+    stepRecheckAtUs = tripActive ? TRIP_RECHECK_AT_US : RECHECK_AT_US;
+    if (!drop) {
+        stepperStart(dir, tripActive ? TRIP_PHASE_US : PHASE_US);
+    }
     absPos += dir;
-    stepSeq++;
+    uncheckedSteps++;
     stepStartUs = lastStepUs = now;
     inFlight = true;
-    rateBins[rateSec % 10]++;
-    if (mode == M_QUEUE) {
-        queuePending -= dir;
-    } else if (mode == M_SPIN || mode == M_ROTATE || mode == M_EXERCISE) {
-        acc -= dir;
-        if (mode == M_SPIN) {
-            spinStepsLeft--;
+}
+
+static uint16_t readNdx()
+{
+    adc_select_input(pin::NDX - 26);
+    uint16_t v = adc_read();
+    return time_us_64() < blindUntilUs ? 0 : v; // bench hook: index blinded
+}
+
+// A mismatch: remember what was showing, in ring coordinates as the count saw it, and re-home at
+// once. The display is not mission critical, so nothing latches: the effect resumes afterwards.
+static void beginRecovery(uint64_t now)
+{
+    noteUnchecked(now);
+    resumeAt = tripActive ? ringOf(tripHome) : posMod();
+    resumeQueue = 0;
+    switch (mode) {
+    case M_WEDGE:
+    case M_SWING:
+    case M_BOUNCE:
+    case M_ROTATE:
+        resumeKind = R_CMD; // ring coordinates: re-anchors after the home
+        resumeCmd = lastEffectCmd;
+        break;
+    case M_SPIN:
+        resumeKind = R_QUEUE; // the rest of the spin is dropped: back to where it started
+        resumeAt = returnPos;
+        break;
+    case M_EXERCISE:
+        resumeKind = R_EXERCISE; // same end time, then back to returnPos
+        break;
+    case M_QUEUE:
+        resumeKind = R_QUEUE;
+        resumeQueue = queuePending;
+        break;
+    default:
+        resumeKind = R_QUEUE; // a held position: back to it
+        break;
+    }
+    recovering = true;
+    rehoming = true;
+    rehomeOffset = -1;
+    mismatchAtUs = now;
+    startHome(); // clears the effect and any trip
+}
+
+static void finishRecovery(uint64_t now)
+{
+    recovering = false;
+    if (rehomeOffset == 0) {
+        senseMisses++; // the glow was where it was counted
+    } else if (rehomeOffset > 0) {
+        skips++;
+        lastSkip = (int8_t)shortest(0, (uint8_t)rehomeOffset); // count minus truth
+    }
+    recoveryMs = (int32_t)((now - mismatchAtUs) / 1000);
+    uint8_t kind = resumeKind;
+    resumeKind = R_NONE;
+    if (kind == R_QUEUE) {
+        int32_t n = resumeQueue + shortest(0, resumeAt);
+        mode = M_QUEUE;
+        queuePending = n > QUEUE_MAX ? QUEUE_MAX : n < -QUEUE_MAX ? -QUEUE_MAX : n;
+    } else if (kind == R_CMD) {
+        Command c = resumeCmd;
+        c.src = owner == OWN_I2C ? SRC_I2C : SRC_USB;
+        if (execute(c) == E_OK && (c.op == OP_SPIN || c.op == OP_EXERCISE)) {
+            returnPos = resumeAt;
         }
+    } else if (kind == R_EXERCISE) {
+        startRotate((float)EXERCISE_RATE, M_EXERCISE);
+        rate = EXERCISE_RATE;
     }
 }
 
 static void finishStep()
 {
+    uint64_t now = time_us_64();
     inFlight = false;
-    adc_select_input(pin::NDX - 26);
-    ndxRaw = adc_read();
+    ndxRaw = readNdx();
     bool hit = ndxRaw > NDX_HIGH_RAW;
 
     if (mode == M_HOME) {
@@ -513,11 +794,15 @@ static void finishStep()
                     rehoming = false;
                 }
                 absPos = 0;
+                markChecked(now); // before posValid: the homing steps are not an unchecked stretch
                 posValid = true;
                 setIdle();
                 if (power == PWR_STRIKING) {
                     power = PWR_LIT;
                     verySlowUs = 0;
+                }
+                if (recovering) {
+                    finishRecovery(now);
                 }
                 return;
             }
@@ -528,7 +813,14 @@ static void finishStep()
             }
         }
         if (power == PWR_LIT && homeSteps >= HOME_MAX_STEPS) {
-            setFault(F_INDEX_TIMEOUT);
+            if (homeAttempts < RECOVERY_ATTEMPTS) {
+                homeAttempts++; // try again from here; nothing is latched
+                homeSteps = homeConfirm = 0;
+                homeConfirming = false;
+            } else {
+                recoveryFailures++;
+                goDark(DR_INDEX_LOST); // the master may LIGHT again: strike and home as usual
+            }
         }
         return;
     }
@@ -538,9 +830,8 @@ static void finishStep()
             // Recheck just before the earliest next step: a glow that settles on K1 later than
             // the first sample is not a lost step (bench 2026-11-13: 0.29 V at 100 us, the glow
             // on K1 at the re-home). Counted, so the margin stays visible.
-            busy_wait_until(from_us_since_boot(stepStartUs + RECHECK_AT_US));
-            adc_select_input(pin::NDX - 26);
-            uint16_t again = adc_read();
+            busy_wait_until(from_us_since_boot(stepStartUs + stepRecheckAtUs));
+            uint16_t again = readNdx();
             if ((again > NDX_HIGH_RAW) == expected) {
                 idxLate++;
                 lateNdxRaw = ndxRaw;
@@ -555,12 +846,13 @@ static void finishStep()
             missNdxRaw = ndxRaw;
             missExpected = expected;
             missMode = (int8_t)mode;
-            rehomeOffset = -1;
-            rehoming = true;
-            posValid = false; // re-homed at the next idle boundary
-            if (mode != M_QUEUE) {
-                setIdle(); // a continuous effect has no idle boundary: stop it and re-home now
+            if (dropAtUs) {
+                dropDetectMs = (int32_t)((now - dropAtUs) / 1000);
+                dropAtUs = 0;
             }
+            beginRecovery(now);
+        } else if (expected) {
+            markChecked(now); // K1 where the count said: the count is confirmed
         }
     }
 }
@@ -638,12 +930,23 @@ static int decideWedge(uint32_t *gapUs)
 static int decide(uint64_t now, uint32_t *gapUs)
 {
     *gapUs = MIN_PERIOD_US;
+    if (tripActive) {
+        int d = tripStep();
+        if (d) {
+            *gapUs = TRIP_PERIOD_US; // trip timing, whatever the effect's rate
+            return d;
+        }
+    }
     switch (mode) {
     case M_HOME:
         *gapUs = 1000000UL / HOME_RATE;
         return 1;
     case M_QUEUE:
         if (queuePending == 0) {
+            if (checkDue(now) >= 1 && nearK1()) {
+                startTrip(); // the end of a queue near K1: a short trip before the hold
+                return tripStep();
+            }
             setIdle();
             return 0;
         }
@@ -734,7 +1037,7 @@ static void safety(uint64_t now)
             setFault(F_HV_LOW);
             return;
         }
-        uint64_t dwell = now - lastStepUs;
+        uint64_t dwell = now - dwellFromUs;
         uint64_t hold = verySlowUs + (dwell >= VERY_SLOW_GAP_US ? dwell : 0);
         if (hold >= HOLD_LIMIT_US) {
             goDark(DR_HOLD_LIMIT);
@@ -793,7 +1096,7 @@ static void snapshot(uint64_t now)
     s.flags = (posValid ? FL_POSITION_VALID : 0) | (mode != M_IDLE ? FL_BUSY : 0) |
               (gpio_get(pin::PGOOD) ? FL_PGOOD : 0) | (gpio_get_out_level(pin::HV_EN) ? FL_HV_EN : 0) |
               (masterLoss ? FL_MASTER_LOSS : 0) | (slowRunUs >= 1000000 ? FL_EXERCISE_DUE : 0) |
-              (wdtReset ? FL_WATCHDOG_RESET : 0);
+              (wdtReset ? FL_WATCHDOG_RESET : 0) | (recovering ? FL_RECOVERING : 0);
     s.position = posMod();
     s.mode = mode;
     s.queue = (int16_t)(queuePending > 32767 ? 32767 : queuePending < -32767 ? -32767 : queuePending);
@@ -801,22 +1104,37 @@ static void snapshot(uint64_t now)
     s.idx_observed = idxObserved;
     s.home_failures = homeFailures;
     s.idx_mismatches = idxMismatches;
-    s.dwell_ms = power == PWR_DARK ? 0 : (uint32_t)((now - lastStepUs) / 1000);
+    s.dwell_ms = power == PWR_DARK ? 0 : (uint32_t)((now - dwellFromUs) / 1000);
     s.rate_dsps = (uint16_t)stepsLast10s(); // steps per 10 s = 0.1 steps/s
     s.slow_run_s = (uint32_t)(slowRunUs / 1000000ull);
     s.hv_dv = (uint16_t)(fmaxf(hvV, 0) * 10 + 0.5f);
     s.vin_dv = (uint16_t)(fmaxf(vinV, 0) * 10 + 0.5f);
     s.rtn_dv = (uint16_t)(fmaxf(rtnV, 0) * 10 + 0.5f);
+    s.skips = skips;
+    s.sense_misses = senseMisses;
+    s.idx_late = idxLate;
+    s.recovery_failures = recoveryFailures;
+    s.last_skip = lastSkip;
+    s.trips = tripCount;
+    noteUnchecked(now);
+    bool live = posValid && power == PWR_LIT && uncheckedOwnSteps && now >= uncheckedSinceUs;
     critical_section_enter_blocking(&statusLock);
     shared = s;
     sharedDiag.ndx_raw = ndxRaw;
     sharedDiag.pio_ok = pioOk;
     sharedDiag.miss_ndx_raw = missNdxRaw;
-    sharedDiag.idx_late = idxLate;
     sharedDiag.late_ndx_raw = lateNdxRaw;
     sharedDiag.miss_expected = missExpected;
     sharedDiag.miss_mode = missMode;
     sharedDiag.rehome_offset = rehomeOffset;
+    sharedDiag.index_open_ms = indexOpenMs;
+    sharedDiag.index_check_ms = indexCheckMs;
+    sharedDiag.unchecked_steps = live ? uncheckedSteps : 0;
+    sharedDiag.unchecked_ms = live ? (uint32_t)((now - uncheckedSinceUs) / 1000) : 0;
+    sharedDiag.max_unchecked_steps = maxUncheckedSteps;
+    sharedDiag.max_unchecked_ms = (uint32_t)(maxUncheckedUs / 1000);
+    sharedDiag.drop_detect_ms = dropDetectMs;
+    sharedDiag.recovery_ms = recoveryMs;
     critical_section_exit(&statusLock);
 }
 
@@ -859,7 +1177,8 @@ void controllerBegin(uint16_t boots, bool watchdog)
     bootCount = boots;
     wdtReset = watchdog;
     uint64_t now = time_us_64();
-    lastStepUs = lastTickUs = now;
+    lastStepUs = lastTickUs = dwellFromUs = uncheckedSinceUs = now;
+    stepPeriodUs = MIN_PERIOD_US;
     rateSec = (uint32_t)(now / 1000000ull);
     snapshot(now);
 }
@@ -896,22 +1215,34 @@ void controllerLoop()
     tubeCare(now, dt);
 
     if (inFlight) {
-        if (now - stepStartUs >= SAMPLE_AT_US) {
+        if (now - stepStartUs >= stepSampleAtUs) {
             finishStep();
         }
     } else {
         telemetry(now);
         if (power != PWR_DARK && pioOk) {
             if (mode == M_IDLE && power == PWR_LIT && !posValid) {
-                startHome(); // re-home at the idle boundary after a mismatch
+                startHome(); // safety net: lit without a position always re-homes
+            }
+            if (checkDue(now) == 2) {
+                startTrip(); // overdue: a short trip to K1, whatever is showing
             }
             uint32_t gap;
             int dir = decide(now, &gap);
-            if (gap < MIN_PERIOD_US) {
-                gap = MIN_PERIOD_US;
+            if (gap < stepPeriodUs) {
+                gap = stepPeriodUs; // the previous step's guides and rest come first
             }
             if (dir && now - lastStepUs >= gap) {
-                startStep(dir, now);
+                bool towardK1 = (shortest(posMod(), 0) > 0) == (dir > 0); // gets there by itself
+                if (!tripActive && checkDue(now) >= 1 && nearK1() && !towardK1) {
+                    // In the band and the glow next to K1: a trip of a step or two, beside the lit
+                    // part, instead of a streak across the dark one.
+                    startTrip();
+                    dir = tripStep();
+                }
+                if (dir) {
+                    startStep(dir, now);
+                }
             }
         }
     }

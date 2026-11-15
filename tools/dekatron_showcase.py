@@ -47,7 +47,8 @@ class Show:
         return r
 
     def recover(self):
-        """After an index mismatch the controller stops the effect and re-homes; wait for it."""
+        """Firmware 0.1 answered motion commands with ERR state while it re-homed after a mismatch;
+        0.2 holds them and resumes by itself, so this only runs against older firmware."""
         end = time.monotonic() + 5
         while time.monotonic() < end:
             d = parse_status(send(self.ser, "status")[-1])
@@ -252,7 +253,8 @@ def main():
                     time.sleep(args.gap)
             d = show.status()
             show.stamp(f"done; index {d['idx_obs']}/{d['idx_exp']} seen, mismatches {d['mismatch']}, "
-                       f"late {d['idx_late']} (first sample {d['late_ndx_raw']})")
+                       f"late {d['idx_late']} (first sample {d['late_ndx_raw']}), skips {d.get('skips', '-')}, "
+                       f"sense misses {d.get('sense_misses', '-')}, index-check trips {d.get('trips', '-')}")
         finally:
             try:
                 send(ser, "dark")
