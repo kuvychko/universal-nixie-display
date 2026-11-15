@@ -35,9 +35,12 @@ A cheap moment is one of these:
 The user's reasoning: this is a display, so it should look pleasant. A rare skip that stays on
 show for up to a minute is the better trade.
 
-The trips across the dark part of the ring were visible at 1 s and at 5 s. The user went ahead to
-the full run after watching the band's smoke pass, but no video verdict on the band is recorded
-yet.
+The trips across the dark part of the ring were visible at 1 s and at 5 s. A trip that is required
+every 5 s was "very visible and distracting by eye" (user).
+
+**Verdict on the band, by eye (user, 2026-11-14): the eye looks clean.** The trip at the 60 s
+limit is hard to spot, and in the eye most checks come sooner as cheap hops. This is much better
+than the earlier settings.
 
 ## Full run (band 5-60 s), 18:41-18:55
 
@@ -68,7 +71,6 @@ eye and rotate values come from the smoke pass at 18:30, in which each ran first
 * One board, one warm tube, one session. No skip occurred naturally, so recovery is only shown
   with injected faults. The injected drop is a step the tube never got: lost-step behaviour, not
   an extra step.
-* The final band has no visibility verdict yet, by eye or on video. Neither has a cheap trip
-  (1-2 cathodes next to the lit sector).
+* The band was judged by eye only, not on video.
 * Errors that cancel between two checks remain invisible. With a 60 s limit they can build up for
   up to a minute.
