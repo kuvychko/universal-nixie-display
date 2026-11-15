@@ -67,20 +67,25 @@ Two separate limits show:
    pulses: long runs of consecutive index hits while it sat on K1. Every phase from 50 µs up
    was clean at all its rates. **Phase floor: between 30 and 50 µs.**
 2. **Short rests miscount when the phase is long enough.** The failures at 150 µs/2000 steps/s
-   (rest 50 µs) and 100 µs/3000 steps/s (rest 33 µs) are mostly *extra* steps: net errors of
-   −2 to −4, the glow ahead of the count. Clean runs had rests of 108 µs (75 µs at 3000 steps/s)
-   and above. **Rest limit: between about 50 and 108 µs**, near the 30-40 µs K1 latency
-   plus margin; not narrowed further.
+   (rest 50 µs) and 100 µs/3000 steps/s (rest 33 µs) failed 5 of 6 runs each. At 150 µs they
+   are mostly *extra* steps (net errors −3, −3, −4, −3, +1: the glow ahead of the count); at
+   100 µs mostly *lost* steps (net errors −2, +3, +3, +1, +1; positive = lost, see
+   `analyse_hits` in the host script). The index sample there (23 µs after release) fell before
+   the glow reached K1, so only the net error is meaningful. The shortest rest clean in all runs
+   was 67 µs (200 µs phase at 1500 steps/s), then 100 µs (300 µs at 1000 steps/s) and 108 µs
+   (75 µs at 3000 steps/s). **Rest limit: between about 50 and 67 µs**, near the 30-40 µs K1
+   latency plus margin; not narrowed further. (Corrected 2026-11-14: this paragraph first said
+   both points were mostly extra steps and put the limit at 50-108 µs.)
 
 Fastest clean point: 3000 steps/s (the highest rate tried) at 50 and 75 µs phase. That is three
 times the datasheet's 1000 Hz and well under its 200 µs minimum phase.
 
 ## Limits of this result
 
-* Three runs of 1000 steps per point: a clean point means no error in 3000 steps, not zero
-  error. Plan §9's 1000-trial homing characterisation is separate (bring-up step 5).
+* Three runs of 1000 steps per point: a clean point means no error in 3000 steps in each
+  direction, not zero error. Plan §9's 1000-trial homing characterisation is separate (bring-up step 5).
 * One board, one tube, warm, 453 V, one day. Not tested: cold tube, other HV setpoints, rates
-  above 3000 steps/s, rests between 50 and 108 µs, sustained running.
+  above 3000 steps/s, rests between 50 and 67 µs, sustained running.
 * When the index sample fell before the glow reached K1 (rest ≤ 50 µs), only the net error
   checked motion, and it cannot see a lost and an extra step that cancel, or errors that sum
   to a multiple of 10.

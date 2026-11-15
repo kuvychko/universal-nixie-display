@@ -104,7 +104,7 @@ Consequences for this design:
   compatible with the whole 200-1000 µs range.
   **Measured** (board 1, 2026-11-12, 453 V, warm tube; [speed sweep](../characterization/dekatron/2026-11-12_speed_sweep.md)): clean in both
   directions for every phase from 50 to 500 µs, up to 3000 steps/s at 50-75 µs phase, as long as
-  the rest after the step (period − 3 × phase) was ≥ 108 µs. Steps were lost at 30 µs phase at
+  the rest after the step (period − 3 × phase) was ≥ 67 µs. Steps were lost at 30 µs phase at
   any rate and at 20 µs nearly always; miscounts at rests of 33-50 µs. NDX crosses 2.0 V
   30-40 µs after the second guide releases. The firmware's operating phase and maximum rate are
   chosen from these with margin (firmware/dekatron/README.md).

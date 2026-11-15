@@ -40,7 +40,7 @@ which gives a 200 µs minimum phase and 1000 Hz maximum rate; chosen for faster 
 |---|---|---|
 | Guide phase | **100 µs** (each guide low 200 µs) | Clean from 50 µs up; steps lost at 30 µs |
 | Maximum rate | **2000 steps/s** | Clean up to 3000 steps/s (highest tried) at 50-75 µs phase |
-| Minimum rest (period − 3 × phase) | **200 µs**, which is what 2000 steps/s leaves at 100 µs phase | Clean from 108 µs; miscounts at 33-50 µs |
+| Minimum rest (period − 3 × phase) | **200 µs**, which is what 2000 steps/s leaves at 100 µs phase | Clean from 67 µs; miscounts at 33-50 µs |
 | Index sample | 100 µs after the second guide releases (proposed) | NDX valid from 30-40 µs after release |
 
 Homing keeps the plan's 200 steps/s target (plan §5). Measured on one board, one warm tube at
