@@ -199,7 +199,7 @@ the order, the uploaded file, size, layer count, thickness and quantity. The edg
 clean: no break-away tab remnants to file, so the boards were ready to use straight out of the bag.
 
 PCBWay is sponsoring the Nixie controller/mount boards too: ordered on 2026-11-11 from
-[`hardware/nixie/fab/`](hardware/nixie/fab/).
+[`hardware/nixie/fab/`](hardware/nixie/fab/), in fabrication as of 2026-11-14.
 
 Thank you, PCBWay, for supporting an open-source hardware project!
 

@@ -25,7 +25,7 @@ smooth, and their website gives a lot of information along the way, including a 
 [walk-through of how a board is made](https://www.pcbway.com/pcb-service.html). The boards
 arrived a week after the order, sealed with a desiccant pack and clearly labelled, with
 clean milled edges (no break-away tab remnants to file). PCBWay is sponsoring the Nixie
-controller boards as well (ordered 2026-11-11).
+controller boards as well (ordered 2026-11-11, in fabrication as of 2026-11-14).
 
 ![The dekatron boards as delivered: sealed in bubble wrap with a silica-gel desiccant pack and PCBWay's order labels](assets/dekatron-pcbs-packaged.jpg){ width="360" }
 
