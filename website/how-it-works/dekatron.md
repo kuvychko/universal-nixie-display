@@ -201,8 +201,11 @@ cathodes stay put.
 
 ## How fast it can count
 
-Slowly. The A101 is rated at 1,000 steps per second, at the slow end of what dekatrons could
-do. That is no handicap here: the display's plan steps it at up to 200 per second.
+Slowly, by dekatron standards. The A101 is rated at 1,000 steps per second, at the slow end of
+what dekatrons could do. On this project's controller board it counted cleanly at up to 3,000
+steps per second, and the display runs it at up to 2,000, with margin
+([speed sweep](https://github.com/kuvychko/universal-nixie-display/blob/main/characterization/dekatron/2026-11-12_speed_sweep.md);
+the story is told in [One cathode of ten](https://igorkuvychko.com/case-studies/dekatron/)).
 
 What sets the limit is the same thing that makes the handoff work. Every transfer leaves ions and
 excited atoms around the electrode the glow has just left. They are what primes the neighbouring
