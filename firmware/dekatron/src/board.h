@@ -46,7 +46,8 @@ static_assert(SAMPLE_AT_US + 50 <= MIN_PERIOD_US, "index sample must fit before 
 // Recheck of a disagreeing index sample, just before the earliest next step (170 us after release).
 static const uint32_t RECHECK_AT_US = MIN_PERIOD_US - 30;
 // Index-check trip steps (user, 2026-11-14, after the 2000 steps/s trips were visible): 3000 steps/s
-// at 50 us phase, the fastest clean point of the speed sweep (rest 183 us; clean from 67 us).
+// at 50 us phase, clean in both speed sweeps (rest 183 us; clean from 67 us). Not the fastest clean
+// point: 4000 steps/s at 50 us was clean too (2026-11-15_speed_sweep.md).
 static const uint32_t TRIP_PHASE_US = 50;
 static const uint32_t TRIP_PERIOD_US = 1000000 / 3000; // 333 us
 static const uint32_t TRIP_SAMPLE_AT_US = 3 * TRIP_PHASE_US + SAMPLE_US;

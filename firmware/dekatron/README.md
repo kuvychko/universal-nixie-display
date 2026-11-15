@@ -39,8 +39,8 @@ which gives a 200 µs minimum phase and 1000 Hz maximum rate; chosen for faster 
 | Parameter | Value | Margin against the measurement |
 |---|---|---|
 | Guide phase | **100 µs** (each guide low 200 µs) | Clean from 50 µs up; steps lost at 30 µs |
-| Maximum rate | **2000 steps/s** | Clean up to 3000 steps/s (highest tried) at 50-75 µs phase |
-| Minimum rest (period − 3 × phase) | **200 µs**, which is what 2000 steps/s leaves at 100 µs phase | Clean from 67 µs; miscounts at 33-50 µs |
+| Maximum rate | **2000 steps/s** | Clean up to 4000 steps/s at 50 µs phase; 5000 fails (rest 50 µs) ([2026-11-15](../../characterization/dekatron/2026-11-15_speed_sweep.md)) |
+| Minimum rest (period − 3 × phase) | **200 µs**, which is what 2000 steps/s leaves at 100 µs phase | Clean from 67 µs; miscounts at 25-50 µs |
 | Index sample | 100 µs after the second guide releases (proposed) | NDX valid from 30-40 µs after release |
 
 Homing keeps the plan's 200 steps/s target (plan §5). Measured on one board, one warm tube at
@@ -131,8 +131,8 @@ controller bounds the time between confirmations:
 
 * **Tracking.** Steps and time since the last confirmed K1, and the largest of each, on the
   console (`unchecked_steps`, `unchecked_ms`, `max_unchecked_*`).
-* **The trip.** The glow steps the shortest way to K1 at 3000 steps/s and 50 µs phase (the speed
-  sweep's fastest clean point), the index confirms, and it steps back. The effect resumes where it
+* **The trip.** The glow steps the shortest way to K1 at 3000 steps/s and 50 µs phase (clean in
+  both speed sweeps, 183 µs rest), the index confirms, and it steps back. The effect resumes where it
   left off. K1 is at most 5 steps away, so the round trip is at most 10 steps, or 3.3 ms. Trip
   steps are index-checked like any other. They do not count toward the effect, the queue, the step
   rate or the hold-limit dwell.

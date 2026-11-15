@@ -15,11 +15,16 @@ switches it off at once.
     uv run --group bench python tools/dekatron_speed.py                     # full grid
     uv run --group bench python tools/dekatron_speed.py --phases 200,100 --rates 500,1000,2000
     uv run --group bench python tools/dekatron_speed.py --latency           # K1 settle time
+    uv run --group bench python tools/dekatron_speed.py --overlaps 100,50,0,-10 --phases 100 --rates 2000
     uv run --group bench python tools/dekatron_speed.py --selftest          # analysis only, no board
 
+--overlaps runs the bring-up firmware's `sweepo` instead: each guide alone for one phase, with the
+given overlap of both guides on between them (negative: a gap with neither on; overlap = phase is
+the normal sequence). Rest = period - 2 x phase - |overlap|.
+
 Rows are appended to the CSV as each run finishes (default
-characterization/dekatron/<date>_speed_sweep.csv, or _ndx_latency.csv), so an interrupted
-sweep keeps its data.
+characterization/dekatron/<date>_speed_sweep.csv, _ndx_latency.csv or _overlap.csv), so an
+interrupted sweep keeps its data.
 
 SPDX-License-Identifier: MIT
 """
@@ -134,16 +139,20 @@ class Sweeper:
             self.demo.step(1, fwd=fwd, hz=20)
         return None
 
-    def run(self, mode, fwd, phase, hz, sample=None, n=None):
+    def run(self, mode, fwd, phase, hz, sample=None, n=None, overlap=None):
         n = n or self.n
         period = 1_000_000 // hz
-        rest = period - 3 * phase
+        rest = period - (3 * phase if overlap is None else 2 * phase + abs(overlap))
         run_s = n * period / 1e6
         self.refresh_hv(run_s)
         self.demo.pos = None
         self.demo.home()  # always forward, at 20 Hz; leaves the glow on K1
         time.sleep(0.05)
-        cmd = f"sweep {n} {'fwd' if fwd else 'rev'} {phase} {hz}" + ("" if sample is None else f" {sample}")
+        d = "fwd" if fwd else "rev"
+        if overlap is None:
+            cmd = f"sweep {n} {d} {phase} {hz}" + ("" if sample is None else f" {sample}")
+        else:
+            cmd = f"sweepo {n} {d} {phase} {hz} {overlap}"
         reply = send(self.ser, cmd)
         if not reply[-1].startswith("OK sweep"):
             sys.exit(f"{cmd!r}: {reply}")
@@ -164,9 +173,11 @@ class Sweeper:
             work_max_us=res["work_max_us"], hv_pre=res["hv_pre"], hv_post=res["hv_post"],
             pgood_low=res["pgood_low"],
         )
+        if overlap is not None:
+            row["overlap_us"] = overlap
         self.writer.writerow(row)
         self.fh.flush()
-        print(f"{row['dir']} phase {phase:4d} us {hz:5d} Hz rest {rest:6d} us sample {row['sample_us']:5d} us: hits {row['hits']}/"
+        print(("" if overlap is None else f"overlap {overlap:4d} us ") + f"{row['dir']} phase {phase:4d} us {hz:5d} Hz rest {rest:6d} us sample {row['sample_us']:5d} us: hits {row['hits']}/"
               f"{row['expected_hits']} lost {a['lost']} extra {a['extra']} ndx_missed {a['ndx_missed']} "
               f"verify {row['verify_err']} slip {row['slip_max_us']}/{row['start_late_us']} us work {row['work_max_us']} us -> {'ok' if motion_ok else 'FAIL'}")
         if res["stop"] != "done":
@@ -196,6 +207,16 @@ class Sweeper:
         print("\nHighest rate with every repeat clean (of the rates tried):")
         for (d, phase), best in summary.items():
             print(f"  {d} phase {phase:4d} us: {best if best else 'none'} Hz")
+
+    def overlaps(self, overlaps, phases, rates, repeats):
+        for fwd in (True, False):
+            for phase in phases:
+                for hz in rates:
+                    for ov in overlaps:
+                        if 1_000_000 // hz < 2 * phase + abs(ov) + REST_MIN_US:
+                            continue
+                        ok = sum(self.run("overlap", fwd, phase, hz, overlap=ov) for _ in range(repeats))
+                        print(f"  -> {ok}/{repeats} clean")
 
     def latency(self, samples, n):
         print("NDX latency: fraction of K1 arrivals seen vs. sample delay after the guide release")
@@ -234,6 +255,8 @@ def main():
     ap.add_argument("--n", type=int, default=1000, help="steps per sweep run")
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--latency", action="store_true", help="measure the K1 settle time instead of the grid")
+    ap.add_argument("--overlaps", type=lambda s: tuple(int(x) for x in s.split(",")),
+                    help="guide overlaps, us (comma list; negative = gap): run the overlap sweep")
     ap.add_argument("--latency-n", type=int, default=100, help="steps per latency point (10 Hz)")
     ap.add_argument("--out", help="CSV path")
     ap.add_argument("--selftest", action="store_true", help="check the gap analysis and exit")
@@ -244,19 +267,22 @@ def main():
         return
 
     root = pathlib.Path(__file__).resolve().parent.parent
-    suffix = "ndx_latency" if args.latency else "speed_sweep"
+    suffix = "ndx_latency" if args.latency else "overlap" if args.overlaps else "speed_sweep"
     out = pathlib.Path(args.out) if args.out else (
         root / "characterization" / "dekatron" / f"{datetime.date.today().isoformat()}_{suffix}.csv")
     new = not out.exists()
     with open(out, "a", newline="", encoding="utf-8") as fh, \
             serial.Serial(args.port or find_port(), 115200, timeout=0.2) as ser:
-        writer = csv.DictWriter(fh, fieldnames=FIELDS, lineterminator="\n")
+        fields = FIELDS + (("overlap_us",) if args.overlaps else ())
+        writer = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
         if new:
             writer.writeheader()
         sw = Sweeper(ser, writer, fh, args.n)
         try:
             if args.latency:
                 sw.latency(LATENCY_SAMPLES, args.latency_n)
+            elif args.overlaps:
+                sw.overlaps(args.overlaps, args.phases, args.rates, args.repeats)
             else:
                 sw.grid(args.phases, args.rates, args.repeats)
         except KeyboardInterrupt:

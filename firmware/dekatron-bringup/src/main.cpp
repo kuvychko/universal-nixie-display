@@ -243,6 +243,16 @@ static uint32_t waitUntil(uint32_t t)
     return 0;
 }
 
+// One step of a sweep burst: up to four guide edges, each a time after the step start and the
+// guide pattern from then on (bit 0 = the leading guide, bit 1 = the trailing one). The last edge
+// returns both guides to rest; NDX is sampled sample_us after it.
+struct SweepEdge {
+    uint32_t at;
+    uint8_t pattern;
+};
+static void runSweep(unsigned long n, const char *dir, uint32_t hz, const SweepEdge *edges, int nEdges,
+                     uint32_t sample, const char *header);
+
 // Speed-sweep experiment: n steps as one blocking burst on an absolute timetable, NDX sampled
 // once per step sample_us after the second guide releases. Reports the step numbers (1-based,
 // position after that step) at which NDX read high, so the host can find lost or extra steps from
@@ -272,6 +282,64 @@ static void cmdSweep(const char *arg)
         Serial.printf("ERR sample_us must be < rest %lu\n", (unsigned long)rest);
         return;
     }
+    const SweepEdge edges[] = {{0, 1}, {(uint32_t)ph, 3}, {(uint32_t)(2 * ph), 2}, {(uint32_t)(3 * ph), 0}};
+    char header[96];
+    snprintf(header, sizeof header, "OK sweep %lu %s %lu us %lu Hz rest %lu us sample %lu us\n", n, dir, ph, hz,
+             (unsigned long)rest, sample);
+    runSweep(n, dir, hz, edges, 4, sample, header);
+}
+
+// Overlap experiment: each guide alone for solo_us, with overlap_us of both on between them
+// (negative: a gap with neither on). overlap = solo is the sweep command's sequence.
+//   overlap >= 0: lead on 0, trail on solo, lead off solo + overlap, trail off 2 solo + overlap
+//   overlap <  0: lead on 0, lead off solo, trail on solo + gap, trail off 2 solo + gap
+// NDX is sampled 10 us before the next step.
+static void cmdSweepOverlap(const char *arg)
+{
+    char dir[8] = "";
+    unsigned long n = 0, solo = 0, hz = 0;
+    long ov = 0;
+    if (sscanf(arg, "%lu %7s %lu %lu %ld", &n, dir, &solo, &hz, &ov) != 5 ||
+        (strcmp(dir, "fwd") != 0 && strcmp(dir, "rev") != 0) || n < SWEEP_N_MIN || n > SWEEP_N_MAX || hz == 0 ||
+        hz > SWEEP_HZ_MAX || solo < SWEEP_PHASE_MIN || solo > PHASE_US_MAX || ov > (long)PHASE_US_MAX ||
+        ov < -(long)PHASE_US_MAX) {
+        Serial.printf("ERR sweepo <n %lu-%lu> <fwd|rev> <solo_us %lu-%lu> <hz 1-%lu> <overlap_us +/-%lu>\n",
+                      (unsigned long)SWEEP_N_MIN, (unsigned long)SWEEP_N_MAX, (unsigned long)SWEEP_PHASE_MIN,
+                      (unsigned long)PHASE_US_MAX, (unsigned long)SWEEP_HZ_MAX, (unsigned long)PHASE_US_MAX);
+        return;
+    }
+    uint32_t g = ov < 0 ? (uint32_t)(-ov) : 0, o = ov > 0 ? (uint32_t)ov : 0;
+    uint32_t last = 2 * solo + o + g;
+    uint32_t period = 1000000UL / hz;
+    if (period < last + SWEEP_REST_MIN) {
+        Serial.printf("ERR rest %ld us < %lu\n", (long)period - (long)last, (unsigned long)SWEEP_REST_MIN);
+        return;
+    }
+    uint32_t rest = period - last;
+    SweepEdge edges[4];
+    int ne = 0;
+    edges[ne++] = {0, 1};
+    if (ov > 0) {
+        edges[ne++] = {(uint32_t)solo, 3};
+        edges[ne++] = {(uint32_t)solo + o, 2};
+    } else if (ov == 0) {
+        edges[ne++] = {(uint32_t)solo, 2}; // lead off and trail on in the same write
+    } else {
+        edges[ne++] = {(uint32_t)solo, 0};
+        edges[ne++] = {(uint32_t)solo + g, 2};
+    }
+    edges[ne++] = {last, 0};
+    char header[112];
+    snprintf(header, sizeof header, "OK sweepo %lu %s solo %lu us overlap %ld us %lu Hz rest %lu us sample %lu us\n",
+             n, dir, solo, ov, hz, (unsigned long)rest, (unsigned long)(rest - 10));
+    runSweep(n, dir, hz, edges, ne, rest - 10, header);
+}
+
+static void runSweep(unsigned long n, const char *dir, uint32_t hz, const SweepEdge *edges, int nEdges,
+                     uint32_t sample, const char *header)
+{
+    uint32_t period = 1000000UL / hz;
+    uint32_t last = edges[nEdges - 1].at;
     if (!hvOn) {
         Serial.println("ERR hv off");
         return;
@@ -290,9 +358,13 @@ static void cmdSweep(const char *arg)
     guidesRest();
     uint8_t first = strcmp(dir, "fwd") == 0 ? PIN_GUIDE1 : PIN_GUIDE2;
     uint8_t second = first == PIN_GUIDE1 ? PIN_GUIDE2 : PIN_GUIDE1;
+    const uint32_t mask = (1u << first) | (1u << second);
+    uint32_t value[4];
+    for (int i = 0; i < nEdges; i++) {
+        value[i] = ((edges[i].pattern & 1) ? 1u << first : 0) | ((edges[i].pattern & 2) ? 1u << second : 0);
+    }
     float hvPre = readHv();
-    Serial.printf("OK sweep %lu %s %lu us %lu Hz rest %lu us sample %lu us\n", n, dir, ph, hz,
-                  (unsigned long)rest, sample);
+    Serial.print(header);
     Serial.flush();
 
     uint32_t hits = 0;
@@ -313,15 +385,14 @@ static void cmdSweep(const char *arg)
     uint32_t t = time_us_32() + 1000;
     while (done < n) {
         startLate = maxU32(startLate, waitUntil(t));
-        gpio_put(first, 1);
-        uint32_t slip = waitUntil(t + ph);
-        gpio_put(second, 1);
-        slip = maxU32(slip, waitUntil(t + 2 * ph));
-        gpio_put(first, 0);
-        slip = maxU32(slip, waitUntil(t + 3 * ph));
-        gpio_put(second, 0);
+        gpio_put_masked(mask, value[0]);
+        uint32_t slip = 0;
+        for (int i = 1; i < nEdges; i++) {
+            slip = maxU32(slip, waitUntil(t + edges[i].at));
+            gpio_put_masked(mask, value[i]);
+        }
         done++;
-        slip = maxU32(slip, waitUntil(t + 3 * ph + sample));
+        slip = maxU32(slip, waitUntil(t + last + sample));
         uint32_t workStart = time_us_32();
         // ADC, not a digital read: analogRead() has turned off GP26's digital input buffer.
         if (adc_read() > ndxHighRaw) {
@@ -438,6 +509,8 @@ static void handleLine(char *cmd)
         cmdStep(arg);
     } else if (strcmp(cmd, "sweep") == 0) {
         cmdSweep(arg);
+    } else if (strcmp(cmd, "sweepo") == 0) {
+        cmdSweepOverlap(arg);
     } else if (strcmp(cmd, "log") == 0) {
         cmdLog(arg);
     } else if (strcmp(cmd, "help") == 0) {
