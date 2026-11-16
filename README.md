@@ -48,10 +48,14 @@ with the tube lit ([assembly log](characterization/dekatron/2026-10-24_assembly_
 **Phase 1D and Phase 2 in parallel.** The dekatron controller/PSU board 1 is assembled: its rails,
 HV converter and tube drive pass bring-up steps 1-3 (some measurements deferred), and the A101
 steps and indexes on it under the [bring-up firmware](firmware/dekatron-bringup/README.md). Its
-step-rate limits are measured (clean to 3000 steps/s; [log](characterization/dekatron/2026-11-12_speed_sweep.md)),
-and the [dekatron controller firmware](firmware/dekatron/README.md) runs the tube over its USB
+step-rate limits are measured: clean to 4000 steps/s, four times the datasheet rate, with counts
+lost at 5000 ([logs](characterization/dekatron/2026-11-12_speed_sweep.md),
+[2026-11-15](characterization/dekatron/2026-11-15_speed_sweep.md)). The
+[dekatron controller firmware](firmware/dekatron/README.md) runs the tube over its USB
 console, including the periodic index check and skip recovery
-([log](characterization/dekatron/2026-11-14_index_check.md)); its I2C path and the remaining
+([log](characterization/dekatron/2026-11-14_index_check.md)), and ran an hour at its 2000 steps/s
+limit, about 7.1 million steps, without a count error
+([soak](characterization/dekatron/2026-11-15_overlap_soak.md)); its I2C path and the remaining
 step 4-5 tests are next. The Nixie board is designed: schematics, PCB,
 fab outputs and an [assembly checklist](hardware/nixie/assembly.md) are done; its parts were
 ordered on 2026-11-10 and the board from PCBWay on 2026-11-11. The purchased Nixie HV module has
@@ -64,7 +68,7 @@ baseline is [docs/project_plan.md](docs/project_plan.md); design decisions and o
 | 1A | Dekatron board architecture and power budget for 12 VDC input | Done |
 | 1B | Hierarchical schematics and simulation evidence | Done (open simulation items in `docs/hardware.md`) |
 | 1C | Dekatron controller/PSU PCB, BOM, fab files | Done: boards and parts received 2026-10-15/16 |
-| 1D | Sectional bring-up and standalone firmware | **In progress:** board 1 hardware brought up (steps 1-3), step-rate limits measured (3a); controller firmware v0.1 motion tested with HV (step 4); I2C path and fault paths next |
+| 1D | Sectional bring-up and standalone firmware | **In progress:** board 1 hardware brought up (steps 1-3), step-rate limits measured (3a); controller firmware motion, index check and a one-hour soak tested with HV (step 4); I2C path and fault paths next |
 | 2 | Nixie PSU qualification and six-tube controller/mount | **In progress:** HV module bench data and inrush; board designed; parts and boards ordered (2026-11-10/11) |
 | 3 | ESP32 UI, encoder, I2C master, USB host commands | Not started |
 | 4 | Enclosure | Started: A101 socket housing and shroud printed and in use |

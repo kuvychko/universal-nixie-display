@@ -78,7 +78,8 @@ Two separate limits show:
    both points were mostly extra steps and put the limit at 50-108 µs.)
 
 Fastest clean point: 3000 steps/s (the highest rate tried) at 50 and 75 µs phase. That is three
-times the datasheet's 1000 Hz and well under its 200 µs minimum phase.
+times the datasheet's 1000 Hz and well under its 200 µs minimum phase. (Extended 2026-11-15: 50 µs
+phase is also clean at 4000 steps/s and fails at 5000; [follow-up](2026-11-15_speed_sweep.md).)
 
 ## Limits of this result
 

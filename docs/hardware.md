@@ -106,8 +106,13 @@ Consequences for this design:
   directions for every phase from 50 to 500 µs, up to 3000 steps/s at 50-75 µs phase, as long as
   the rest after the step (period − 3 × phase) was ≥ 67 µs. Steps were lost at 30 µs phase at
   any rate and at 20 µs nearly always; miscounts at rests of 33-50 µs. NDX crosses 2.0 V
-  30-40 µs after the second guide releases. The firmware's operating phase and maximum rate are
-  chosen from these with margin (firmware/dekatron/README.md).
+  30-40 µs after the second guide releases. Follow-up (2026-11-15,
+  [speed sweep](../characterization/dekatron/2026-11-15_speed_sweep.md)): 50 µs phase clean at
+  4000 steps/s (rest 100 µs), failing at 5000 (rest 50 µs); 40 µs phase marginal. Guide overlap
+  ([log](../characterization/dekatron/2026-11-15_overlap_soak.md)): at 100 µs per guide and
+  2000 steps/s the handover is clean from full overlap down to a 20 µs gap with neither guide
+  driven, and fails from 30 µs. The firmware's operating phase and maximum rate are chosen from
+  these with margin (firmware/dekatron/README.md); a one-hour soak at that point lost no count.
 * **Static glow is a tube-life limit, not just a display choice.** See plan §5: the controller
   must not leave the discharge on one electrode for long; it exercises the tube or turns HV off.
 * **Strike timeout.** Allow at least 5 s for the first strike in a dark enclosure before

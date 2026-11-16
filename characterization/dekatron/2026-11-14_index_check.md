@@ -23,7 +23,7 @@ changes over the scene).
 | Trip timing | Interval | What was seen |
 |---|---|---|
 | 2000 steps/s, 100 µs phase | 1 s, natural boundaries from 0.5 s | About 2 trips/s in the wedge and eye: a plainly visible "heartbeat" (the early window opened at half the interval, which doubled the rate; fixed) |
-| 3000 steps/s, 50 µs phase (the speed sweep's fastest clean point) | 5 s, natural boundaries from 4.5 s | One trip per ~5 s; each one still visible as a streak across the dark cathodes between the wedge and K1 |
+| 3000 steps/s, 50 µs phase (the speed sweep's fastest clean point at the time; 4000 steps/s was clean on 2026-11-15) | 5 s, natural boundaries from 4.5 s | One trip per ~5 s; each one still visible as a streak across the dark cathodes between the wedge and K1 |
 | 3000 steps/s, 50 µs phase | **band 5-60 s**: from 5 s only at a cheap moment, at 60 s whatever is showing | Final setting (user, 2026-11-14). The run below uses it |
 
 A cheap moment is one of these:

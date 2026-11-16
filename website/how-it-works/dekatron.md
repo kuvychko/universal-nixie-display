@@ -106,6 +106,12 @@ and finally G2 is released. The glow falls to the nearest main cathode, which is
 one. The two guides between each pair of cathodes act like a ratchet: the order of the pulses
 decides which way the glow can go.
 
+How much overlap does the handoff need? On the controller board, with each guide grounded for
+100 µs at 2,000 steps per second, none: the glow still made it across with up to 20 µs in which
+neither guide was grounded. At a 30 µs gap the count went wrong, and from 50 µs the glow fell back
+to the cathode it had just left ([log](https://github.com/kuvychko/universal-nixie-display/blob/main/characterization/dekatron/2026-11-15_overlap_soak.md)). The controller keeps the
+overlap anyway, as margin.
+
 **Reverse the order** (S2 first, then S1) and the same reasoning runs the other way round the ring:
 the count goes down. The same two buttons drive the count in both directions.
 
@@ -202,9 +208,12 @@ cathodes stay put.
 ## How fast it can count
 
 Slowly, by dekatron standards. The A101 is rated at 1,000 steps per second, at the slow end of
-what dekatrons could do. On this project's controller board it counted cleanly at up to 3,000
-steps per second, and the display runs it at up to 2,000, with margin
-([speed sweep](https://github.com/kuvychko/universal-nixie-display/blob/main/characterization/dekatron/2026-11-12_speed_sweep.md);
+what dekatrons could do. On this project's controller board it counted cleanly at up to 4,000
+steps per second, four times its rating, and lost count at 5,000. The display runs it at up to
+2,000, with margin: an hour at that rate, about seven million steps, ended without a single count
+error ([speed sweep](https://github.com/kuvychko/universal-nixie-display/blob/main/characterization/dekatron/2026-11-12_speed_sweep.md),
+[follow-up](https://github.com/kuvychko/universal-nixie-display/blob/main/characterization/dekatron/2026-11-15_speed_sweep.md),
+[soak](https://github.com/kuvychko/universal-nixie-display/blob/main/characterization/dekatron/2026-11-15_overlap_soak.md);
 the story is told in [One cathode of ten](https://igorkuvychko.com/case-studies/dekatron/)).
 
 What sets the limit is the same thing that makes the handoff work. Every transfer leaves ions and

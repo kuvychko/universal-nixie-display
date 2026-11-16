@@ -7,7 +7,10 @@ what is shown and sends commands over I2C ([architecture](../../docs/architectur
 I2C path, hold limit and fault paths are not tested yet (Phase 1D, bring-up steps 4-5).
 **Version 0.2 adds the periodic index check and skip recovery, bench-tested with HV on 2026-11-14**
 ([log](../../characterization/dekatron/2026-11-14_index_check.md)): no unintended mismatch, an
-injected lost step caught inside the 60 s limit and recovered in 100 ms, nothing latched. The board
+injected lost step caught inside the 60 s limit and recovered in 100 ms, nothing latched. A
+one-hour soak at 2000 steps/s, 30 min each way (2026-11-15,
+[log](../../characterization/dekatron/2026-11-15_overlap_soak.md)): 710,471 index crossings, no
+skip; 5 sense misses re-homed at offset 0, 27 late indexes caught by the recheck. The board
 bring-up tool is separate: [`firmware/dekatron-bringup/`](../dekatron-bringup/README.md).
 
 Toolchain: arduino-pico on PlatformIO, pinned to the same platform commit as the bring-up firmware
@@ -38,13 +41,19 @@ which gives a 200 µs minimum phase and 1000 Hz maximum rate; chosen for faster 
 
 | Parameter | Value | Margin against the measurement |
 |---|---|---|
-| Guide phase | **100 µs** (each guide low 200 µs) | Clean from 50 µs up; steps lost at 30 µs |
+| Guide phase | **100 µs** (each guide low 200 µs) | Clean from 50 µs up; 40 µs marginal (2026-11-15); steps lost at 30 µs |
 | Maximum rate | **2000 steps/s** | Clean up to 4000 steps/s at 50 µs phase; 5000 fails (rest 50 µs) ([2026-11-15](../../characterization/dekatron/2026-11-15_speed_sweep.md)) |
 | Minimum rest (period − 3 × phase) | **200 µs**, which is what 2000 steps/s leaves at 100 µs phase | Clean from 67 µs; miscounts at 25-50 µs |
 | Index sample | 100 µs after the second guide releases (proposed) | NDX valid from 30-40 µs after release |
 
 Homing keeps the plan's 200 steps/s target (plan §5). Measured on one board, one warm tube at
 453 V; re-check on each new board and tube (bring-up step 3a).
+
+The step is three phases, the guides overlapping for the middle one. At 100 µs and 2000 steps/s
+the overlap turned out not to be needed on board 1: clean down to a 20 µs gap with neither guide
+on, and two-phase steps at 50 µs were clean up to 5000 steps/s
+([log](../../characterization/dekatron/2026-11-15_overlap_soak.md)). Not adopted; the controller
+keeps the three-phase step.
 
 ## Capabilities
 
