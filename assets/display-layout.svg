@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="600" height="340" font-family="system-ui, sans-serif" font-size="13">
+<title>Proposed front view of the display, not to scale: on top of the enclosure, six IN-14 Nixies in a row and, at the right end of the row, the A101 dekatron held horizontally, end-on, in its socket housing and shroud; on the front, the touchscreen at the left and the rotary encoder to its right; the enclosure sits on a tilt base</title>
+<rect width="600" height="340" fill="#fff"/>
+<g stroke="#333" stroke-width="2" fill="none">
+  <!-- enclosure and tilt base -->
+  <rect x="60" y="140" width="480" height="140" rx="8"/>
+  <path d="M90 280L110 310H490L510 280"/>
+  <!-- six IN-14 tubes standing on top -->
+  <rect x="90" y="40" width="34" height="100" rx="14"/>
+  <rect x="150" y="40" width="34" height="100" rx="14"/>
+  <rect x="210" y="40" width="34" height="100" rx="14"/>
+  <rect x="270" y="40" width="34" height="100" rx="14"/>
+  <rect x="330" y="40" width="34" height="100" rx="14"/>
+  <rect x="390" y="40" width="34" height="100" rx="14"/>
+  <!-- A101 on top at the right, horizontal and end-on: socket housing, shroud, glass end -->
+  <rect x="445" y="60" width="80" height="80" rx="6"/>
+  <circle cx="485" cy="100" r="32"/>
+  <circle cx="485" cy="100" r="24"/>
+  <!-- touchscreen, front left -->
+  <rect x="90" y="165" width="170" height="95" rx="3"/>
+  <!-- rotary encoder, right of the touchscreen -->
+  <circle cx="420" cy="212" r="16"/>
+</g>
+<!-- glowing numerals and dekatron glow -->
+<g fill="#ff6a00" font-size="34" font-weight="600" text-anchor="middle" opacity="0.8">
+  <text x="107" y="102">1</text>
+  <text x="167" y="102">2</text>
+  <text x="227" y="102">3</text>
+  <text x="287" y="102">4</text>
+  <text x="347" y="102">5</text>
+  <text x="407" y="102">6</text>
+</g>
+<circle cx="485" cy="82" r="5" fill="#ff6a00" opacity="0.8"/>
+<g fill="#222">
+  <text x="257" y="24" text-anchor="middle">six IN-14 Nixies in a row, on top</text>
+  <text x="485" y="30" text-anchor="middle">A101 dekatron,</text>
+  <text x="485" y="46" text-anchor="middle">horizontal, end-on</text>
+  <text x="175" y="216" text-anchor="middle">2.8" touchscreen</text>
+  <text x="175" y="233" text-anchor="middle" font-size="12">(ESP32)</text>
+  <text x="446" y="216">encoder</text>
+  <text x="300" y="330" text-anchor="middle" font-size="12">tilt base</text>
+</g>
+<text x="300" y="300" text-anchor="middle" fill="#666" font-size="12" font-style="italic">proposed arrangement, not to scale</text>
+</svg>

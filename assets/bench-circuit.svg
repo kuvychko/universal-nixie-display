@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 400" width="680" height="400" font-family="system-ui, sans-serif" font-size="13">
+<title>The A101 bench test circuit, as built on the bench: a 400 V supply feeds the anode through R_A; a divider R1, R2, R3 holds the main cathodes at RTN, about 57 V, and the guide supply G+ at about 91 V; each guide is pulled up to G+ through 470 kΩ, and a pushbutton grounds it</title>
+<rect width="680" height="400" fill="#fff"/>
+<g stroke="#333" stroke-width="2" fill="none">
+  <!-- rails -->
+  <path d="M60 40H545"/>
+  <path d="M60 370H560"/>
+  <!-- supply -->
+  <path d="M60 40V180M60 190V370"/>
+  <path d="M44 180H76"/>
+  <path d="M52 190H68" stroke-width="4"/>
+  <!-- divider R1, R2, R3 -->
+  <path d="M170 40V60M170 106V146M170 186V306M170 346V370"/>
+  <rect x="163" y="60" width="14" height="46"/>
+  <rect x="163" y="146" width="14" height="40"/>
+  <rect x="163" y="306" width="14" height="40"/>
+  <!-- G+ bus and guide pull-ups -->
+  <path d="M170 130H350"/>
+  <path d="M260 130V146M260 186V318M260 351V370"/>
+  <rect x="253" y="146" width="14" height="40"/>
+  <path d="M350 130V146M350 186V318M350 351V370"/>
+  <rect x="343" y="146" width="14" height="40"/>
+  <!-- pushbuttons S1, S2 (normally open) -->
+  <path d="M260 345L274 324M350 345L364 324"/>
+  <!-- wires to the tube, hopping over the crossings -->
+  <path d="M260 210H344A6 6 0 0 1 356 210H505"/>
+  <path d="M350 250H505"/>
+  <path d="M170 290H254A6 6 0 0 1 266 290H344A6 6 0 0 1 356 290H505"/>
+  <!-- anode resistor and anode -->
+  <path d="M545 40V60M545 106V175"/>
+  <rect x="538" y="60" width="14" height="46"/>
+  <path d="M515 175H575" stroke-width="4"/>
+  <!-- envelope -->
+  <rect x="470" y="150" width="150" height="172" rx="34"/>
+</g>
+<g fill="#fff" stroke="#333" stroke-width="2">
+  <circle cx="260" cy="321" r="3"/><circle cx="260" cy="348" r="3"/>
+  <circle cx="350" cy="321" r="3"/><circle cx="350" cy="348" r="3"/>
+  <path d="M512 203L519 216H505Z"/>
+  <rect x="505" y="243" width="14" height="14"/>
+  <circle cx="512" cy="290" r="7"/>
+</g>
+<ellipse cx="512" cy="290" rx="15" ry="15" fill="#ff6a00" opacity="0.45"/>
+<g fill="#222">
+  <circle cx="170" cy="130" r="3.5"/><circle cx="170" cy="290" r="3.5"/>
+  <circle cx="260" cy="130" r="3.5"/><circle cx="260" cy="210" r="3.5"/>
+  <circle cx="350" cy="250" r="3.5"/>
+  <text x="200" y="32" font-weight="600">+400 V</text>
+  <text x="84" y="182">bench</text>
+  <text x="84" y="197">supply</text>
+  <text x="566" y="374" font-weight="600">GND 0 V</text>
+  <text x="184" y="88">R1 340k</text>
+  <text x="184" y="103" font-size="11.5" fill="#555">2 × 680k ∥, over-rated: see text</text>
+  <text x="184" y="170">R2 38k</text>
+  <text x="184" y="330">R3 47k</text>
+  <text x="272" y="170">R_G1</text>
+  <text x="272" y="185">470k</text>
+  <text x="362" y="170">R_G2</text>
+  <text x="362" y="185">470k</text>
+  <text x="280" y="341">S1</text>
+  <text x="370" y="341">S2</text>
+  <text x="560" y="88">R_A 660k</text>
+  <text x="200" y="122" font-weight="600">G+ ≈ 91 V</text>
+  <text x="164" y="266" text-anchor="end" font-weight="600">RTN ≈ 57 V</text>
+  <text x="164" y="282" text-anchor="end">(63 measured)</text>
+  <text x="556" y="124" font-weight="600">anode ≈ 204 V</text>
+  <text x="556" y="139">(210 measured)</text>
+  <text x="275" y="203" font-size="12">G1</text>
+  <text x="365" y="243" font-size="12">G2</text>
+  <text x="526" y="214" font-size="12">G1 ×10</text>
+  <text x="526" y="254" font-size="12">G2 ×10</text>
+  <text x="526" y="294" font-size="12">K0–K9</text>
+  <text x="530" y="200" font-size="12">anode</text>
+  <text x="470" y="342" font-size="11.5" fill="#555">glow on a cathode; K1 tied</text>
+  <text x="470" y="356" font-size="11.5" fill="#555">to the others on the bench</text>
+  <text x="252" y="392" font-size="11.5" fill="#555">pressed: guide at 0 V</text>
+</g>
+</svg>
