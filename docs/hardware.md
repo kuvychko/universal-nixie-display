@@ -1421,8 +1421,7 @@ Nixie-only parts (HV5622PG-G, CD40109BNSRE4, RP2040-Zero, HHV-50FT-52-1M); the e
 generic 1206 by value (R107/R108 and R314/R315 added 2026-11-11 from the kit; C104 is one more
 0.1 µF than the seven ordered, from the dekatron leftovers). Still to pick at ordering: MMBT3904, MMSZ5243B, 3.3 µF and 10 µF 25 V X7R
 1206. The 12k MRS25 anode resistors R210-R260 are `MRS25000C1202FRP00` (user's order,
-2026-11-10; same resistor as the `FCT00` first guessed, different packaging suffix). `hardware/nixie/order_scratch.csv` (untracked, as the dekatron board's was) groups the
-parts by line for the order, with an `ORDERED` column to fill in, plus the off-board encoder.
+2026-11-10; same resistor as the `FCT00` first guessed, different packaging suffix).
 
 #### Cross-check against a published HV5622 design (2026-11-06)
 
