@@ -1127,7 +1127,8 @@ wired to it on harnesses (see [Encoder](#encoder) and [Time sources](#time-sourc
 * **Custom IN-14 footprint**, placed on B.Cu by flipping the footprint, not by mirroring the
   pinout. **Equal row pitch 24 mm** (19 mm glass + 5 mm between envelopes; user, 2026-11-06: a
   universal display, so no HH MM SS grouping). Tube centres 12 mm from the front edge (layout
-  proposal); tube height above the cover _open_.
+  proposal). Tube height above the board set by the standard lead spacers supplied with the tubes
+  (user, 2026-11-19); the height above the cover follows from the enclosure.
 * **Outline:** compact, set after routing (user, 2026-11-06): **164 × 50 mm** (2026-11-10: longer
   and shallower, user; 150 × 70 on 2026-11-07, 150 × 80 first pass). The RP2040-Zero sits right of
   tube 6, toward the back, USB-C at the right edge; the 12 V switch (Q101) and the level shifter

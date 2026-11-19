@@ -143,7 +143,7 @@ RTC and the ES100 are mounted in the enclosure and wired to the board there (ste
 | Step | Section | Acceptance | Result |
 |---|---|---|---|
 | −1 | Before ordering boards | 1:1 print: IN-14 lead spacer on the footprint; RP2040-Zero castellations centred on U301's pads, USB-C at the right edge | **IN-14 footprint matches** (2026-11-11, user: spacing and orientation). RP2040-Zero: — |
-| 0 | Before assembly | Nixie HV module trimmer at 175 V and glued; ZS-042 and ES100 carrier inspected (header order, pull-ups, coin-cell charging), R305-R308 values chosen; tube height decided | — |
+| 0 | Before assembly | Nixie HV module trimmer at 175 V and glued; ZS-042 and ES100 carrier inspected (header order, pull-ups, coin-cell charging), R305-R308 values chosen | **Done** (2026-11-19, [log](../characterization/nixie/2026-11-19_assembly_log.md)): bare board and HV-node checks pass; HV module at 175 V and glued (set on a 10k 2 W load, recheck on a cooler load); ZS-042 pull-ups kept, LIR2032; R305/R306 not fitted, R307/R308 10k |
 | 1 | 5 V, 3.3 V, RP2040-Zero (checklist Stage 1) | Rails in tolerance; enumerates over USB; `DRV_BL` low in BOOTSEL | — |
 | 2 | 12 V input, 12 V logic rail, module switch (Stage 2) | `+12V_LOGIC` within the HV5622's 10.8-13.2 V; `+12V_SW` off in reset and with 5 V absent, on only by command; `NIX12_SENSE` scale | — |
 | 3 | Driver logic, no HV (Stage 3) | Frames shift, latch and read back on GP12; every output switches, matching `HV_MAP`, no bridges; blank frame latched before `BL` is released; encoder filter and ES100 idle levels | — |

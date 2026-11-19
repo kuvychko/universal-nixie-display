@@ -57,10 +57,8 @@ Record readings in the blanks, then copy the verdict into the Result column of
 - [ ] ES100 carrier: header pin order and silk names ___; pull-ups on SDA / SCL / IRQ-, and any pull
   on EN, as found ___. Values chosen for R305 (SDA up) ___, R306 (SCL up) ___, R307 (IRQ- up) ___,
   R308 (EN down) ___ (or "not fitted"); record them in [hardware.md](../../docs/hardware.md#time-sources)
-- [ ] Tube height above the cover decided (still `_open_` in hardware.md): it sets where the tube
-  leads are cut at Stage 5
 - [ ] Bring-up firmware for the Nixie RP2040 (to be written, `firmware/nixie-bringup/`, as the
-  [dekatron's](../../firmware/dekatron-bringup/README.md)). Needed from Gate 3: `NIX12_EN` low at boot
+  [dekatron's](../../firmware/dekatron-bringup/README.md)). Needed from Gate 2: `NIX12_EN` low at boot
   and on only by command with an auto-off timeout; `NIX12_EN` dropped above 200 V on `NIX_HV_SENSE`
   (threshold settable in a test build); blank frame shifted and latched before `BL` is released;
   frames shifted at ≤ 1 MHz, data shifted on the falling clock edge, `LE` idle low and pulsed per
@@ -271,7 +269,9 @@ HV on (bring-up firmware, auto-off set):
 ## Stage 5 — tubes
 
 Tubes go on side B with their plastic lead spacers, standing vertical, leads through to side A
-and soldered there. Pin 1 (anode, square pad) is at the back; the tube's front (between digits 5
+and soldered there. The height is set by the standard lead spacers supplied with the tubes (user,
+2026-11-19): leads trimmed with a good margin before seating, then cut to size on side A after
+soldering, so no cut length is decided in advance. Pin 1 (anode, square pad) is at the back; the tube's front (between digits 5
 and 6, the arrow in the glass bottom marks pin 1) faces the board's front edge. The footprint was
 checked against the spacer on a 1:1 print (2026-11-11). From here, rest the board on standoffs in
 its M3 holes, never on the tubes.
@@ -281,8 +281,8 @@ its M3 holes, never on the tubes.
 The leads cannot be unsoldered without shortening them, so each tube is checked first on the HV
 lab supply (voltage regulated, adjustable current limit), wired as on the board: anode through a
 12k (as R2n0) to the supply's +, cathodes to its − in turn. Clip leads (insulated mini-grabbers),
-not solder; if a joint is soldered, only at the lead tip that is trimmed at Stage 5, away from the
-glass seal. Pins from the board's N1 footprint (checked against the spacer on the 1:1 print), pin 1
+not solder; if a joint is soldered, only at the lead tip, which is trimmed off at Stage 5, away
+from the glass seal. Pins from the board's N1 footprint (checked against the spacer on the 1:1 print), pin 1
 the anode (arrow in the glass bottom).
 
 - [ ] Each change of a clip lead: output off, voltage below 30 V first
@@ -303,7 +303,8 @@ the anode (arrow in the glass bottom).
 **5a — tube 1 and its decimal-point resistors**
 
 - [ ] Point resistors, value from 5.0, 1206: R211, R212
-- [ ] N1: spacer fitted, height as decided, orientation checked, leads soldered on side A and trimmed
+- [ ] N1: leads trimmed with a good margin, standard spacer fitted, seated, orientation checked,
+  leads soldered on side A, then trimmed to size there
 - [ ] Flux cleaned around the lead ring
 
 **Gate 5a — bring-up step 5**
