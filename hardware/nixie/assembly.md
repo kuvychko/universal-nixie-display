@@ -45,9 +45,9 @@ Record readings in the blanks, then copy the verdict into the Result column of
 
 - [ ] Bare board inspected: no visible shorts or damage, silkscreen legible
 - [ ] Bare board, meter: NIX_HV (TP103) to GND (TP105) open, and to +12V_IN (TP101) open
-- [ ] Tools: microscope, flux, solder wick, fine iron tip, hot air (for the PQFP-44s if wanted),
-  IPA, ESD mat and strap
-- [ ] All parts on hand and checked against `bom.csv` and `order_scratch.csv`, including the 0.1 µF
+- [ ] Tools: microscope, solder paste and hot air (Q101; the PQFP-44s too if wanted), flux, solder
+  wick, fine iron tip, IPA, ESD mat and strap
+- [ ] All parts on hand and checked against `bom.csv`, including the 0.1 µF
   taken from the dekatron leftovers (C104)
 - [ ] Nixie HV module: trimmer set to **175 V** on the bench and fixed with glue (never toward its
   maximum: it may have no overvoltage protection; [hardware.md](../../docs/hardware.md#nixie-board-electrical-design-phase-1a-draft-2026-10-26), HV limit)
@@ -67,17 +67,24 @@ Record readings in the blanks, then copy the verdict into the Result column of
   frame; readback compared on GP12; one-output walk; PWM on `DRV_BL`; ADC status; I2C probe of the
   ES100 on I2C0
 
-## Stage 0 — drivers and level shifter on the bare board
+## Stage 0 — module switch, drivers and level shifter on the bare board
 
-The three HV5622s are the board's only fine-pitch parts (PQFP-44, 0.8 mm, no exposed pad). They
-go on first, with nothing fitted around them yet. U302 follows.
+Q101 (DPAK) goes on first: its tab is reflowed with paste and hot air (as the dekatron board's
+Q102), and it sits in the 11 mm gap between U201 and U202, so hot air there later would disturb
+their leads. The three HV5622s follow. They are the board's only fine-pitch parts (PQFP-44,
+0.8 mm, no exposed pad). U302 goes on last. Q101's gate stays floating until R101 is fitted at
+Stage 2, which is harmless because no 12 V reaches the board before then.
 
+- [ ] IPD50P04P4L-11, `IPD50P04P4L11ATMA2`, TO-252: Q101, paste on the tab pad, reflowed with hot
+  air, then the gate and source leads touched up with the iron
 - [ ] HV5622, `HV5622PG-G`, PQFP-44: U201, U202, U203 (3; no spare ordered): pin 1 aligned, all four
   sides tacked and checked before soldering the rest
 - [ ] CD40109B, `CD40109BNSRE4`, SOP-16 (5.3 mm body): U302, pin 1 aligned
 
 **Gate 0**
 
+- [ ] Q101: tab wetted along its edge, solder visible at the leads (microscope); +12V_SW (TP102) to
+  +12V_IN (TP101) not shorted, diode test red on TP102 reads one diode drop (body diode) ___ V
 - [ ] No bridges between pins on any of the four chips (microscope, every side)
 - [ ] No pin lifted: each lead wetted to its pad (microscope)
 - [ ] Each HV5622: VDD to VSS not shorted (meter)
@@ -146,7 +153,7 @@ Discretes
 
 - [ ] MMBT3904, SOT-23: Q102
 - [ ] MMSZ5243B (13 V), SOD-123: D301 (cathode band)
-- [ ] IPD50P04P4L-11, `IPD50P04P4L11ATMA2`, TO-252: Q101
+- (Q101 is already fitted, at Stage 0)
 
 Harness
 
