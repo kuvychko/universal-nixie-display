@@ -148,7 +148,7 @@ RTC and the ES100 are mounted in the enclosure and wired to the board there (ste
 | 2 | 12 V input, 12 V logic rail, module switch (Stage 2) | `+12V_LOGIC` within the HV5622's 10.8-13.2 V; `+12V_SW` off in reset and with 5 V absent, on only by command; `NIX12_SENSE` scale | — |
 | 3 | Driver logic, no HV (Stage 3) | Frames shift, latch and read back on GP12; every output switches, matching `HV_MAP`, no bridges; blank frame latched before `BL` is released; encoder filter and ES100 idle levels | — |
 | 4 | HV module and monitor, no tubes (Stage 4) | HV off in reset and while flashing; 12 V ramp against the simulation; 175 V at TP103, `NIX_HV_SENSE` agrees with the meter; 200 V firmware cut-off exercised (below); ripple, overshoot, decay | — |
-| 5 | Tube 1 and its decimal points (Stage 5a) | All digits strike at 175 V; digit current ≤ 2.5 mA; decimal-point resistor value chosen (below) | — |
+| 5 | Tubes on the bench (Stage 5.0), then tube 1 and its decimal points (Stage 5a) | Bench, HV lab supply through 12k: each tube's strike voltage ≤ 170 V, every digit and point lights, decimal-point resistor value chosen (below). Board: all digits strike at 175 V; digit current ≤ 2.5 mA; point value confirmed | — |
 | 6 | All six tubes (Stage 5b) | Every digit and point; dark start-up; full-load stability and current; dimming frequency and minimum duty (below) | — |
 | 7 | Encoder, RTC, ES100 in the enclosure (Stage 6) | Harness continuity by silk name; encoder counts both ways; ES100 ID 0x10 at 0x32 with EN high, absent with EN low; RTC answers on the main bus | — |
 
@@ -162,9 +162,11 @@ Details for steps 4-6:
 * **Dimming (PWM on `DRV_BL`).** Sweep frequency and duty: all digits ignite at the lowest duty, no
   flicker, and the HV module keeps regulation (`NIX_HV_SENSE`, scope on TP103) with no audible
   noise. Record the chosen frequency and minimum duty in [hardware.md](hardware.md).
-* **Decimal-point resistors (R2n1/R2n2, 150k starting value).** On one tube, measure the current
+* **Decimal-point resistors (R2n1/R2n2, 150k starting value).** Chosen on the bench before any
+  tube is soldered (HV lab supply, anode through 12k as on the board), then confirmed on tube 1
+  at Stage 5a. On one tube, measure the current
   in the point's series resistor (voltage across it) with the point alone and with a digit lit.
   Acceptance: ≤ 0.3 mA with the point alone (IN-14 data sheet); point visibly lit with a digit on.
   Too bright → larger resistor; dim beside a digit → note it, since the shared anode resistor
   limits it (design estimate ≈ 0.27 mA alone, ≈ 0.09 mA with a digit). Record the chosen value in
-  [hardware.md](hardware.md) and fit all twelve.
+  [hardware.md](hardware.md); fit tube 1's pair, confirm, then the other ten.

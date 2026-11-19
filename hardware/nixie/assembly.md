@@ -31,8 +31,8 @@ number, package, references. Rules:
   0.23 W at the 24 V input clamp: use it from the kit only if the kit part is rated ≥ 0.25 W.
 * **R305-R308 (ES100 pulls):** R305 and R306 are not fitted (the carrier has 10k I2C pull-ups);
   R307 and R308 are 10k from the kit ([carrier log](../../characterization/nixie/2026-11-19_es100_carrier.md)).
-* **Decimal-point resistors:** fit tube 1's pair (R211, R212) first; the other ten follow the value
-  chosen at Gate 5a.
+* **Decimal-point resistors:** the value is chosen on the bench (Stage 5.0) and confirmed on tube
+  1's pair (R211, R212) at Gate 5a before the other ten are fitted.
 * Test points (`TP…`) are bare plated pads; nothing to fit.
 * Clean the flux after each stage (IPA). The board takes no clearance credit for solder mask or
   coating, so flux left between the cathode tracks (0.25 mm) or on the HV side is a leakage path.
@@ -276,13 +276,33 @@ and 6, the arrow in the glass bottom marks pin 1) faces the board's front edge. 
 checked against the spacer on a 1:1 print (2026-11-11). From here, rest the board on standoffs in
 its M3 holes, never on the tubes.
 
-- [ ] Optional, before soldering: each tube on the bench from the module at 175 V through a 12k
-  anode resistor, each cathode to GND in turn: all digits and points light ___ (the leads cannot
-  be unsoldered without shortening them)
+**5.0 — bench test, before any tube is soldered**
+
+The leads cannot be unsoldered without shortening them, so each tube is checked first on the HV
+lab supply (voltage regulated, adjustable current limit), wired as on the board: anode through a
+12k (as R2n0) to the supply's +, cathodes to its − in turn. Clip leads (insulated mini-grabbers),
+not solder; if a joint is soldered, only at the lead tip that is trimmed at Stage 5, away from the
+glass seal. Pins from the board's N1 footprint (checked against the spacer on the 1:1 print), pin 1
+the anode (arrow in the glass bottom).
+
+- [ ] Each change of a clip lead: output off, voltage below 30 V first
+- [ ] Current limit set just above one digit's 2.5 mA (design), at the lowest setting that lets
+  a digit run; the 12k stays in the anode lead as well
+- [ ] Per tube, one digit connected, voltage raised slowly from below the strike: strike voltage
+  ___ V (IN-14 ≤ 170 V; the board runs at 175 V)
+- [ ] Per tube at 175 V: each digit 0-9 lights fully, glow covers the whole digit ___; both points
+  light ___; voltage across the 12k with one digit ___ V (design ≈ 30 V). A digit that lights
+  unevenly: run it for a while and recheck (cathode poisoning in old stock)
+- [ ] Decimal-point resistor, on one tube: point to − through 150k (kit, as R2n1 / R2n2). Voltage
+  across the 150k with the point alone ___ V and with a digit also lit (digit cathode to −) ___ V.
+  Acceptance ≤ 0.3 mA alone (≤ 45 V across 150k); design ≈ 0.27 mA alone, ≈ 0.09 mA beside a
+  digit. Too bright → next kit value up, and repeat. Value chosen ___, recorded in
+  [hardware.md](../../docs/hardware.md#nixie-board-electrical-design-phase-1a-draft-2026-10-26)
+- [ ] Readings into `characterization/nixie/` as a dated file, one row per tube
 
 **5a — tube 1 and its decimal-point resistors**
 
-- [ ] 150k (kit), 1206: R211, R212 (starting value)
+- [ ] Point resistors, value from 5.0, 1206: R211, R212
 - [ ] N1: spacer fitted, height as decided, orientation checked, leads soldered on side A and trimmed
 - [ ] Flux cleaned around the lead ring
 
@@ -292,10 +312,10 @@ its M3 holes, never on the tubes.
 - [ ] Strike: each digit 0-9 lights fully at 175 V ___ (IN-14 ignition ≤ 170 V)
 - [ ] Digit current: voltage across R210 ___ V with one digit lit (design ≈ 30 V: 2.5 mA,
   (175 − 145) V / 12k; IN-14 ≤ 2.5 mA)
-- [ ] Decimal points: voltage across R211 / R212 with the point alone ___ V and with a digit lit
-  ___ V. Acceptance ≤ 0.3 mA alone (≤ 45 V across 150k); design ≈ 0.27 mA alone, ≈ 0.09 mA beside
-  a digit. Too bright → larger value; dim beside a digit → noted (the shared anode resistor limits it)
-- [ ] Value chosen for all twelve ___; recorded in [hardware.md](../../docs/hardware.md#nixie-board-electrical-design-phase-1a-draft-2026-10-26)
+- [ ] Decimal points, confirming the bench value on the board: voltage across R211 / R212 with
+  the point alone ___ V and with a digit lit ___ V; same acceptance as 5.0 (≤ 0.3 mA alone). Dim
+  beside a digit → noted (the shared anode resistor limits it). If it differs from the bench,
+  change the value here, before the other ten are fitted
 - [ ] Result copied into bringup.md step 5
 
 **5b — tubes 2-6**
