@@ -496,7 +496,8 @@ def build_logic(lib) -> Sheet:
 
     # ---- time modules (bottom middle) -----------------------------------------------------------
     note(sh, "TIME MODULES (optional, harnesses)", "RTC (ZS-042) on the main bus; ES100 on its private bus. "
-         "Pull resistors here so an unplugged module leaves defined levels; values chosen at assembly.",
+         "Pull resistors here so an unplugged module leaves defined levels. ES100 carrier measured "
+         "2026-11-19: 10k I2C pull-ups (R305/R306 not fitted), no pulls on IRQ- or EN.",
          142.24, 132.08, 110)
     sh.part("Connector_Generic:Conn_01x04", "J302", "RTC", 172.72, 160.02,
             {"1": "+3V3", "2": "GND", "3": "SDA", "4": "SCL"}, footprint=FP_WIRE4, stub=5.08,
@@ -504,12 +505,15 @@ def build_logic(lib) -> Sheet:
     sh.part("Connector_Generic:Conn_01x06", "J303", "WWVB", 172.72, 193.04,
             {"1": "+3V3", "2": "GND", "3": "WWVB_SDA", "4": "WWVB_SCL", "5": "WWVB_EN", "6": "WWVB_IRQ"},
             footprint=FP_WIRE6, stub=5.08, fields=F("Harness to the ES100 carrier: jacks on its header by silk name"))
-    for i, (net, up, func) in enumerate((("WWVB_SDA", True, "pull-up (unless on the carrier)"),
-                                         ("WWVB_SCL", True, "pull-up (unless on the carrier)"),
-                                         ("WWVB_IRQ", True, "pull-up (IRQ- is active low)"),
-                                         ("WWVB_EN", False, "pull-down: ES100 in shutdown when unplugged or in reset"))):
+    # Values: user, 2026-11-19, after measuring the ES100 carrier (10k I2C pull-ups on the carrier;
+    # IRQ- and EN 5 / 15 Mohm, effectively unpulled). characterization/nixie/2026-11-19_es100_carrier.md
+    for i, (net, up, val, dnp, func) in enumerate((
+            ("WWVB_SDA", True, "DNP", True, "pull-up: not fitted, 10k on the carrier"),
+            ("WWVB_SCL", True, "DNP", True, "pull-up: not fitted, 10k on the carrier"),
+            ("WWVB_IRQ", True, "10k", False, "pull-up (IRQ- is active low)"),
+            ("WWVB_EN", False, "10k", False, "pull-down: ES100 in shutdown when unplugged or in reset"))):
         x = 200.66 + i * 20.32
-        pt, pb = v2(sh, R, f"R{305 + i}", OPEN, x, 182.88, FP_R, F(f"{net} {func}"))
+        pt, pb = v2(sh, R, f"R{305 + i}", val, x, 182.88, FP_R, F(f"{net} {func}"), dnp=dnp)
         if up:
             sh.pwr("+3V3", pt)
             lead(sh, pb, net, 0, 2.54, "R")

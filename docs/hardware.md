@@ -1406,7 +1406,7 @@ core); routing with FreeRouting (Specctra DSN/SES) instead of the dekatron board
 **Schematic draft (2026-10-26):** `hardware/nixie/` (power, logic, tubes sheets), ERC clean.
 Values marked `_open_` in the schematics and `bom.csv`: ES100 pull resistors (R305-R308): 1206
 pads, values chosen at assembly from the kit or left unfitted, depending on what the ES100 carrier
-already has (user, 2026-11-07). Decided 2026-11-07: C101 (+5V bulk at the harness landing) 10 µF
+already has (user, 2026-11-07); chosen 2026-11-19 (below, Time sources: ES100). Decided 2026-11-07: C101 (+5V bulk at the harness landing) 10 µF
 16 V tantalum, the same part as C301 (user: "a reasonable one"); the encoder filter (above). Values carried over with their basis: 0.1 µF bypass and 10 µF module
 bulk (as the dekatron board), 100 nF ADC reservoir and BAT54S clamp (as the dekatron ADC inputs).
 Redrawn for the HV5622 drivers 2026-11-06 (tubes and logic sheets), ERC clean. Decimal-point series
@@ -1477,10 +1477,16 @@ female jacks on the module headers, each wire with a printed label naming its si
 
 * **RTC: ZS-042 module (DS3231),** the user's part, run with RTClib's `RTC_DS3231` in an earlier
   sketch. On the main I2C bus, through its harness from the Nixie board. Open, pending the DS3231
-  datasheet (not yet in `docs/datasheets/`): address, accuracy, supply range. Commonly reported
-  for the ZS-042 and to be checked on the user's module: its own I2C pull-ups (conflict with the
-  single pull-up pair, D14/I2C bus; remove them or count them in) and a coin-cell charging path
-  (resistor + diode from VCC) that should not charge a CR2032.
+  datasheet (not yet in `docs/datasheets/`): address, accuracy, supply range. The user's module
+  (measured 2026-11-19, [log](../characterization/nixie/2026-11-19_zs042_rtc.md)): header SCL,
+  SDA, VCC, GND.
+  * **I2C pull-ups:** 4.7 kΩ on SDA and SCL to its VCC (two 3-resistor SMD arrays). **Kept**
+    (user, 2026-11-19), counted in parallel with the dekatron board's 4.7 kΩ pair: ≈ 2.35 kΩ,
+    ≈ 1.4 mA sink at 3.3 V, within the I2C 3 mA (UM10204). The DS3231's own sink rating is _open_
+    (datasheet).
+  * **Coin cell:** the module's charging path (diode + resistor from VCC) is present and kept;
+    the cell is an **LIR2032** (rechargeable; user, 2026-11-19). The charge voltage it reaches
+    from a 3.3 V VCC and the DS3231 VBAT range are _open_ (datasheets).
 * **WWVB: EverSet ES100-MOD** on Universal Solder's carrier board, with two 60 × 10 mm ferrite
   antennas and a 90° holder (the user's kit, verified over I2C). From the ES100 data sheet v0.97
   (`docs/datasheets/es100/`, local copy, not redistributed):
@@ -1488,7 +1494,12 @@ female jacks on the module headers, each wire with a printed label naming its si
     2.5 mA, shutdown 0.1 µA (typ).
   * I2C target at **0x32**, ≤ 400 kHz; device ID register 0x0D reads 0x10. Plus **EN** (low =
     shutdown) and **IRQ-** (active-low, data ready). Digital pins float in shutdown: EN needs a
-    pull-down (receiver off while the host is in reset) and IRQ- a pull-up; values _open_.
+    pull-down (receiver off while the host is in reset) and IRQ- a pull-up.
+  * **Carrier pulls (measured 2026-11-19, [log](../characterization/nixie/2026-11-19_es100_carrier.md)):**
+    10 kΩ I2C pull-ups on SDA and SCL; IRQ- and EN 5 MΩ and 15 MΩ, effectively unpulled.
+    **Chosen (user, 2026-11-19):** R305/R306 not fitted (the carrier's 10k pair is the bus's only
+    pull-up; private bus run at 100 kHz, where 10k allows ≈ 118 pF for the 1000 ns rise time of
+    UM10204); R307 (IRQ- up) and R308 (EN down) **10k** from the kit.
   * **Dedicated I2C bus:** "The ES100 should be placed on a dedicated serial interface so that
     reception is not compromised by serial interface traffic directed at another device." So it
     does not go on the main bus. **Decided (user, 2026-10-26):** the Nixie RP2040 hosts it on its

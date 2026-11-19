@@ -29,8 +29,8 @@ number, package, references. Rules:
   marking.
 * **Kit resistors** (no part number in the BOM) are batched by value. R309 (470 Ω) dissipates
   0.23 W at the 24 V input clamp: use it from the kit only if the kit part is rated ≥ 0.25 W.
-* **R305-R308 (ES100 pulls) are `_open_`:** values from the kit, or not fitted, depending on what
-  the ES100 carrier already has (decided at "Before starting").
+* **R305-R308 (ES100 pulls):** R305 and R306 are not fitted (the carrier has 10k I2C pull-ups);
+  R307 and R308 are 10k from the kit ([carrier log](../../characterization/nixie/2026-11-19_es100_carrier.md)).
 * **Decimal-point resistors:** fit tube 1's pair (R211, R212) first; the other ten follow the value
   chosen at Gate 5a.
 * Test points (`TP…`) are bare plated pads; nothing to fit.
@@ -189,7 +189,7 @@ Resistors, 1206
 - [ ] 100k (kit): R314
 - [ ] 33k (kit): R315
 - [ ] 10k (kit): R302, R303, R304, R311, R312, R313 (6, encoder filter)
-- [ ] R305-R308 as decided at "Before starting" (or left empty): R305 ___, R306 ___, R307 ___, R308 ___
+- [ ] 10k (kit): R307 (`WWVB_IRQ` pull-up), R308 (`WWVB_EN` pull-down). R305, R306 not fitted
 
 **Gate 3 — bring-up step 3** (acceptance: frames shift, latch and read back; every output
 switches; tubes dark at start-up)

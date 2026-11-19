@@ -61,10 +61,10 @@ R301,10k,DRV_BL pull-down: tubes blank while the RP2040 is in reset,,,,Resistor_
 R302,10k,ENC_A pull-up (PEC11R suggested filter),,,,Resistor_SMD:R_1206_3216Metric,
 R303,10k,ENC_B pull-up (PEC11R suggested filter),,,,Resistor_SMD:R_1206_3216Metric,
 R304,10k,ENC_SW pull-up (PEC11R suggested filter),,,,Resistor_SMD:R_1206_3216Metric,
-R305,_open_,WWVB_SDA pull-up (unless on the carrier),,,,Resistor_SMD:R_1206_3216Metric,
-R306,_open_,WWVB_SCL pull-up (unless on the carrier),,,,Resistor_SMD:R_1206_3216Metric,
-R307,_open_,WWVB_IRQ pull-up (IRQ- is active low),,,,Resistor_SMD:R_1206_3216Metric,
-R308,_open_,WWVB_EN pull-down: ES100 in shutdown when unplugged or in reset,,,,Resistor_SMD:R_1206_3216Metric,
+R305,DNP,"WWVB_SDA pull-up: not fitted, 10k on the carrier",,,,Resistor_SMD:R_1206_3216Metric,DNP
+R306,DNP,"WWVB_SCL pull-up: not fitted, 10k on the carrier",,,,Resistor_SMD:R_1206_3216Metric,DNP
+R307,10k,WWVB_IRQ pull-up (IRQ- is active low),,,,Resistor_SMD:R_1206_3216Metric,
+R308,10k,WWVB_EN pull-down: ES100 in shutdown when unplugged or in reset,,,,Resistor_SMD:R_1206_3216Metric,
 R309,470,12 V logic rail series resistor: ~0.2 V at ~0.45 mA average; 0.23 W at the 24 V clamp,,,"1206, 0.25 W",Resistor_SMD:R_1206_3216Metric,
 R310,100k,DRV12_BL pull-down: tubes blank while 3V3 is absent (U302 outputs then high-impedance),,,,Resistor_SMD:R_1206_3216Metric,
 R311,10k,"ENC_A series: filter discharge through 10k, not the contact (PEC11R suggested filter)",,,,Resistor_SMD:R_1206_3216Metric,

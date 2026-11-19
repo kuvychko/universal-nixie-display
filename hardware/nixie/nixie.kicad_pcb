@@ -1609,7 +1609,7 @@
 				)
 			)
 		)
-		(property "Value" "_open_"
+		(property "Value" "10k"
 			(at 0 1.83 90)
 			(layer "F.Fab")
 			(uuid "9b89773a-f5fe-433a-b728-eb3423fa79b8")
@@ -5459,7 +5459,7 @@
 				)
 			)
 		)
-		(property "Value" "_open_"
+		(property "Value" "10k"
 			(at 0 1.83 0)
 			(layer "F.Fab")
 			(uuid "a4b14863-abe7-4c9e-9edd-e332751c6de7")
@@ -11105,7 +11105,7 @@
 				)
 			)
 		)
-		(property "Value" "_open_"
+		(property "Value" "DNP"
 			(at 0 1.83 90)
 			(layer "F.Fab")
 			(uuid "f7f58402-a3c1-4cef-9bfe-b13d7f6f0c94")
@@ -11150,7 +11150,7 @@
 				)
 			)
 		)
-		(property "Function" "WWVB_SDA pull-up (unless on the carrier)"
+		(property "Function" "WWVB_SDA pull-up: not fitted, 10k on the carrier"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
@@ -11162,7 +11162,7 @@
 				)
 			)
 		)
-		(attr smd)
+		(attr smd dnp)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
 			(start -0.727064 -0.91)
@@ -14048,7 +14048,7 @@
 				)
 			)
 		)
-		(property "Value" "_open_"
+		(property "Value" "DNP"
 			(at 0 1.83 90)
 			(layer "F.Fab")
 			(uuid "74f3a226-5113-4ed7-b23d-3b5be908cd5c")
@@ -14093,7 +14093,7 @@
 				)
 			)
 		)
-		(property "Function" "WWVB_SCL pull-up (unless on the carrier)"
+		(property "Function" "WWVB_SCL pull-up: not fitted, 10k on the carrier"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
@@ -14105,7 +14105,7 @@
 				)
 			)
 		)
-		(attr smd)
+		(attr smd dnp)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
 			(start -0.727064 -0.91)
