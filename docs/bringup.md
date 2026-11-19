@@ -157,7 +157,7 @@ Details for steps 4-6:
 * **HV setpoint and overvoltage cut-off.** Set the module's trimmer to 175 V on the bench and fix it
   with glue before fitting; do not turn it toward its maximum (the module may have no
   overvoltage protection). Check the firmware cut-off: `NIX12_EN` drops when `NIX_HV_SENSE` reads
-  above 200 V, by scaling the threshold down in a test build rather than raising the HV
+  above 200 V, by lowering the threshold with the bring-up firmware's `trip` command rather than raising the HV
   ([hardware.md](hardware.md), HV limit).
 * **Dimming (PWM on `DRV_BL`).** Sweep frequency and duty: all digits ignite at the lowest duty, no
   flicker, and the HV module keeps regulation (`NIX_HV_SENSE`, scope on TP103) with no audible

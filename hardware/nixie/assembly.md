@@ -57,13 +57,13 @@ Record readings in the blanks, then copy the verdict into the Result column of
 - [ ] ES100 carrier: header pin order and silk names ___; pull-ups on SDA / SCL / IRQ-, and any pull
   on EN, as found ___. Values chosen for R305 (SDA up) ___, R306 (SCL up) ___, R307 (IRQ- up) ___,
   R308 (EN down) ___ (or "not fitted"); record them in [hardware.md](../../docs/hardware.md#time-sources)
-- [ ] Bring-up firmware for the Nixie RP2040 (to be written, `firmware/nixie-bringup/`, as the
-  [dekatron's](../../firmware/dekatron-bringup/README.md)). Needed from Gate 2: `NIX12_EN` low at boot
-  and on only by command with an auto-off timeout; `NIX12_EN` dropped above 200 V on `NIX_HV_SENSE`
-  (threshold settable in a test build); blank frame shifted and latched before `BL` is released;
-  frames shifted at ≤ 1 MHz, data shifted on the falling clock edge, `LE` idle low and pulsed per
-  frame; readback compared on GP12; one-output walk; PWM on `DRV_BL`; ADC status; I2C probe of the
-  ES100 on I2C0
+- [ ] Bring-up firmware for the Nixie RP2040 built ([`firmware/nixie-bringup/`](../../firmware/nixie-bringup/README.md),
+  as the [dekatron's](../../firmware/dekatron-bringup/README.md); written 2026-11-19, not yet run
+  on a board). Needed from Gate 2: `NIX12_EN` low at boot and on only by command with an auto-off
+  timeout; `NIX12_EN` dropped above 200 V on `NIX_HV_SENSE` (`trip` lowers it for the test);
+  blank frame shifted and latched before `BL` is released; frames shifted at ≤ 1 MHz, data
+  shifted on the falling clock edge, `LE` idle low and pulsed per frame; readback compared on
+  GP12; one-output walk; PWM on `DRV_BL`; ADC status; I2C probe of the ES100 on I2C0
 
 ## Stage 0 — module switch, drivers and level shifter on the bare board
 
@@ -261,8 +261,8 @@ HV on (bring-up firmware, auto-off set):
   ratio 84.3); NIX12_SENSE ___ V
 - [ ] 12 V input current, no tubes ___ mA (bench: 13 mA at 176 V into 1 MΩ)
 - [ ] Ripple on TP103 ___; overshoot at switch-on ___
-- [ ] Cut-off: test build with the 200 V threshold scaled down below 175 V: `NIX12_EN` drops and
-  HV decays ___; threshold restored to 200 V
+- [ ] Cut-off: `trip 150` (below the 175 V setpoint), then `on`: `NIX12_EN` drops, `FAULT hv_over`
+  latched, and HV decays ___; `trip 200` (or reset) restores the threshold, `clear`
 - [ ] Off: NIX_HV below 30 V in ___ s
 - [ ] Result copied into bringup.md step 4
 
