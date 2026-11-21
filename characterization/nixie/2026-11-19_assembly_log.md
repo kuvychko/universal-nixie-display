@@ -68,12 +68,28 @@ Record readings in the blanks, then copy the verdict into the Result column of
 - [x] Tube height: set by the standard lead spacers supplied with the tubes (user, 2026-11-19);
   leads trimmed with margin, then cut to size on the board after soldering. No longer a gate
 - [x] Bring-up firmware for the Nixie RP2040 built ([`firmware/nixie-bringup/`](../../firmware/nixie-bringup/README.md),
-  as the [dekatron's](../../firmware/dekatron-bringup/README.md); written 2026-11-19, not yet run
-  on a board). Needed from Gate 2: `NIX12_EN` low at boot and on only by command with an auto-off
+  as the [dekatron's](../../firmware/dekatron-bringup/README.md); written 2026-11-19, run on the
+  bare module 2026-11-20, below). Needed from Gate 2: `NIX12_EN` low at boot and on only by command with an auto-off
   timeout; `NIX12_EN` dropped above 200 V on `NIX_HV_SENSE` (`trip` lowers it for the test);
   blank frame shifted and latched before `BL` is released; frames shifted at ≤ 1 MHz, data
   shifted on the falling clock edge, `LE` idle low and pulsed per frame; readback compared on
   GP12; one-output walk; PWM on `DRV_BL`; ADC status; I2C probe of the ES100 on I2C0
+- [x] RP2040-Zero for U301, checked bare on USB before soldering (2026-11-20; added to this log,
+  not an assembly.md item):
+  * Boot ROM: enumerates in BOOTSEL as the RPI-RP2 drive, `INFO_UF2.TXT` "UF2 Bootloader v3.0"
+  * Flash: three UF2s written by copying to the drive, each booted from flash; returns as a USB
+    serial port after every reset, and the 1200-baud touch drops it back into BOOTSEL. (`pio -t
+    upload` fails at picotool on this PC: the RP2 Boot interface has no WinUSB driver (Zadig);
+    copying the UF2 works.)
+  * Clock 133 MHz, `t_ms` in step with the wall clock; die temperature 30.9 °C
+  * GPIO pin test (scratch sketch, not kept): GP0-GP15 and GP26-GP29 (20 pins) each pulled up and
+    down alone, then driven high and low with all others on the opposite pull: every pin follows
+    its own pull and drive, no other pin follows. **PASS**, 0 fails (no shorts between pins)
+  * Bring-up firmware: answers `help` / `status`; `blank` gives `ERR chain` (readback all 0, no
+    HV5622s) and keeps `BL` low, as designed; GP26 / GP27 floating (`hv` 64, `sw12` ≈ 6, not
+    meaningful)
+  * `on 5`: LED flashes red (seen), then `FAULT sw12_low` 200 ms later drops `NIX12_EN` (no 12 V on
+    a bare module): the switched-12 V check works
 
 ## Stage 0 — module switch, drivers and level shifter on the bare board
 
